@@ -105,6 +105,20 @@ export let CONFIG = {
   // Can be set via environment variable: CDN_PATHS (comma-separated)
   CDN_PATHS: ['/cdn/', '/assets/', '/static/'],
 
+  // ============= OBFUSCATION CONFIGURATION =============
+  // UUID-based obfuscated endpoints for anti-ad-blocker detection
+  // Format: /cdn/{provider}/{uuid}.js
+  // These IDs should be unique per deployment for maximum obfuscation
+  // Can be set via environment variables: FACEBOOK_ENDPOINT_ID, GOOGLE_ENDPOINT_ID
+
+  // Facebook endpoint ID (f prefix: /cdn/f/{ID}.js)
+  // AUTO-GENERATED: Random UUID for obfuscation
+  FACEBOOK_ENDPOINT_ID: generateDefaultSecret(),
+
+  // Google endpoint ID (g prefix: /cdn/g/{ID}.js)
+  // AUTO-GENERATED: Random UUID for obfuscation
+  GOOGLE_ENDPOINT_ID: generateDefaultSecret(),
+
   // ============= LOGGING =============
   // Log level for debugging and monitoring
   // Options: 'debug', 'info', 'warn', 'error'
@@ -161,6 +175,14 @@ export function initConfig(env = {}) {
   // CDN Paths
   if (env.CDN_PATHS) {
     CONFIG.CDN_PATHS = env.CDN_PATHS.split(',').map(s => s.trim());
+  }
+
+  // Obfuscation IDs
+  if (env.FACEBOOK_ENDPOINT_ID) {
+    CONFIG.FACEBOOK_ENDPOINT_ID = env.FACEBOOK_ENDPOINT_ID;
+  }
+  if (env.GOOGLE_ENDPOINT_ID) {
+    CONFIG.GOOGLE_ENDPOINT_ID = env.GOOGLE_ENDPOINT_ID;
   }
 
   // Logging

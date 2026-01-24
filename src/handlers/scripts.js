@@ -12,44 +12,32 @@
 // - handleScriptProxy(request) → Promise<Response>
 // - isUUIDPath(path) → boolean (helper)
 
-import { generateSecureUUID } from '../core/uuid.js';
 import { proxyRequest } from '../proxy/index.js';
-import { SCRIPT_MAP } from '../routing/mapping.js';
+import { getScriptTarget } from '../routing/mapping.js';
 import { errorResponse } from '../utils/response.js';
 import { HTTP_STATUS } from '../utils/constants.js';
-import { CONFIG } from '../config/index.js';
 
 /**
  * Handle script proxy requests
- * Supports UUID-based paths for anti-detection
+ * Supports both obfuscated UUID-based paths and legacy paths
+ * Handles dynamic query strings for GTM/GTag scripts
  *
  * @param {Request} request - Incoming request
  * @returns {Promise<Response>} Proxied script or 404
  */
 export async function handleScriptProxy(request) {
   const url = new URL(request.url);
-  const uuid = await generateSecureUUID();
 
   try {
-    // Check if path is UUID path (cdn/${uuid}.js, assets/${uuid}.js, static/${uuid}.js)
-    const uuidPaths = CONFIG.CDN_PATHS.map(path => `${path}${uuid}.js`);
-
-    if (uuidPaths.includes(url.pathname)) {
-      // UUID path always maps to Facebook events script
-      const targetUrl = SCRIPT_MAP['/cdn/fbevents.js'];
-      return await proxyRequest(targetUrl, request, {
-        preserveHeaders: false,
-        allowCache: true
-      });
-    }
-
-    // Look up script in SCRIPT_MAP
-    const targetUrl = SCRIPT_MAP[url.pathname];
+    // Get target URL using the script mapping helper
+    // This automatically handles query strings for GTM/GTag scripts
+    const targetUrl = getScriptTarget(url.pathname, url.search);
 
     if (!targetUrl) {
       return errorResponse('Not found', HTTP_STATUS.NOT_FOUND);
     }
 
+    // Proxy the script with caching enabled
     return await proxyRequest(targetUrl, request, {
       preserveHeaders: false,
       allowCache: true
