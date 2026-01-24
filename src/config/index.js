@@ -143,20 +143,32 @@ export function initConfig(env = {}) {
 
   // Rate limiting
   if (env.RATE_LIMIT_REQUESTS) {
-    CONFIG.RATE_LIMIT_REQUESTS = parseInt(env.RATE_LIMIT_REQUESTS, 10);
+    const parsed = parseInt(env.RATE_LIMIT_REQUESTS, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      CONFIG.RATE_LIMIT_REQUESTS = parsed;
+    }
   }
   if (env.RATE_LIMIT_WINDOW) {
-    CONFIG.RATE_LIMIT_WINDOW = parseInt(env.RATE_LIMIT_WINDOW, 10);
+    const parsed = parseInt(env.RATE_LIMIT_WINDOW, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      CONFIG.RATE_LIMIT_WINDOW = parsed;
+    }
   }
 
   // Timeouts
   if (env.FETCH_TIMEOUT) {
-    CONFIG.FETCH_TIMEOUT = parseInt(env.FETCH_TIMEOUT, 10);
+    const parsed = parseInt(env.FETCH_TIMEOUT, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      CONFIG.FETCH_TIMEOUT = parsed;
+    }
   }
 
   // UUID configuration
   if (env.UUID_SALT_ROTATION) {
-    CONFIG.UUID_SALT_ROTATION = parseInt(env.UUID_SALT_ROTATION, 10);
+    const parsed = parseInt(env.UUID_SALT_ROTATION, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      CONFIG.UUID_SALT_ROTATION = parsed;
+    }
   }
   if (env.UUID_SECRET) {
     CONFIG.UUID_SECRET = env.UUID_SECRET;
@@ -164,12 +176,18 @@ export function initConfig(env = {}) {
 
   // Cache
   if (env.CACHE_TTL) {
-    CONFIG.CACHE_TTL = parseInt(env.CACHE_TTL, 10);
+    const parsed = parseInt(env.CACHE_TTL, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      CONFIG.CACHE_TTL = parsed;
+    }
   }
 
   // Security
   if (env.MAX_REQUEST_SIZE) {
-    CONFIG.MAX_REQUEST_SIZE = parseInt(env.MAX_REQUEST_SIZE, 10);
+    const parsed = parseInt(env.MAX_REQUEST_SIZE, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      CONFIG.MAX_REQUEST_SIZE = parsed;
+    }
   }
 
   // CDN Paths

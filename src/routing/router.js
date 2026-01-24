@@ -28,7 +28,7 @@ import { handleEndpointProxy } from '../handlers/endpoints.js';
 import { getScriptMap, getEndpointMap } from './mapping.js';
 
 export class Router {
-  static route(request) {
+  static route(request, rateLimit = null) {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
@@ -39,7 +39,7 @@ export class Router {
 
     // Health check
     if (pathname === '/health') {
-      return handleHealthCheck(request);
+      return handleHealthCheck(request, rateLimit);
     }
 
     // Check if path is in endpoint map (includes both obfuscated and legacy endpoints)

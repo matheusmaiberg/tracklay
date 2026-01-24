@@ -25,7 +25,7 @@ export function buildResponse(upstreamResponse, request, options) {
 
   addSecurityHeaders(response.headers);
 
-  response.headers.set('X-Cache-Status', options.cached ? 'HIT' : 'MISS');
+  response.headers.set('X-Cache-Status', options.cacheStatus || 'MISS');
 
   return response;
 }

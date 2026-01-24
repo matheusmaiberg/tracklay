@@ -27,13 +27,5 @@ export function validateRequest(request) {
     return { valid: false, error: 'Request too large', status: 413 };
   }
 
-  // Respeitar Do Not Track
-  const dnt = request.headers.get('DNT');
-  if (dnt === '1') {
-    Logger.info('DNT header detected', {
-      url: new URL(request.url).pathname
-    });
-  }
-
   return { valid: true };
 }

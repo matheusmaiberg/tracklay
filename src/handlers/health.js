@@ -2,7 +2,7 @@
 // HEALTH CHECK - HEALTH ENDPOINT COM MÉTRICAS
 // ============================================================
 // RESPONSABILIDADE:
-// - handleHealthCheck(request) → Promise<Response>
+// - handleHealthCheck(request, rateLimit) → Promise<Response>
 // - Retornar JSON com:
 //   - status: 'ok'
 //   - timestamp, date
@@ -13,21 +13,18 @@
 // - Cache-Control: no-store
 
 // FUNÇÕES:
-// - handleHealthCheck(request) → Promise<Response>
-// - getMetrics(request) → object (helper)
+// - handleHealthCheck(request, rateLimit) → Promise<Response>
+// - rateLimit passado do worker.js para evitar chamada duplicada
 
 import { generateSecureUUID } from '../core/uuid.js';
-import { RateLimiter } from '../core/rate-limiter.js';
 import { CONFIG } from '../config/index.js';
 import { jsonResponse } from '../utils/response.js';
 import { Logger } from '../core/logger.js';
 
 // ============= HEALTH CHECK HANDLER =============
-export async function handleHealthCheck(request) {
+export async function handleHealthCheck(request, rateLimit) {
   try {
     const uuid = await generateSecureUUID();
-    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-    const rateLimit = await RateLimiter.check(ip);
 
     const health = {
       status: 'ok',
@@ -37,9 +34,9 @@ export async function handleHealthCheck(request) {
       version: '2.0.0-factory',
       metrics: {
         rateLimit: {
-          remaining: rateLimit.remaining,
-          limit: CONFIG.RATE_LIMIT_REQUESTS,
-          resetAt: new Date(rateLimit.resetAt).toISOString()
+          remaining: rateLimit?.remaining ?? CONFIG.RATE_LIMIT_REQUESTS,
+          limit: rateLimit?.limit ?? CONFIG.RATE_LIMIT_REQUESTS,
+          resetAt: rateLimit?.resetAt ? new Date(rateLimit.resetAt).toISOString() : new Date().toISOString()
         },
         config: {
           cacheTTL: CONFIG.CACHE_TTL,

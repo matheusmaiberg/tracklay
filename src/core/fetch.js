@@ -23,13 +23,13 @@ export async function fetchWithTimeout(url, options = {}) {
       ...options,
       signal: controller.signal
     });
-    clearTimeout(timeoutId);
     return response;
   } catch (error) {
-    clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
       throw new Error('Request timeout');
     }
     throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
