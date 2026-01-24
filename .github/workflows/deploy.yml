@@ -1,0 +1,133 @@
+# ============================================================
+# GITHUB ACTIONS - CLOUDFLARE WORKERS DEPLOYMENT
+# ============================================================
+# Automatically deploy to Cloudflare Workers on push to main
+# Documentation: https://github.com/cloudflare/wrangler-action
+
+name: Deploy to Cloudflare Workers
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Worker
+
+    steps:
+      # ============================================================
+      # 1. CHECKOUT CODE
+      # ============================================================
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ============================================================
+      # 2. SETUP NODE.JS
+      # ============================================================
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # ============================================================
+      # 3. INSTALL DEPENDENCIES
+      # ============================================================
+      - name: Install dependencies
+        run: npm ci
+
+      # ============================================================
+      # 4. RUN TESTS (Optional - uncomment when tests are ready)
+      # ============================================================
+      # - name: Run tests
+      #   run: npm test
+
+      # ============================================================
+      # 5. DEPLOY TO CLOUDFLARE WORKERS
+      # ============================================================
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Deploy to production on main branch
+          command: deploy
+          # Optional: Specify environment
+          # environment: production
+
+      # ============================================================
+      # 6. NOTIFY SUCCESS (Optional)
+      # ============================================================
+      - name: Deployment successful
+        if: success()
+        run: |
+          echo "✅ Deployment successful!"
+          echo "Worker URL: https://tracklay.workers.dev"
+
+      # ============================================================
+      # 7. NOTIFY FAILURE (Optional)
+      # ============================================================
+      - name: Deployment failed
+        if: failure()
+        run: |
+          echo "❌ Deployment failed!"
+          echo "Check logs above for details."
+
+# ============================================================
+# SECRETS REQUIRED
+# ============================================================
+# Set these secrets in GitHub repository settings:
+# Settings > Secrets and variables > Actions > New repository secret
+#
+# 1. CLOUDFLARE_API_TOKEN
+#    - Go to Cloudflare Dashboard
+#    - My Profile > API Tokens > Create Token
+#    - Use "Edit Cloudflare Workers" template
+#    - Or create custom token with permissions:
+#      * Account > Workers Scripts > Edit
+#      * Account > Account Settings > Read
+#    - Copy token and add to GitHub secrets
+#
+# 2. CLOUDFLARE_ACCOUNT_ID
+#    - Go to Cloudflare Dashboard
+#    - Workers > Overview
+#    - Copy Account ID from right sidebar
+#    - Or run: wrangler whoami
+#    - Add to GitHub secrets
+#
+# 3. UUID_SECRET (Set in Cloudflare Dashboard)
+#    - This is NOT a GitHub secret
+#    - Set in Cloudflare: Workers > Settings > Variables
+#    - Or use: wrangler secret put UUID_SECRET
+#
+# ============================================================
+# TESTING LOCALLY
+# ============================================================
+# To test this workflow locally:
+#
+# 1. Install act: https://github.com/nektos/act
+# 2. Create .secrets file with:
+#    CLOUDFLARE_API_TOKEN=your-token
+#    CLOUDFLARE_ACCOUNT_ID=your-account-id
+# 3. Run: act -s CLOUDFLARE_API_TOKEN -s CLOUDFLARE_ACCOUNT_ID
+#
+# ============================================================
+# DEPLOYMENT ENVIRONMENTS
+# ============================================================
+# To deploy to different environments:
+#
+# 1. Add environment-specific secrets:
+#    - CLOUDFLARE_API_TOKEN_DEV
+#    - CLOUDFLARE_API_TOKEN_STAGING
+#    - CLOUDFLARE_API_TOKEN_PROD
+#
+# 2. Add environment parameter to wrangler-action:
+#    environment: staging
+#
+# 3. Create multiple jobs for different environments

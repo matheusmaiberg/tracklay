@@ -1,0 +1,60 @@
+# ============================================================
+# GITIGNORE - TRACKLAY
+# ============================================================
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Cloudflare Wrangler
+.wrangler/
+.mf/
+dist/
+wrangler.toml.bak
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+.dev.vars
+.setup-config
+*.secret
+secrets.json
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+lerna-debug.log*
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# Temporary & Backup
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# Old reference files (to be deleted)
+_OLD_REFERENCE/

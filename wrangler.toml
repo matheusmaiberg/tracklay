@@ -1,0 +1,169 @@
+# ============================================================
+# CLOUDFLARE WRANGLER CONFIGURATION
+# ============================================================
+# Cloudflare Workers deployment configuration
+# Documentation: https://developers.cloudflare.com/workers/wrangler/configuration/
+
+name = "tracklay"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# ============================================================
+# WORKER SETTINGS
+# ============================================================
+
+# Worker limits (free tier: 100,000 requests/day)
+# Upgrade to paid for unlimited requests
+# https://developers.cloudflare.com/workers/platform/limits
+
+# Account ID (get from: wrangler whoami)
+# Uncomment and replace with your account ID
+# account_id = "your-account-id-here"
+
+# ============================================================
+# ROUTES (Custom Domain)
+# ============================================================
+# Configure routes to serve the worker from your domain
+# Example: yourstore.com/cdn/* → worker
+#
+# Option 1: Configure via Dashboard
+#   Workers > Your Worker > Settings > Domains & Routes
+#
+# Option 2: Configure here (requires zone_id)
+# Uncomment and configure:
+#
+# [[routes]]
+# pattern = "yourstore.com/cdn/*"
+# zone_name = "yourstore.com"
+#
+# [[routes]]
+# pattern = "yourstore.com/assets/*"
+# zone_name = "yourstore.com"
+#
+# [[routes]]
+# pattern = "yourstore.com/static/*"
+# zone_name = "yourstore.com"
+
+# ============================================================
+# ENVIRONMENT VARIABLES
+# ============================================================
+# Secrets should be set via Dashboard or wrangler secret:
+#   wrangler secret put UUID_SECRET
+#
+# Non-secret vars can be defined here:
+
+[vars]
+# Environment (development, staging, production)
+ENVIRONMENT = "production"
+
+# ============= OPTIONAL CONFIGURATION =============
+# All variables below are OPTIONAL and have smart defaults
+# Uncomment and configure only if you need to customize
+
+# GTM Server-Side URL (optional, leave empty if not using)
+# GTM_SERVER_URL = "https://gtm.yourstore.com"
+
+# CORS Origins (optional, auto-detected by default)
+# Comma-separated list of allowed origins
+# ALLOWED_ORIGINS = "https://yourstore.com,https://www.yourstore.com"
+
+# Rate Limiting (optional)
+# RATE_LIMIT_REQUESTS = "100"
+# RATE_LIMIT_WINDOW = "60000"
+
+# Fetch Timeout in milliseconds (optional)
+# FETCH_TIMEOUT = "10000"
+
+# Cache TTL in seconds (optional)
+# CACHE_TTL = "3600"
+
+# Max Request Size in bytes (optional)
+# MAX_REQUEST_SIZE = "1048576"
+
+# CDN Paths for proxy (optional, comma-separated)
+# CDN_PATHS = "/cdn/,/assets/,/static/"
+
+# Log Level (optional: debug, info, warn, error)
+# LOG_LEVEL = "info"
+
+# ============================================================
+# BINDINGS (Optional)
+# ============================================================
+
+# KV Namespace (for future rate limiting storage)
+# Uncomment if you want to use KV for persistent rate limiting
+# [[kv_namespaces]]
+# binding = "RATE_LIMIT_KV"
+# id = "your-kv-namespace-id"
+
+# Durable Objects (for advanced rate limiting)
+# Uncomment if implementing Durable Objects
+# [[durable_objects.bindings]]
+# name = "RATE_LIMITER"
+# class_name = "RateLimiter"
+
+# ============================================================
+# DEVELOPMENT
+# ============================================================
+# Local development settings
+
+[env.development]
+name = "tracklay-dev"
+vars = { ENVIRONMENT = "development" }
+
+# ============================================================
+# STAGING
+# ============================================================
+# Staging environment
+
+[env.staging]
+name = "tracklay-staging"
+vars = { ENVIRONMENT = "staging" }
+
+# ============================================================
+# BUILD
+# ============================================================
+# Build configuration for Workers bundling
+
+[build]
+command = ""
+
+# Upload rules - which files to include/exclude
+[build.upload]
+format = "modules"
+
+# ============================================================
+# COMPATIBILITY
+# ============================================================
+# Compatibility flags for specific features
+# https://developers.cloudflare.com/workers/platform/compatibility-dates
+
+# Modern features enabled
+compatibility_flags = []
+
+# ============================================================
+# OBSERVABILITY (Optional)
+# ============================================================
+# Tail consumers for log streaming
+# Uncomment to enable
+
+# [[tail_consumers]]
+# service = "log-consumer-worker"
+
+# ============================================================
+# NOTES
+# ============================================================
+# 1. Set UUID_SECRET via wrangler secret:
+#    wrangler secret put UUID_SECRET
+#
+# 2. Configure routes via Dashboard or uncomment [[routes]] above
+#
+# 3. Update GTM_SERVER_URL in src/config/index.js
+#
+# 4. Deploy with: wrangler deploy
+#
+# 5. For custom domain, add DNS CNAME:
+#    Type: CNAME
+#    Name: @ (or subdomain)
+#    Content: your-worker.workers.dev
+#    Proxy: Yes (orange cloud)

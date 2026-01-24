@@ -1,0 +1,85 @@
+{
+  "name": "tracklay",
+  "version": "2.0.0",
+  "description": "First-party proxy for Google Tag Manager and tracking scripts on Shopify stores. Bypass ad-blockers and browser tracking protections (ITP, ETP) by serving analytics from your own domain.",
+  "type": "module",
+  "main": "worker.js",
+  "scripts": {
+    "setup": "./scripts/setup.sh",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:dev": "wrangler deploy --env development",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:prod": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "login": "wrangler login",
+    "whoami": "wrangler whoami",
+    "tail": "wrangler tail",
+    "secret:put": "wrangler secret put",
+    "secret:list": "wrangler secret list"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matheusmaiberg/tracklay.git"
+  },
+  "keywords": [
+    "shopify",
+    "cloudflare",
+    "workers",
+    "proxy",
+    "first-party",
+    "analytics",
+    "google-tag-manager",
+    "gtm",
+    "google-analytics",
+    "anti-tracking",
+    "itp",
+    "etp",
+    "ad-blocker",
+    "tracking",
+    "conversion-tracking",
+    "meta-pixel",
+    "facebook-pixel",
+    "server-side-tagging",
+    "edge-computing",
+    "privacy"
+  ],
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com",
+    "url": "https://github.com/matheusmaiberg"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/matheusmaiberg/tracklay/issues"
+  },
+  "homepage": "https://tracklay.app",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0",
+    "vitest": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "prettier": "^3.0.0",
+    "eslint": "^8.0.0"
+  },
+  "optionalDependencies": {},
+  "files": [
+    "worker.js",
+    "src/",
+    "wrangler.toml",
+    "scripts/",
+    "README.md",
+    "README.pt-BR.md",
+    "LICENSE",
+    "CONTRIBUTING.md"
+  ]
+}
