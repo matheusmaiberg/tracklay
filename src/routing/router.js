@@ -28,7 +28,7 @@ import { handleEndpointProxy } from '../handlers/endpoints.js';
 import { getScriptMap, getEndpointMap } from './mapping.js';
 
 export class Router {
-  static route(request, rateLimit = null) {
+  static async route(request, rateLimit = null) {
     const url = request._parsedUrl || new URL(request.url);
     const pathname = url.pathname;
 
@@ -43,13 +43,15 @@ export class Router {
     }
 
     // Check if path is in endpoint map (includes both obfuscated and legacy endpoints)
-    const endpointMap = getEndpointMap();
+    // Note: getEndpointMap() is now async due to UUID rotation support
+    const endpointMap = await getEndpointMap();
     if (endpointMap[pathname]) {
       return handleEndpointProxy(request, rateLimit);
     }
 
     // Check if path is in script map (includes both obfuscated and legacy scripts)
-    const scriptMap = getScriptMap();
+    // Note: getScriptMap() is now async due to UUID rotation support
+    const scriptMap = await getScriptMap();
     if (scriptMap[pathname]) {
       return handleScriptProxy(request, rateLimit);
     }

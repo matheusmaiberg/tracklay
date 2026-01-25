@@ -33,7 +33,8 @@ export async function handleScriptProxy(request, rateLimit = null) {
   try {
     // Get target URL using the script mapping helper
     // This automatically handles query strings for GTM/GTag scripts
-    const targetUrl = getScriptTarget(url.pathname, url.search);
+    // Note: getScriptTarget is now async due to UUID rotation support
+    const targetUrl = await getScriptTarget(url.pathname, url.search);
 
     if (!targetUrl) {
       return errorResponse('Not found', HTTP_STATUS.NOT_FOUND);
