@@ -1,0 +1,214 @@
+// ============================================================
+// SCRIPT CACHE - INTELLIGENT CACHING FOR THIRD-PARTY SCRIPTS
+// ============================================================
+// RESPONSABILIDADE:
+// - Cache inteligente de scripts de terceiros (fbevents, gtm, gtag)
+// - Atualização automática a cada 12 horas via Cloudflare Cron
+// - Detecção de mudanças via SHA-256 hash comparison
+// - Fallback para fetch normal se cache falhar
+//
+// FUNÇÕES:
+// - getScriptFromCache(scriptKey) - Retorna script do cache ou null
+// - fetchAndCompareScript(url, scriptKey) - Busca, compara hash, atualiza se necessário
+//
+// CACHE KEYS:
+// - script:fbevents - Conteúdo do script Facebook Pixel
+// - script:gtm - Conteúdo do Google Tag Manager
+// - script:gtag - Conteúdo do Google Analytics/Gtag
+// - script:hash:fbevents - SHA-256 hash do script
+// - script:hash:gtm - SHA-256 hash do script
+// - script:hash:gtag - SHA-256 hash do script
+//
+// TTL: 24 horas (renovado a cada 12h se não mudou)
+
+import { Logger } from '../core/logger.js';
+import { CacheManager } from '../core/cache.js';
+import { fetchWithTimeout } from '../core/fetch.js';
+
+// ============= CONFIGURAÇÃO DE SCRIPTS =============
+
+export const SCRIPT_URLS = {
+  fbevents: 'https://connect.facebook.net/en_US/fbevents.js',
+  gtm: 'https://www.googletagmanager.com/gtm.js',
+  gtag: 'https://www.googletagmanager.com/gtag/js'
+};
+
+const CACHE_PREFIX = 'script:';
+const HASH_PREFIX = 'script:hash:';
+const CACHE_TTL = 86400; // 24 horas em segundos
+
+// ============= FUNÇÕES PÚBLICAS =============
+
+/**
+ * Obtém um script do cache
+ * @param {string} scriptKey - Nome do script (fbevents, gtm, gtag)
+ * @returns {Promise<Response|null>} - Response do cache ou null
+ */
+export async function getScriptFromCache(scriptKey) {
+  try {
+    const cacheKey = `${CACHE_PREFIX}${scriptKey}`;
+    const cached = await CacheManager.get(cacheKey);
+
+    if (cached) {
+      Logger.debug('Script cache hit', { scriptKey });
+      return cached;
+    }
+
+    Logger.debug('Script cache miss', { scriptKey });
+    return null;
+  } catch (error) {
+    Logger.warn('Failed to get script from cache', {
+      scriptKey,
+      error: error.message
+    });
+    return null;
+  }
+}
+
+/**
+ * Busca um script, compara o hash e atualiza o cache se necessário
+ * @param {string} url - URL do script
+ * @param {string} scriptKey - Nome do script (fbevents, gtm, gtag)
+ * @returns {Promise<{updated: boolean, error?: string}>}
+ */
+export async function fetchAndCompareScript(url, scriptKey) {
+  try {
+    Logger.info('Fetching script for cache update', { scriptKey, url });
+
+    // Buscar script da origem
+    const response = await fetchWithTimeout(url, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/javascript, */*',
+      }
+    });
+
+    if (!response.ok) {
+      Logger.error('Failed to fetch script', {
+        scriptKey,
+        status: response.status,
+        statusText: response.statusText
+      });
+      return { updated: false, error: `HTTP ${response.status}` };
+    }
+
+    // Ler conteúdo do script
+    const scriptContent = await response.text();
+
+    // Calcular hash SHA-256
+    const newHash = await generateHash(scriptContent);
+
+    // Obter hash anterior do cache
+    const hashKey = `${HASH_PREFIX}${scriptKey}`;
+    const oldHashResponse = await CacheManager.get(hashKey);
+    const oldHash = oldHashResponse ? await oldHashResponse.text() : null;
+
+    // Comparar hashes
+    const hasChanged = oldHash !== newHash;
+
+    if (hasChanged) {
+      Logger.info('Script content changed, updating cache', {
+        scriptKey,
+        oldHash: oldHash ? oldHash.substring(0, 16) + '...' : 'none',
+        newHash: newHash.substring(0, 16) + '...'
+      });
+
+      // Atualizar conteúdo do script no cache
+      const scriptResponse = new Response(scriptContent, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/javascript; charset=utf-8',
+          'Cache-Control': `public, max-age=${CACHE_TTL}`,
+          'X-Script-Key': scriptKey,
+          'X-Script-Hash': newHash,
+          'X-Cache-Updated': new Date().toISOString()
+        }
+      });
+
+      const cacheKey = `${CACHE_PREFIX}${scriptKey}`;
+      await CacheManager.put(cacheKey, scriptResponse, CACHE_TTL);
+
+      // Atualizar hash no cache
+      const hashResponse = new Response(newHash, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain',
+          'Cache-Control': `public, max-age=${CACHE_TTL}`
+        }
+      });
+
+      await CacheManager.put(hashKey, hashResponse, CACHE_TTL);
+
+      Logger.info('Script cache updated successfully', { scriptKey });
+      return { updated: true };
+
+    } else {
+      Logger.info('Script unchanged, refreshing cache TTL', { scriptKey });
+
+      // Script não mudou, mas renovar TTL do cache
+      const scriptResponse = new Response(scriptContent, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/javascript; charset=utf-8',
+          'Cache-Control': `public, max-age=${CACHE_TTL}`,
+          'X-Script-Key': scriptKey,
+          'X-Script-Hash': newHash,
+          'X-Cache-Refreshed': new Date().toISOString()
+        }
+      });
+
+      const cacheKey = `${CACHE_PREFIX}${scriptKey}`;
+      await CacheManager.put(cacheKey, scriptResponse, CACHE_TTL);
+
+      // Renovar hash também
+      const hashResponse = new Response(newHash, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain',
+          'Cache-Control': `public, max-age=${CACHE_TTL}`
+        }
+      });
+
+      await CacheManager.put(hashKey, hashResponse, CACHE_TTL);
+
+      return { updated: false };
+    }
+
+  } catch (error) {
+    Logger.error('Error in fetchAndCompareScript', {
+      scriptKey,
+      error: error.message,
+      stack: error.stack
+    });
+    return { updated: false, error: error.message };
+  }
+}
+
+// ============= FUNÇÕES AUXILIARES =============
+
+/**
+ * Gera hash SHA-256 de uma string
+ * @param {string} text - Texto para hash
+ * @returns {Promise<string>} - Hash em hexadecimal
+ */
+async function generateHash(text) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
+
+/**
+ * Identifica o script key a partir da URL
+ * @param {string} url - URL do script
+ * @returns {string|null} - Script key ou null
+ */
+export function identifyScriptKey(url) {
+  if (url.includes('fbevents.js')) return 'fbevents';
+  if (url.includes('gtm.js')) return 'gtm';
+  if (url.includes('gtag/js')) return 'gtag';
+  return null;
+}
