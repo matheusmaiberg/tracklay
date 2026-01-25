@@ -68,10 +68,16 @@ async function handleRequest(request) {
       });
     }
 
-    // Roteamento
-    let response = await Router.route(request);
+    // Roteamento (passar rateLimit para evitar chamada duplicada no health check)
+    let response = await Router.route(request, rateLimit);
 
-    // Adicionar rate limit headers na resposta
+    // Criar nova Response com headers adicionais (headers são imutáveis)
+    response = new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: new Headers(response.headers)
+    });
+
     response.headers.set(HEADERS.X_RATELIMIT_LIMIT, rateLimit.limit.toString());
     response.headers.set(HEADERS.X_RATELIMIT_REMAINING, rateLimit.remaining.toString());
     response.headers.set(HEADERS.X_RATELIMIT_RESET, new Date(rateLimit.resetAt).toISOString());

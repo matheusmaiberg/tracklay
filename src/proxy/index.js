@@ -34,7 +34,8 @@ export async function proxyRequest(targetUrl, request, options = {}) {
     const cacheKey = getCacheKey(targetUrl);
 
     // Verificar cache se permitido
-    if (allowCache && shouldCache(targetUrl)) {
+    const targetUrlObj = new URL(targetUrl);
+    if (allowCache && shouldCache(targetUrlObj, request)) {
       const cached = await CacheManager.get(cacheKey);
       if (cached) {
         Logger.debug('Cache hit', { url: targetUrl });
@@ -71,7 +72,7 @@ export async function proxyRequest(targetUrl, request, options = {}) {
         url: targetUrl
       });
 
-      return errorResponse(HTTP_STATUS.BAD_GATEWAY, 'Bad Gateway');
+      return errorResponse('Bad Gateway', HTTP_STATUS.BAD_GATEWAY);
     }
 
     // Verificar se resposta é válida
@@ -88,15 +89,15 @@ export async function proxyRequest(targetUrl, request, options = {}) {
     });
 
     // Adicionar Cache-Control header
-    const cacheTTL = getCacheTTL(targetUrl);
-    if (allowCache && shouldCache(targetUrl)) {
+    const cacheTTL = getCacheTTL(targetUrlObj, request);
+    if (allowCache && shouldCache(targetUrlObj, request)) {
       modifiedResponse.headers.set('Cache-Control', `public, max-age=${cacheTTL}`);
     } else {
       modifiedResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 
     // Salvar em cache se permitido
-    if (allowCache && shouldCache(targetUrl)) {
+    if (allowCache && shouldCache(targetUrlObj, request)) {
       try {
         const responseToCache = modifiedResponse.clone();
         await CacheManager.put(cacheKey, responseToCache, cacheTTL);
@@ -115,6 +116,6 @@ export async function proxyRequest(targetUrl, request, options = {}) {
       url: targetUrl
     });
 
-    return errorResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    return errorResponse('Internal Server Error', HTTP_STATUS.INTERNAL_SERVER_ERROR);
   }
 }

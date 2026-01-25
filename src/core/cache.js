@@ -22,7 +22,17 @@ export class CacheManager {
   }
 
   static async put(key, response, ttl) {
-    await caches.default.put(key, response);
+    // Clone response e adiciona Cache-Control header
+    const headers = new Headers(response.headers);
+    headers.set('Cache-Control', `public, max-age=${ttl}`);
+
+    const modifiedResponse = new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers
+    });
+
+    await caches.default.put(key, modifiedResponse);
   }
 
   static async delete(key) {

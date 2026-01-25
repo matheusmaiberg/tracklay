@@ -36,28 +36,40 @@ export class RateLimiter {
         }
       }
 
-      // Incrementar contador
-      data.count++;
+      // Verificar limite ANTES de incrementar
+      const wouldBeAllowed = (data.count + 1) <= CONFIG.RATE_LIMIT_REQUESTS;
 
-      // Salvar no cache
-      const response = new Response(JSON.stringify(data), {
-        headers: {
-          'Cache-Control': `max-age=${Math.ceil(CONFIG.RATE_LIMIT_WINDOW / 1000)}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      await cache.put(cacheKey, response);
+      if (wouldBeAllowed) {
+        data.count++;  // Só incrementa se allowed
 
-      // Verificar limite
-      const allowed = data.count <= CONFIG.RATE_LIMIT_REQUESTS;
+        // Salvar no cache
+        const response = new Response(JSON.stringify(data), {
+          headers: {
+            'Cache-Control': `max-age=${Math.ceil(CONFIG.RATE_LIMIT_WINDOW / 1000)}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        await cache.put(cacheKey, response);
+      }
+
       const remaining = Math.max(0, CONFIG.RATE_LIMIT_REQUESTS - data.count);
 
-      return { allowed, remaining, resetAt: data.resetAt };
+      return {
+        allowed: wouldBeAllowed,
+        remaining,
+        resetAt: data.resetAt,
+        limit: CONFIG.RATE_LIMIT_REQUESTS
+      };
 
     } catch (error) {
       Logger.error('Rate limit check failed', { error: error.message });
       // Em caso de erro, permitir (fail open)
-      return { allowed: true, remaining: CONFIG.RATE_LIMIT_REQUESTS, resetAt: now };
+      return {
+        allowed: true,
+        remaining: CONFIG.RATE_LIMIT_REQUESTS,
+        resetAt: now,
+        limit: CONFIG.RATE_LIMIT_REQUESTS
+      };
     }
   }
 }
