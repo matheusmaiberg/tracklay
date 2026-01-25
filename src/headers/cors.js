@@ -24,7 +24,6 @@ import { CONFIG, getOriginFromRequest } from '../config/index.js';
  * @returns {Headers} Headers with CORS configured or empty if origin not allowed
  */
 export function buildCORSHeaders(request) {
-  const headers = new Headers();
   const origin = request.headers.get('Origin');
 
   // Auto-detect origin if ALLOWED_ORIGINS is empty (recommended)
@@ -38,9 +37,13 @@ export function buildCORSHeaders(request) {
     allowedOrigin = origin;
   }
 
+  // OTIMIZAÇÃO: early return sem alocar Headers se origin não permitido
   if (!allowedOrigin) {
-    return headers;
+    return new Headers();
   }
+
+  // Só alocar Headers se realmente necessário
+  const headers = new Headers();
 
   // Complete CORS with all necessary headers
   headers.set('Access-Control-Allow-Origin', allowedOrigin);
