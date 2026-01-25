@@ -137,7 +137,23 @@ export let CONFIG = {
   // PRODUCTION: Set to false for maximum anti-detection obfuscation
   // DEVELOPMENT: Set to true for debugging and monitoring
   // Can be set via environment variable: DEBUG_HEADERS (true/false)
-  DEBUG_HEADERS: false
+  DEBUG_HEADERS: false,
+
+  // ============= CONTAINER ALIASES (ULTRA-AGGRESSIVE OBFUSCATION) =============
+  // Map obfuscated container IDs to real GTM/GA4 container IDs
+  // Enables query string obfuscation: ?c=abc123 → ?id=GTM-XXXXX
+  //
+  // Format: { "alias": "real_id" }
+  // Example: { "abc123": "GTM-XXXXX", "def456": "G-YYYYY" }
+  //
+  // Usage:
+  // - Client requests: /g/{UUID}?c=abc123
+  // - Worker maps: abc123 → GTM-XXXXX
+  // - Upstream receives: ?id=GTM-XXXXX
+  //
+  // Can be set via environment variable: CONTAINER_ALIASES (JSON string)
+  // Default: empty object (passthrough mode, no query obfuscation)
+  CONTAINER_ALIASES: {}
 };
 
 /**
@@ -195,5 +211,16 @@ export function initConfig(env = {}) {
   // Debug headers (parse boolean)
   if (env.DEBUG_HEADERS !== undefined) {
     CONFIG.DEBUG_HEADERS = env.DEBUG_HEADERS === 'true' || env.DEBUG_HEADERS === true;
+  }
+
+  // Container aliases (parse JSON string)
+  if (env.CONTAINER_ALIASES) {
+    try {
+      CONFIG.CONTAINER_ALIASES = JSON.parse(env.CONTAINER_ALIASES);
+    } catch (error) {
+      // Note: Logger may not be initialized yet, so we skip logging here
+      // Invalid JSON will result in empty object (safe fallback)
+      CONFIG.CONTAINER_ALIASES = {};
+    }
   }
 }
