@@ -10,9 +10,7 @@
 // FUNCTIONS:
 // - handleOptions(request) → Response
 
-import { buildCORSHeaders } from '../headers/cors.js';
-import { addSecurityHeaders } from '../headers/security.js';
-import { addRateLimitHeaders } from '../headers/rate-limit.js';
+import { buildFullHeaders } from '../factories/headers-factory.js';
 
 /**
  * Handle OPTIONS request (CORS preflight)
@@ -21,13 +19,7 @@ import { addRateLimitHeaders } from '../headers/rate-limit.js';
  * @returns {Response}
  */
 export function handleOptions(request, rateLimit = null) {
-  const headers = buildCORSHeaders(request);
-
-  // Adicionar headers de segurança
-  addSecurityHeaders(headers);
-
-  // Adicionar rate limit headers
-  addRateLimitHeaders(headers, rateLimit);
+  const headers = buildFullHeaders(request, { rateLimit });
 
   return new Response(null, {
     status: 204,
