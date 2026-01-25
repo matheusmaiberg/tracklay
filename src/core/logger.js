@@ -42,14 +42,23 @@ export class Logger {
   static _log(level, message, data = {}) {
     if (!this._shouldLog(level)) return;
 
-    const logEntry = {
-      level,
-      message,
-      timestamp: this._getTimestamp(),
-      ...data
-    };
+    // OTIMIZAÇÃO: JSON.stringify condicional - string direta para logs simples
+    const hasData = Object.keys(data).length > 0;
 
-    console.log(JSON.stringify(logEntry));
+    if (!hasData) {
+      // Logs simples: usar template string (mais rápido)
+      const timestamp = this._getTimestamp();
+      console.log(`{"level":"${level}","message":"${message}","timestamp":"${timestamp}"}`);
+    } else {
+      // Logs complexos: usar JSON.stringify
+      const logEntry = {
+        level,
+        message,
+        timestamp: this._getTimestamp(),
+        ...data
+      };
+      console.log(JSON.stringify(logEntry));
+    }
   }
 
   static debug(message, data = {}) {
