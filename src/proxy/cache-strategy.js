@@ -1,14 +1,14 @@
 // ============================================================
 // CACHE STRATEGY - CACHE DECISION LOGIC
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - shouldCache(url, request) → boolean
-// - getCacheKey(url) → Request (apenas targetUrl + GET)
-// - getCacheTTL(url) → number (CACHE_TTL para scripts)
-// - Nunca cachear endpoints (/g/collect, /tr)
-// - Sempre cachear scripts (.js)
+// - getCacheKey(url) → Request (only targetUrl + GET)
+// - getCacheTTL(url) → number (CACHE_TTL for scripts)
+// - Never cache endpoints (/g/collect, /tr)
+// - Always cache scripts (.js)
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - shouldCache(url, request) → boolean
 // - getCacheKey(url) → Request
 // - getCacheTTL(url) → number
@@ -16,18 +16,18 @@
 import { CONFIG } from '../config/index.js';
 
 /**
- * Determina se uma URL deve ser cacheada
- * @param {URL} url - URL object do request
+ * Determines if a URL should be cached
+ * @param {URL} url - URL object from request
  * @param {Request} request - Request object
- * @returns {boolean} - true se deve cachear
+ * @returns {boolean} - true if should cache
  */
 export function shouldCache(url, request) {
-  // OTIMIZAÇÃO: early return para scripts .js (caso comum)
+  // OPTIMIZATION: early return for .js scripts (common case)
   if (url.pathname.endsWith('.js')) {
     return true;
   }
 
-  // Nunca cachear endpoints de tracking
+  // Never cache tracking endpoints
   const trackingEndpoints = ['/g/collect', '/tr', '/collect'];
   if (trackingEndpoints.some(endpoint => url.pathname.includes(endpoint))) {
     return false;
@@ -37,25 +37,25 @@ export function shouldCache(url, request) {
 }
 
 /**
- * Cria a cache key correta usando apenas targetUrl + GET
- * @param {string} targetUrl - URL completa do destino
- * @returns {Request} - Request object para usar como cache key
+ * Creates correct cache key using only targetUrl + GET
+ * @param {string} targetUrl - Full target URL
+ * @returns {Request} - Request object to use as cache key
  */
 export function getCacheKey(targetUrl) {
   return new Request(targetUrl, { method: 'GET' });
 }
 
 /**
- * Retorna o TTL de cache para uma URL
- * @param {URL} url - URL object do request
- * @returns {number} - TTL em segundos
+ * Returns cache TTL for a URL
+ * @param {URL} url - URL object from request
+ * @returns {number} - TTL in seconds
  */
 export function getCacheTTL(url) {
-  // Scripts: usar CACHE_TTL configurado
+  // Scripts: use configured CACHE_TTL
   if (url.pathname.endsWith('.js')) {
     return CONFIG.CACHE_TTL;
   }
 
-  // Default: sem cache
+  // Default: no cache
   return 0;
 }

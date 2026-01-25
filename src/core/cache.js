@@ -1,19 +1,19 @@
 // ============================================================
 // CACHE MANAGER - CLOUDFLARE CACHE API WRAPPER
 // ============================================================
-// RESPONSABILIDADE:
-// - Wrapper para caches.default
+// RESPONSIBILITY:
+// - Wrapper for caches.default
 // - get(key) → Response | null
 // - put(key, value, ttl) → void
 // - delete(key) → void
-// - purge(pattern) → void (opcional)
+// - purge(pattern) → void (optional)
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - CacheManager.get(key)
 // - CacheManager.put(key, value, ttl)
 // - CacheManager.delete(key)
 
-// NOTA: Pode ser simples wrapper ou adicionar lógica extra
+// NOTE: Can be simple wrapper or add extra logic
 
 export class CacheManager {
   static async get(key) {
@@ -22,7 +22,7 @@ export class CacheManager {
   }
 
   static async put(key, response, ttl) {
-    // Clone response e adiciona Cache-Control header
+    // Clone response and add Cache-Control header
     const headers = new Headers(response.headers);
     headers.set('Cache-Control', `public, max-age=${ttl}`);
 
