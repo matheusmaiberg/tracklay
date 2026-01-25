@@ -153,7 +153,57 @@ export let CONFIG = {
   //
   // Can be set via environment variable: CONTAINER_ALIASES (JSON string)
   // Default: empty object (passthrough mode, no query obfuscation)
-  CONTAINER_ALIASES: {}
+  CONTAINER_ALIASES: {},
+
+  // ============= ENDPOINT UUID ROTATION =============
+  // Control whether endpoint UUIDs rotate automatically based on time
+  //
+  // HOW IT WORKS:
+  // - Rotation uses deterministic time-based UUID generation
+  // - UUIDs change weekly based on UUID_SALT_ROTATION interval (default: 7 days)
+  // - All workers generate the same UUID at the same time (stateless, deterministic)
+  // - No KV/Durable Objects needed (everything is time-based)
+  //
+  // ROTATION ENABLED (false - default):
+  //   - Uses generateEndpointUUID() with time-based rotation
+  //   - UUIDs rotate automatically every UUID_SALT_ROTATION interval
+  //   - Maximum security (UUIDs expire automatically)
+  //   - Requires Shopify theme to fetch UUIDs dynamically via /endpoints
+  //   - Week-based rotation: Math.floor(Date.now() / UUID_SALT_ROTATION)
+  //
+  // ROTATION DISABLED (true):
+  //   - Uses fixed FACEBOOK_ENDPOINT_ID and GOOGLE_ENDPOINT_ID from env
+  //   - UUIDs never change (valid forever)
+  //   - Simpler setup (hardcode in theme)
+  //   - Lower security (if discovered, UUIDs remain valid)
+  //
+  // Can be set via environment variable: ENDPOINTS_UUID_ROTATION
+  // Default: false (rotation enabled for maximum security)
+  ENDPOINTS_UUID_ROTATION: false,
+
+  // ============= AUTHENTICATED ENDPOINT SECRET =============
+  // Secret token for /endpoints authentication (query string based)
+  // Used by Shopify theme/n8n to fetch current rotating UUIDs dynamically
+  //
+  // CRITICAL SECURITY:
+  // - NEVER expose UUIDs publicly (e.g., in /health endpoint)
+  // - Ad-blockers can scrape public endpoints and blacklist UUIDs
+  // - This endpoint requires authentication via query string: ?token=SECRET
+  //
+  // AUTHENTICATION METHOD:
+  // - Query string based: GET /endpoints?token=your-secret
+  // - NOT using Authorization header (easier for n8n/GitHub Actions)
+  // - Constant-time comparison to prevent timing attacks
+  //
+  // Set via Cloudflare Workers secret (RECOMMENDED):
+  //   wrangler secret put ENDPOINTS_SECRET
+  //
+  // Generate secure token:
+  //   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+  //
+  // Default: auto-generated (generateDefaultSecret)
+  // If not set, endpoint returns 503 Service Unavailable
+  ENDPOINTS_SECRET: generateDefaultSecret()
 };
 
 /**
@@ -222,5 +272,15 @@ export function initConfig(env = {}) {
       // Invalid JSON will result in empty object (safe fallback)
       CONFIG.CONTAINER_ALIASES = {};
     }
+  }
+
+  // Endpoint UUID rotation (parse as boolean)
+  if (env.ENDPOINTS_UUID_ROTATION !== undefined) {
+    CONFIG.ENDPOINTS_UUID_ROTATION = env.ENDPOINTS_UUID_ROTATION === 'true' || env.ENDPOINTS_UUID_ROTATION === true;
+  }
+
+  // Authenticated endpoint secret (from Cloudflare Workers secret or env var)
+  if (env.ENDPOINTS_SECRET) {
+    CONFIG.ENDPOINTS_SECRET = env.ENDPOINTS_SECRET;
   }
 }
