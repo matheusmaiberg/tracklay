@@ -23,9 +23,10 @@ import { HTTP_STATUS } from '../utils/constants.js';
  * Handles dynamic query strings for GTM/GTag scripts
  *
  * @param {Request} request - Incoming request
+ * @param {Object} rateLimit - Rate limit info from worker
  * @returns {Promise<Response>} Proxied script or 404
  */
-export async function handleScriptProxy(request) {
+export async function handleScriptProxy(request, rateLimit = null) {
   const url = request._parsedUrl || new URL(request.url);
 
   try {
@@ -40,7 +41,8 @@ export async function handleScriptProxy(request) {
     // Proxy the script with caching enabled
     return await proxyRequest(targetUrl, request, {
       preserveHeaders: false,
-      allowCache: true
+      allowCache: true,
+      rateLimit
     });
 
   } catch (error) {

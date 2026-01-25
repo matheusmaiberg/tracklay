@@ -22,9 +22,10 @@ import { HTTP_STATUS } from '../utils/constants.js';
  * Handles tracking pixels and analytics collection endpoints
  *
  * @param {Request} request - Incoming request
+ * @param {Object} rateLimit - Rate limit info from worker
  * @returns {Promise<Response>} Proxied response
  */
-export async function handleEndpointProxy(request) {
+export async function handleEndpointProxy(request, rateLimit = null) {
   const url = request._parsedUrl || new URL(request.url);
 
   // Get dynamic endpoint map (includes both obfuscated and legacy endpoints)
@@ -40,6 +41,7 @@ export async function handleEndpointProxy(request) {
   // Preserve headers for accurate tracking data
   return await proxyRequest(targetUrl + url.search, request, {
     preserveHeaders: true,
-    allowCache: false
+    allowCache: false,
+    rateLimit
   });
 }

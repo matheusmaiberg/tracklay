@@ -53,6 +53,15 @@ export async function handleHealthCheck(request, rateLimit) {
 
     const response = jsonResponse(health);
     response.headers.set('Cache-Control', 'no-store');
+
+    // Rate limit headers já foram adicionados no health check metrics
+    // Mas vamos garantir que estejam na response também
+    if (rateLimit) {
+      response.headers.set('X-RateLimit-Limit', rateLimit.limit.toString());
+      response.headers.set('X-RateLimit-Remaining', rateLimit.remaining.toString());
+      response.headers.set('X-RateLimit-Reset', new Date(rateLimit.resetAt).toISOString());
+    }
+
     return response;
 
   } catch (error) {

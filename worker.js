@@ -72,18 +72,10 @@ async function handleRequest(request) {
     }
 
     // Roteamento (passar rateLimit para evitar chamada duplicada no health check)
-    let response = await Router.route(request, rateLimit);
+    const response = await Router.route(request, rateLimit);
 
-    // Criar nova Response com headers adicionais (headers são imutáveis)
-    response = new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: new Headers(response.headers)
-    });
-
-    response.headers.set(HEADERS.X_RATELIMIT_LIMIT, rateLimit.limit.toString());
-    response.headers.set(HEADERS.X_RATELIMIT_REMAINING, rateLimit.remaining.toString());
-    response.headers.set(HEADERS.X_RATELIMIT_RESET, new Date(rateLimit.resetAt).toISOString());
+    // Rate limit headers são adicionados diretamente em buildResponse
+    // Não é necessário clonar a response
 
     // Registrar métricas
     const duration = Date.now() - startTime;

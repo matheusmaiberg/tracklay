@@ -27,7 +27,7 @@ import { HTTP_STATUS } from '../utils/constants.js';
 import { errorResponse } from '../utils/response.js';
 
 export async function proxyRequest(targetUrl, request, options = {}) {
-  const { preserveHeaders = false, allowCache = false } = options;
+  const { preserveHeaders = false, allowCache = false, rateLimit = null } = options;
 
   try {
     // Obter cache key
@@ -45,7 +45,8 @@ export async function proxyRequest(targetUrl, request, options = {}) {
 
         // Build response com headers CORS/security
         const response = buildResponse(cached, request, {
-          cacheStatus: 'HIT'
+          cacheStatus: 'HIT',
+          rateLimit
         });
 
         return response;
@@ -88,7 +89,8 @@ export async function proxyRequest(targetUrl, request, options = {}) {
 
     // Build response com CORS/security headers
     const modifiedResponse = buildResponse(response, request, {
-      cacheStatus: 'MISS'
+      cacheStatus: 'MISS',
+      rateLimit
     });
 
     // Adicionar Cache-Control header

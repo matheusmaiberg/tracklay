@@ -34,7 +34,7 @@ export class Router {
 
     // OPTIONS request
     if (request.method === 'OPTIONS') {
-      return handleOptions(request);
+      return handleOptions(request, rateLimit);
     }
 
     // Health check
@@ -45,19 +45,19 @@ export class Router {
     // Check if path is in endpoint map (includes both obfuscated and legacy endpoints)
     const endpointMap = getEndpointMap();
     if (endpointMap[pathname]) {
-      return handleEndpointProxy(request);
+      return handleEndpointProxy(request, rateLimit);
     }
 
     // Check if path is in script map (includes both obfuscated and legacy scripts)
     const scriptMap = getScriptMap();
     if (scriptMap[pathname]) {
-      return handleScriptProxy(request);
+      return handleScriptProxy(request, rateLimit);
     }
 
     // Legacy: Script proxy routes (for paths not in script map)
     // This catches any custom paths under /cdn/, /assets/, /static/
     if (pathname.startsWith('/cdn/') || pathname.startsWith('/assets/') || pathname.startsWith('/static/')) {
-      return handleScriptProxy(request);
+      return handleScriptProxy(request, rateLimit);
     }
 
     // Default 404
