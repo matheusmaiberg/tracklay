@@ -191,6 +191,67 @@ DEBUG_HEADERS=true
 
 See [docs/OBFUSCATION.md](docs/OBFUSCATION.md) for security details.
 
+### UUID Rotation (Maximum Security)
+
+**Tracklay now supports automatic UUID rotation** to prevent permanent blacklisting.
+
+**How it works:**
+- UUIDs rotate weekly (default: 7 days)
+- Time-based deterministic generation (all workers synchronized)
+- No persistent storage needed (Cloudflare Workers compatible)
+- Ad-blockers cannot blacklist permanently
+
+**Configuration:**
+
+```bash
+# Rotation enabled (default - RECOMMENDED)
+ENDPOINTS_UUID_ROTATION=false
+
+# Rotation disabled (simpler but less secure)
+ENDPOINTS_UUID_ROTATION=true
+FACEBOOK_ENDPOINT_ID=your-fixed-uuid
+GOOGLE_ENDPOINT_ID=your-fixed-uuid
+```
+
+**Shopify Integration Strategies:**
+
+1. **Metafields + n8n (RECOMMENDED)** - Server-side fetch, auto-update
+2. **Fixed UUIDs** - Manual rotation every 1-3 months
+3. **Client-side fetch** - NOT recommended (exposes secret)
+
+See [docs/SHOPIFY-INTEGRATION.md](docs/SHOPIFY-INTEGRATION.md) for complete integration guide.
+
+**Fetching current UUIDs:**
+
+```bash
+# Authenticated endpoint (query string token)
+curl 'https://cdn.yourstore.com/endpoints?token=your-secret'
+
+# Response:
+{
+  "facebook": {
+    "uuid": "a3f9c2e1b8d4",
+    "script": "/cdn/f/a3f9c2e1b8d4",
+    "endpoint": "/cdn/f/a3f9c2e1b8d4"
+  },
+  "google": {
+    "uuid": "b7e4d3f2c9a1",
+    "script": "/cdn/g/b7e4d3f2c9a1",
+    "endpoint": "/cdn/g/b7e4d3f2c9a1"
+  },
+  "rotation": {
+    "enabled": true,
+    "interval": 604800000
+  },
+  "expiresAt": "2026-02-01T00:00:00Z"
+}
+```
+
+**Security:**
+- Never expose `ENDPOINTS_SECRET` in client-side code
+- Use server-side integration (n8n/GitHub Actions)
+- UUIDs expire automatically (7-day max lifespan)
+
 ## Deploy Options
 
 **Option 1: Manual**
