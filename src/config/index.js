@@ -129,7 +129,15 @@ export let CONFIG = {
   // Log level for debugging and monitoring
   // Options: 'debug', 'info', 'warn', 'error'
   // Can be set via environment variable: LOG_LEVEL
-  LOG_LEVEL: 'info'
+  LOG_LEVEL: 'info',
+
+  // ============= DEBUG HEADERS =============
+  // Enable debug headers in responses (X-Script-Key, X-Script-Hash, X-Cache-Status, etc.)
+  // WARNING: Debug headers expose internal implementation details
+  // PRODUCTION: Set to false for maximum anti-detection obfuscation
+  // DEVELOPMENT: Set to true for debugging and monitoring
+  // Can be set via environment variable: DEBUG_HEADERS (true/false)
+  DEBUG_HEADERS: false
 };
 
 /**
@@ -182,5 +190,10 @@ export function initConfig(env = {}) {
   // Logging
   if (env.LOG_LEVEL) {
     CONFIG.LOG_LEVEL = env.LOG_LEVEL;
+  }
+
+  // Debug headers (parse boolean)
+  if (env.DEBUG_HEADERS !== undefined) {
+    CONFIG.DEBUG_HEADERS = env.DEBUG_HEADERS === 'true' || env.DEBUG_HEADERS === true;
   }
 }
