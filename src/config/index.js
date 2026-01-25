@@ -100,11 +100,6 @@ export let CONFIG = {
   // Can be set via environment variable: MAX_REQUEST_SIZE
   MAX_REQUEST_SIZE: 1048576, // 1MB (1048576 bytes)
 
-  // ============= CDN PATHS =============
-  // Path variations for proxy (anti-detection against ad-blockers)
-  // Can be set via environment variable: CDN_PATHS (comma-separated)
-  CDN_PATHS: ['/cdn/', '/assets/', '/static/'],
-
   // ============= OBFUSCATION CONFIGURATION =============
   // UUID-based obfuscated endpoints for anti-ad-blocker detection
   // Format: /cdn/{provider}/{uuid}.js
@@ -188,11 +183,6 @@ export function initConfig(env = {}) {
     if (!isNaN(parsed) && parsed > 0) {
       CONFIG.MAX_REQUEST_SIZE = parsed;
     }
-  }
-
-  // CDN Paths
-  if (env.CDN_PATHS) {
-    CONFIG.CDN_PATHS = env.CDN_PATHS.split(',').map(s => s.trim());
   }
 
   // Obfuscation IDs
