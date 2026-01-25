@@ -22,15 +22,15 @@ import { CONFIG } from '../config/index.js';
  * @returns {boolean} - true se deve cachear
  */
 export function shouldCache(url, request) {
+  // OTIMIZAÇÃO: early return para scripts .js (caso comum)
+  if (url.pathname.endsWith('.js')) {
+    return true;
+  }
+
   // Nunca cachear endpoints de tracking
   const trackingEndpoints = ['/g/collect', '/tr', '/collect'];
   if (trackingEndpoints.some(endpoint => url.pathname.includes(endpoint))) {
     return false;
-  }
-
-  // Sempre cachear scripts (.js)
-  if (url.pathname.endsWith('.js')) {
-    return true;
   }
 
   return false;
