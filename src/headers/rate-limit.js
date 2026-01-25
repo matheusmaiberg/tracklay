@@ -5,6 +5,7 @@
 // - addRateLimitHeaders(headers, rateLimit) - Adds rate limit headers to a Headers object
 
 import { HEADERS } from '../utils/constants.js';
+import { timestampToISO } from '../utils/time.js';
 
 /**
  * Adds rate limit headers to a Headers object
@@ -19,5 +20,5 @@ export function addRateLimitHeaders(headers, rateLimit) {
 
   headers.set(HEADERS.X_RATELIMIT_LIMIT, rateLimit.limit.toString());
   headers.set(HEADERS.X_RATELIMIT_REMAINING, rateLimit.remaining.toString());
-  headers.set(HEADERS.X_RATELIMIT_RESET, new Date(rateLimit.resetAt).toISOString());
+  headers.set(HEADERS.X_RATELIMIT_RESET, timestampToISO(rateLimit.resetAt));
 }

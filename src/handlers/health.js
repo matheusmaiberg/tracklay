@@ -21,6 +21,7 @@ import { CONFIG } from '../config/index.js';
 import { jsonResponse } from '../utils/response.js';
 import { Logger } from '../core/logger.js';
 import { addRateLimitHeaders } from '../headers/rate-limit.js';
+import { getCurrentDateISO, timestampToISO } from '../utils/time.js';
 
 // ============= HEALTH CHECK HANDLER =============
 export async function handleHealthCheck(request, rateLimit) {
@@ -30,7 +31,7 @@ export async function handleHealthCheck(request, rateLimit) {
     const health = {
       status: 'ok',
       timestamp: Date.now(),
-      date: new Date().toISOString(),
+      date: getCurrentDateISO(),
       version: '2.0.0-factory'
     };
 
@@ -42,7 +43,7 @@ export async function handleHealthCheck(request, rateLimit) {
         rateLimit: {
           remaining: rateLimit?.remaining ?? CONFIG.RATE_LIMIT_REQUESTS,
           limit: rateLimit?.limit ?? CONFIG.RATE_LIMIT_REQUESTS,
-          resetAt: rateLimit?.resetAt ? new Date(rateLimit.resetAt).toISOString() : new Date().toISOString()
+          resetAt: rateLimit?.resetAt ? timestampToISO(rateLimit.resetAt) : getCurrentDateISO()
         },
         config: {
           cacheTTL: CONFIG.CACHE_TTL,

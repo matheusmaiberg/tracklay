@@ -11,6 +11,7 @@
 // - createHashResponse() - Creates hash Response
 
 import { CONFIG } from '../config/index.js';
+import { getCurrentDateISO } from '../utils/time.js';
 
 /**
  * Creates a script Response object with proper cache headers
@@ -37,7 +38,7 @@ export function createScriptResponse(content, scriptKey, hash, options) {
   if (CONFIG.DEBUG_HEADERS) {
     headers['X-Script-Key'] = scriptKey;
     headers['X-Script-Hash'] = hash;
-    headers[`X-Cache-${updateType === 'updated' ? 'Updated' : 'Refreshed'}`] = new Date().toISOString();
+    headers[`X-Cache-${updateType === 'updated' ? 'Updated' : 'Refreshed'}`] = getCurrentDateISO();
 
     if (isStale) {
       headers['X-Cache-Type'] = 'stale';
