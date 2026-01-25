@@ -18,6 +18,8 @@
 // - script:stale:fbevents - Fallback stale (7 dias)
 // - script:stale:gtm - Fallback stale (7 dias)
 // - script:stale:gtag - Fallback stale (7 dias)
+
+import { generateSHA256 } from '../utils/crypto.js';
 // - script:hash:fbevents - SHA-256 hash do script
 // - script:hash:gtm - SHA-256 hash do script
 // - script:hash:gtag - SHA-256 hash do script
@@ -130,7 +132,7 @@ export async function fetchAndCompareScript(url, scriptKey) {
     const scriptContent = await response.text();
 
     // Calcular hash SHA-256
-    const newHash = await generateHash(scriptContent);
+    const newHash = await generateSHA256(scriptContent);
 
     // Obter hash anterior do cache
     const hashKey = `${HASH_PREFIX}${scriptKey}`;
@@ -251,20 +253,6 @@ export async function fetchAndCompareScript(url, scriptKey) {
 }
 
 // ============= FUNÇÕES AUXILIARES =============
-
-/**
- * Gera hash SHA-256 de uma string
- * @param {string} text - Texto para hash
- * @returns {Promise<string>} - Hash em hexadecimal
- */
-async function generateHash(text) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
-}
 
 /**
  * Identifica o script key a partir da URL
