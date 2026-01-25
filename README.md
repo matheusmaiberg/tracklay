@@ -102,8 +102,40 @@ export const CONFIG = {
   ALLOWED_ORIGINS: [], // Auto-detect (recommended)
   RATE_LIMIT_REQUESTS: 100,
   CACHE_TTL: 3600,
+  DEBUG_HEADERS: false, // Production-safe default
 };
 ```
+
+### Debug Headers (Development Mode)
+
+**⚠️ SECURITY WARNING: Never enable DEBUG_HEADERS in production!**
+
+Debug headers expose internal state and can be used for ad-blocker fingerprinting.
+
+**What DEBUG_HEADERS controls:**
+- `X-Script-Key`: Which script is being served (fbevents/gtm/gtag)
+- `X-Script-Hash`: SHA-256 hash of script content
+- `X-Cache-Updated/Refreshed`: Timestamp of cache updates
+- `X-Cache-Type`: Cache state (stale/fresh)
+- `X-Cache-Status`: Cache hit/miss status
+- Health endpoint: UUID, metrics, Cloudflare info
+
+**Usage:**
+```bash
+# Production (default) - Maximum obfuscation
+DEBUG_HEADERS=false
+
+# Development/Staging - Enable debug headers
+DEBUG_HEADERS=true
+```
+
+**Why disable in production?**
+- Ad-blockers can fingerprint your proxy via custom headers
+- Headers like `X-Script-Key` reveal which tracking script is being served
+- Unique headers are uncommon for legitimate Google/Facebook scripts
+- Increases detection rate from <10% to 50%+
+
+See [docs/OBFUSCATION.md](docs/OBFUSCATION.md) for security details.
 
 ## Deploy Options
 
