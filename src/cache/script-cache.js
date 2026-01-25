@@ -30,6 +30,7 @@ import { generateSHA256 } from '../utils/crypto.js';
 import { Logger } from '../core/logger.js';
 import { CacheManager } from '../core/cache.js';
 import { fetchWithTimeout } from '../core/fetch.js';
+import { createScriptResponse, createHashResponse } from './response-factory.js';
 
 // ============= CONFIGURAÇÃO DE SCRIPTS =============
 
@@ -44,6 +45,45 @@ const STALE_PREFIX = 'script:stale:';
 const HASH_PREFIX = 'script:hash:';
 const CACHE_TTL = 86400; // 24 horas em segundos
 const STALE_TTL = 604800; // 7 dias em segundos (fallback para alta disponibilidade)
+
+// ============= FUNÇÕES PRIVADAS =============
+
+/**
+ * Updates all cache layers (fresh, stale, hash) for a script
+ * @param {string} content - Script content
+ * @param {string} scriptKey - Script identifier
+ * @param {string} hash - Script hash
+ * @param {string} updateType - 'updated' | 'refreshed'
+ * @returns {Promise<void>}
+ */
+async function updateScriptCache(content, scriptKey, hash, updateType) {
+  // Create cache keys
+  const cacheKey = `${CACHE_PREFIX}${scriptKey}`;
+  const staleKey = `${STALE_PREFIX}${scriptKey}`;
+  const hashKey = `${HASH_PREFIX}${scriptKey}`;
+
+  // Create responses using factory
+  const scriptResponse = createScriptResponse(content, scriptKey, hash, {
+    ttl: CACHE_TTL,
+    updateType,
+    isStale: false
+  });
+
+  const staleResponse = createScriptResponse(content, scriptKey, hash, {
+    ttl: STALE_TTL,
+    updateType,
+    isStale: true
+  });
+
+  const hashResponse = createHashResponse(hash, CACHE_TTL);
+
+  // Store all caches in parallel
+  await Promise.all([
+    CacheManager.put(cacheKey, scriptResponse, CACHE_TTL),
+    CacheManager.put(staleKey, staleResponse, STALE_TTL),
+    CacheManager.put(hashKey, hashResponse, CACHE_TTL)
+  ]);
+}
 
 // ============= FUNÇÕES PÚBLICAS =============
 
@@ -148,47 +188,7 @@ export async function fetchAndCompareScript(url, scriptKey) {
         newHash: newHash.substring(0, 16) + '...'
       });
 
-      // Atualizar conteúdo do script no cache (fresh - 24h)
-      const scriptResponse = new Response(scriptContent, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/javascript; charset=utf-8',
-          'Cache-Control': `public, max-age=${CACHE_TTL}`,
-          'X-Script-Key': scriptKey,
-          'X-Script-Hash': newHash,
-          'X-Cache-Updated': new Date().toISOString()
-        }
-      });
-
-      const cacheKey = `${CACHE_PREFIX}${scriptKey}`;
-      await CacheManager.put(cacheKey, scriptResponse, CACHE_TTL);
-
-      // Atualizar cache stale (fallback - 7d)
-      const staleResponse = new Response(scriptContent, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/javascript; charset=utf-8',
-          'Cache-Control': `public, max-age=${STALE_TTL}`,
-          'X-Script-Key': scriptKey,
-          'X-Script-Hash': newHash,
-          'X-Cache-Updated': new Date().toISOString(),
-          'X-Cache-Type': 'stale'
-        }
-      });
-
-      const staleKey = `${STALE_PREFIX}${scriptKey}`;
-      await CacheManager.put(staleKey, staleResponse, STALE_TTL);
-
-      // Atualizar hash no cache
-      const hashResponse = new Response(newHash, {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/plain',
-          'Cache-Control': `public, max-age=${CACHE_TTL}`
-        }
-      });
-
-      await CacheManager.put(hashKey, hashResponse, CACHE_TTL);
+      await updateScriptCache(scriptContent, scriptKey, newHash, 'updated');
 
       Logger.info('Script cache updated successfully (fresh + stale)', { scriptKey });
       return { updated: true };
@@ -196,47 +196,7 @@ export async function fetchAndCompareScript(url, scriptKey) {
     } else {
       Logger.info('Script unchanged, refreshing cache TTL', { scriptKey });
 
-      // Script não mudou, mas renovar TTL do cache (fresh - 24h)
-      const scriptResponse = new Response(scriptContent, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/javascript; charset=utf-8',
-          'Cache-Control': `public, max-age=${CACHE_TTL}`,
-          'X-Script-Key': scriptKey,
-          'X-Script-Hash': newHash,
-          'X-Cache-Refreshed': new Date().toISOString()
-        }
-      });
-
-      const cacheKey = `${CACHE_PREFIX}${scriptKey}`;
-      await CacheManager.put(cacheKey, scriptResponse, CACHE_TTL);
-
-      // Renovar cache stale também (fallback - 7d)
-      const staleResponse = new Response(scriptContent, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/javascript; charset=utf-8',
-          'Cache-Control': `public, max-age=${STALE_TTL}`,
-          'X-Script-Key': scriptKey,
-          'X-Script-Hash': newHash,
-          'X-Cache-Refreshed': new Date().toISOString(),
-          'X-Cache-Type': 'stale'
-        }
-      });
-
-      const staleKey = `${STALE_PREFIX}${scriptKey}`;
-      await CacheManager.put(staleKey, staleResponse, STALE_TTL);
-
-      // Renovar hash também
-      const hashResponse = new Response(newHash, {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/plain',
-          'Cache-Control': `public, max-age=${CACHE_TTL}`
-        }
-      });
-
-      await CacheManager.put(hashKey, hashResponse, CACHE_TTL);
+      await updateScriptCache(scriptContent, scriptKey, newHash, 'refreshed');
 
       return { updated: false };
     }
