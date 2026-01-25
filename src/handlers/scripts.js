@@ -16,6 +16,7 @@ import { proxyRequest } from '../proxy/index.js';
 import { getScriptTarget } from '../routing/mapping.js';
 import { errorResponse } from '../utils/response.js';
 import { HTTP_STATUS } from '../utils/constants.js';
+import { Logger } from '../core/logger.js';
 
 /**
  * Handle script proxy requests
@@ -46,6 +47,10 @@ export async function handleScriptProxy(request, rateLimit = null) {
     });
 
   } catch (error) {
+    Logger.error('Script proxy failed', {
+      path: url.pathname,
+      error: error.message
+    });
     return errorResponse('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR);
   }
 }
