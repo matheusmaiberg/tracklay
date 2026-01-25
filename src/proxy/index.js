@@ -34,8 +34,11 @@ export async function proxyRequest(targetUrl, request, options = {}) {
     const cacheKey = getCacheKey(targetUrl);
 
     // Verificar cache se permitido
+    // OTIMIZAÇÃO: calcular shouldCache uma vez e reusar
     const targetUrlObj = new URL(targetUrl);
-    if (allowCache && shouldCache(targetUrlObj, request)) {
+    const canCache = allowCache && shouldCache(targetUrlObj, request);
+
+    if (canCache) {
       const cached = await CacheManager.get(cacheKey);
       if (cached) {
         Logger.debug('Cache hit', { url: targetUrl });
@@ -90,14 +93,14 @@ export async function proxyRequest(targetUrl, request, options = {}) {
 
     // Adicionar Cache-Control header
     const cacheTTL = getCacheTTL(targetUrlObj, request);
-    if (allowCache && shouldCache(targetUrlObj, request)) {
+    if (canCache) {
       modifiedResponse.headers.set('Cache-Control', `public, max-age=${cacheTTL}`);
     } else {
       modifiedResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 
     // Salvar em cache se permitido
-    if (allowCache && shouldCache(targetUrlObj, request)) {
+    if (canCache) {
       try {
         const responseToCache = modifiedResponse.clone();
         await CacheManager.put(cacheKey, responseToCache, cacheTTL);
