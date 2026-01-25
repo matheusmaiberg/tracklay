@@ -15,6 +15,7 @@ import { CONFIG } from '../config/index.js';
 import { generateEndpointUUID } from '../core/uuid.js';
 import { errorResponse, jsonResponse } from '../utils/response.js';
 import { Logger } from '../core/logger.js';
+import { getCurrentDateISO, getNextRotationISO } from '../utils/time.js';
 
 /**
  * Handle authenticated endpoints info request
@@ -83,10 +84,7 @@ export async function handleEndpointsInfo(request) {
   // Calculate expiration (only relevant if rotation enabled)
   let expiresAt = null;
   if (CONFIG.ENDPOINTS_UUID_ROTATION === false) {
-    const now = Date.now();
-    const rotationWindow = CONFIG.UUID_SALT_ROTATION;
-    const nextRotation = Math.ceil(now / rotationWindow) * rotationWindow;
-    expiresAt = new Date(nextRotation).toISOString();
+    expiresAt = getNextRotationISO(Date.now(), CONFIG.UUID_SALT_ROTATION);
   }
 
   // Build response payload
@@ -105,8 +103,8 @@ export async function handleEndpointsInfo(request) {
       enabled: CONFIG.ENDPOINTS_UUID_ROTATION === false,
       interval: CONFIG.UUID_SALT_ROTATION
     },
-    expiresAt: expiresAt,
-    generatedAt: new Date().toISOString()
+    expiresAt,
+    generatedAt: getCurrentDateISO()
   };
 
   Logger.info('Endpoints fetched successfully', {
