@@ -17,23 +17,53 @@ import { CONFIG } from '../config/index.js';
 
 /**
  * Determines if a URL should be cached
- * @param {URL} url - URL object from request
+ *
+ * ULTRA-AGGRESSIVE MODE:
+ * Scripts and endpoints share same path (no suffixes).
+ * Differentiation strategy:
+ * - Facebook: POST = tracking (never cache), GET = script (cache)
+ * - Google: Query params differentiate (v2.x breaking change)
+ *
+ * CRITICAL: GA4/GTM uses GET for BOTH scripts AND tracking events!
+ * We MUST detect tracking hits by query parameters, not HTTP method.
+ *
  * @param {Request} request - Request object
  * @returns {boolean} - true if should cache
  */
-export function shouldCache(url, request) {
-  // OPTIMIZATION: early return for .js scripts (common case)
-  if (url.pathname.endsWith('.js')) {
-    return true;
-  }
-
-  // Never cache tracking endpoints
-  const trackingEndpoints = ['/g/collect', '/tr', '/collect'];
-  if (trackingEndpoints.some(endpoint => url.pathname.includes(endpoint))) {
+export function shouldCache(request) {
+  // Never cache non-GET requests (POST/PUT/DELETE)
+  // This handles Facebook tracking (POST method)
+  if (request.method !== 'GET') {
     return false;
   }
 
-  return false;
+  const url = new URL(request.url);
+
+  // Health and options endpoints (never cache)
+  if (url.pathname === '/health' || url.pathname === '/options') {
+    return false;
+  }
+
+  // CRITICAL FIX: Detect GA4 tracking hits by query parameters
+  // GA4 tracking events include these params:
+  // - v=2 (protocol version)
+  // - tid= (tracking ID, e.g., tid=G-XXXXX)
+  // - _p= (page hit counter)
+  //
+  // These indicate tracking events that must NEVER be cached.
+  // Script loading uses: c= (container alias) or id= (container ID)
+  const search = url.search;
+  const isTrackingHit = search.includes('v=2') ||
+                        search.includes('tid=') ||
+                        search.includes('_p=');
+
+  if (isTrackingHit) {
+    return false; // Never cache tracking events
+  }
+
+  // All other GET requests to UUID paths are scripts (cacheable)
+  // Pattern: /cdn/f/{UUID} or /cdn/g/{UUID}?c=alias
+  return true;
 }
 
 /**
@@ -47,12 +77,18 @@ export function getCacheKey(targetUrl) {
 
 /**
  * Returns cache TTL for a URL
- * @param {URL} url - URL object from request
+ *
+ * ULTRA-AGGRESSIVE MODE:
+ * No .js suffix anymore, so we can't rely on file extension.
+ * Use CONFIG.CACHE_TTL for all cacheable requests.
+ *
+ * @param {Request} request - Request object
  * @returns {number} - TTL in seconds
  */
-export function getCacheTTL(url) {
-  // Scripts: use configured CACHE_TTL
-  if (url.pathname.endsWith('.js')) {
+export function getCacheTTL(request) {
+  // If shouldCache returned true, use configured CACHE_TTL
+  // This covers all script loading requests (GET without tracking params)
+  if (shouldCache(request)) {
     return CONFIG.CACHE_TTL;
   }
 
