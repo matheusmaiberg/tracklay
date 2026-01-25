@@ -4,9 +4,10 @@
 // RESPONSIBILITY:
 // - Exportar SCRIPT_MAP: { path → targetUrl }
 // - Exportar ENDPOINT_MAP: { path → targetUrl }
-// - Suportar múltiplos paths (/cdn/, /assets/, /static/)
+// - ULTRA-AGGRESSIVE: Scripts and endpoints share same path (no suffixes)
 
 import { CONFIG } from '../config/index.js';
+import { deobfuscateQuery } from '../utils/query-obfuscation.js';
 
 // ============= CACHE FOR MEMOIZATION =============
 // Cache the maps to avoid rebuilding them on every request (1-3ms gain)
@@ -21,8 +22,8 @@ let endpointMapCache = null;
 // - Fallback (Legacy): /cdn/fbevents.js, /cdn/gtm.js (for backward compatibility, but DETECTABLE)
 
 /**
- * Get script mappings with obfuscated paths
- * Uses configured UUIDs from CONFIG for maximum anti-detection
+ * Get script mappings with ultra-aggressive obfuscation (no suffixes)
+ * Scripts and endpoints share same path - differentiated by query string or HTTP method
  * Memoized for performance (1-3ms improvement)
  * @returns {Object} Script path to target URL mapping
  */
@@ -32,32 +33,31 @@ export function getScriptMap() {
   }
 
   scriptMapCache = {
-    // ============= OBFUSCATED SCRIPTS (RECOMMENDED) =============
-    // Facebook Events - Obfuscated UUID-based script
-    // Format: /cdn/f/{FACEBOOK_ENDPOINT_ID}-script.js
-    [`/cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}-script.js`]: 'https://connect.facebook.net/en_US/fbevents.js',
+    // ============= ULTRA-OBFUSCATED SCRIPTS (NO SUFFIXES) =============
+    // Facebook Events - Pure UUID (no suffix)
+    // Format: /cdn/f/{UUID}
+    // NOTE: Same path as endpoint - differentiated by HTTP method
+    //       GET = script loading, POST = tracking event
+    [`/cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}`]: 'https://connect.facebook.net/en_US/fbevents.js',
 
-    // Google Tag Manager - Obfuscated UUID-based script
-    // Format: /cdn/g/{GOOGLE_ENDPOINT_ID}-gtm.js
-    [`/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}-gtm.js`]: 'https://www.googletagmanager.com/gtm.js',
+    // Google Tag Manager & GTag - Pure UUID + obfuscated query
+    // Format: /cdn/g/{UUID}?c=alias
+    // NOTE: Same path for GTM and GTag - differentiated by query string
+    //       Query with c= or id= = script loading (cacheable)
+    //       Query with v=2, tid=, _p= = tracking event (never cache)
+    [`/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}`]: 'https://www.googletagmanager.com/gtm.js'
 
-    // Google Tag (gtag.js) - Obfuscated UUID-based script
-    // Format: /cdn/g/{GOOGLE_ENDPOINT_ID}-tag.js
-    [`/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}-tag.js`]: 'https://www.googletagmanager.com/gtag/js'
-
-    // ============= REMOVED 2026-01-25: LEGACY SCRIPTS (v3.0.0 BREAKING CHANGE) =============
-    // BREAKING CHANGE: All legacy detectable routes have been removed in v3.0.0
+    // ============= REMOVED 2026-01-25: ALL SUFFIXES (v3.0.0 BREAKING CHANGE) =============
+    // BREAKING CHANGE: Removed ALL detectable suffixes for maximum obfuscation
     // See: docs/MIGRATION-V3.md for migration guide
     //
-    // REMOVED: '/cdn/fbevents.js' → 'https://connect.facebook.net/en_US/fbevents.js'
-    // REMOVED: '/cdn/gtm.js' → 'https://www.googletagmanager.com/gtm.js'
-    // REMOVED: '/cdn/gtag.js' → 'https://www.googletagmanager.com/gtag/js'
+    // REMOVED: /cdn/f/{UUID}-script.js (suffix '-script' detectable)
+    // REMOVED: /cdn/g/{UUID}-gtm.js (suffix '-gtm' detectable)
+    // REMOVED: /cdn/g/{UUID}-tag.js (suffix '-tag' detectable)
     //
-    // REMOVED: Alternative paths (also detectable)
-    // REMOVED: '/assets/fbevents.js' → 'https://connect.facebook.net/en_US/fbevents.js'
-    // REMOVED: '/assets/gtm.js' → 'https://www.googletagmanager.com/gtm.js'
-    // REMOVED: '/static/fbevents.js' → 'https://connect.facebook.net/en_US/fbevents.js'
-    // REMOVED: '/static/gtm.js' → 'https://www.googletagmanager.com/gtm.js'
+    // REMOVED: Legacy routes
+    // REMOVED: /cdn/fbevents.js, /cdn/gtm.js, /cdn/gtag.js
+    // REMOVED: /assets/*, /static/* variants
   };
 
   return scriptMapCache;
@@ -68,11 +68,11 @@ export const SCRIPT_MAP = getScriptMap();
 
 // ============= ENDPOINT MAPPINGS =============
 // Map proxy endpoints to original tracking URLs
-// Note: GTM endpoints require GTM_SERVER_URL to be configured
+// ULTRA-AGGRESSIVE: Same path as scripts (no suffixes, no .js extension)
 //
-// OBFUSCATION STRATEGY:
-// - Primary (Obfuscated): /cdn/f/{UUID}.js for Facebook, /cdn/g/{UUID}.js for Google
-// - Fallback (Legacy): /tr, /g/collect (for backward compatibility, but DETECTABLE)
+// DIFFERENTIATION STRATEGY:
+// - Facebook: HTTP method (GET = script, POST = tracking)
+// - Google: Query string (c=/id= = script, v=2/tid= = tracking)
 export function getEndpointMap() {
   if (endpointMapCache) {
     return endpointMapCache;
@@ -80,29 +80,31 @@ export function getEndpointMap() {
 
   const map = {};
 
-  // ============= OBFUSCATED ENDPOINTS (RECOMMENDED) =============
-  // Facebook Pixel - Obfuscated UUID-based endpoint
-  // Format: /cdn/f/{FACEBOOK_ENDPOINT_ID}.js
-  // Example: /cdn/f/a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e.js
-  map[`/cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}.js`] = 'https://www.facebook.com/tr';
+  // ============= ULTRA-OBFUSCATED ENDPOINTS (NO SUFFIXES) =============
+  // Facebook Pixel - Same path as script
+  // Format: /cdn/f/{UUID}
+  // NOTE: Facebook uses POST for tracking events, GET for script loading
+  //       This method-based differentiation works reliably for Facebook
+  map[`/cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}`] = 'https://www.facebook.com/tr';
 
-  // Google Analytics - Obfuscated UUID-based endpoint
-  // Format: /cdn/g/{GOOGLE_ENDPOINT_ID}.js
-  // Example: /cdn/g/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f.js
+  // Google Analytics - Same path as script
+  // Format: /cdn/g/{UUID}
+  // NOTE: GA4 uses GET for BOTH scripts and tracking events
+  //       Detection via query string params (v=2, tid=, _p= = tracking)
   if (CONFIG.GTM_SERVER_URL) {
-    map[`/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}.js`] = `${CONFIG.GTM_SERVER_URL}/g/collect`;
-
-    // Additional Google endpoint for JavaScript collection
-    map[`/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}-j.js`] = `${CONFIG.GTM_SERVER_URL}/j/collect`;
+    map[`/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}`] = `${CONFIG.GTM_SERVER_URL}/g/collect`;
   }
 
-  // ============= REMOVED 2026-01-25: LEGACY ENDPOINTS (v3.0.0 BREAKING CHANGE) =============
-  // BREAKING CHANGE: All legacy detectable endpoints have been removed in v3.0.0
+  // ============= REMOVED 2026-01-25: ALL SUFFIXES (v3.0.0 BREAKING CHANGE) =============
+  // BREAKING CHANGE: Removed ALL detectable suffixes and legacy endpoints
   // See: docs/MIGRATION-V3.md for migration guide
   //
-  // REMOVED: map['/tr'] = 'https://www.facebook.com/tr'
-  // REMOVED: map['/g/collect'] = `${CONFIG.GTM_SERVER_URL}/g/collect`
-  // REMOVED: map['/j/collect'] = `${CONFIG.GTM_SERVER_URL}/j/collect`
+  // REMOVED: /cdn/f/{UUID}.js (suffix '.js' detectable)
+  // REMOVED: /cdn/g/{UUID}.js (suffix '.js' detectable)
+  // REMOVED: /cdn/g/{UUID}-j.js (suffix '-j.js' detectable)
+  //
+  // REMOVED: Legacy endpoints
+  // REMOVED: /tr, /g/collect, /j/collect
 
   endpointMapCache = map;
   return endpointMapCache;
@@ -124,10 +126,15 @@ export function invalidateMapCache() {
 // ============= HELPER FUNCTION =============
 /**
  * Get target URL for a script path
- * Handles dynamic query strings for GTM/GTag scripts
+ * Handles query string deobfuscation and dynamic URLs
  *
- * @param {string} path - Request path (e.g., '/cdn/gtm.js')
- * @param {string} search - Query string (e.g., '?id=GTM-XXXX')
+ * ULTRA-AGGRESSIVE MODE:
+ * - Deobfuscates query strings: ?c=abc123 → ?id=GTM-XXXXX
+ * - Supports both Google paths (/cdn/g/{UUID})
+ * - Facebook paths (/cdn/f/{UUID}) don't use query strings
+ *
+ * @param {string} path - Request path (e.g., '/cdn/g/{UUID}')
+ * @param {string} search - Query string (e.g., '?c=abc123' or '?id=GTM-XXXX')
  * @returns {string|null} Target URL or null if not found
  */
 export function getScriptTarget(path, search = '') {
@@ -138,11 +145,16 @@ export function getScriptTarget(path, search = '') {
     return null;
   }
 
-  // For GTM and GTag scripts, append query string
-  // Check for both legacy names and obfuscated paths containing 'gtm' or 'tag'
-  if (path.includes('gtm') || path.includes('gtag') || path.includes('tag.js')) {
-    return `${baseUrl}${search}`;
+  // Deobfuscate query string if container aliases configured
+  // This converts ?c=abc123 to ?id=GTM-XXXXX before forwarding to upstream
+  const deobfuscatedSearch = deobfuscateQuery(search, CONFIG.CONTAINER_ALIASES);
+
+  // For Google scripts (GTM/GTag), append deobfuscated query string
+  // Google paths contain '/g/' prefix
+  if (path.includes('/g/')) {
+    return `${baseUrl}${deobfuscatedSearch}`;
   }
 
+  // For Facebook scripts, no query string needed
   return baseUrl;
 }
