@@ -29,7 +29,7 @@ import { getScriptMap, getEndpointMap } from './mapping.js';
 
 export class Router {
   static route(request, rateLimit = null) {
-    const url = new URL(request.url);
+    const url = request._parsedUrl || new URL(request.url);
     const pathname = url.pathname;
 
     // OPTIONS request

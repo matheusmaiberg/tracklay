@@ -26,7 +26,7 @@ import { HTTP_STATUS } from '../utils/constants.js';
  * @returns {Promise<Response>} Proxied script or 404
  */
 export async function handleScriptProxy(request) {
-  const url = new URL(request.url);
+  const url = request._parsedUrl || new URL(request.url);
 
   try {
     // Get target URL using the script mapping helper

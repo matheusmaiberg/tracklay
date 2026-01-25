@@ -25,7 +25,7 @@ import { HTTP_STATUS } from '../utils/constants.js';
  * @returns {Promise<Response>} Proxied response
  */
 export async function handleEndpointProxy(request) {
-  const url = new URL(request.url);
+  const url = request._parsedUrl || new URL(request.url);
 
   // Get dynamic endpoint map (includes both obfuscated and legacy endpoints)
   // GTM endpoints are only included if GTM_SERVER_URL is configured
