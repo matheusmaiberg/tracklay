@@ -18,10 +18,25 @@ import { CONFIG } from '../config/index.js';
 
 const LEVELS = ['debug', 'info', 'warn', 'error'];
 
+// OTIMIZAÇÃO: cache de timestamp (reusar se <100ms)
+let cachedTimestamp = null;
+let cachedTimestampTime = 0;
+const TIMESTAMP_CACHE_MS = 100;
+
 export class Logger {
   static _shouldLog(level) {
     const configLevel = CONFIG.LOG_LEVEL || 'info';
     return LEVELS.indexOf(level) >= LEVELS.indexOf(configLevel);
+  }
+
+  static _getTimestamp() {
+    const now = Date.now();
+    if (cachedTimestamp && (now - cachedTimestampTime) < TIMESTAMP_CACHE_MS) {
+      return cachedTimestamp;
+    }
+    cachedTimestamp = new Date().toISOString();
+    cachedTimestampTime = now;
+    return cachedTimestamp;
   }
 
   static _log(level, message, data = {}) {
@@ -30,7 +45,7 @@ export class Logger {
     const logEntry = {
       level,
       message,
-      timestamp: new Date().toISOString(),
+      timestamp: this._getTimestamp(),
       ...data
     };
 
