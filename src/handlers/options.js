@@ -12,7 +12,7 @@
 
 import { buildCORSHeaders } from '../headers/cors.js';
 import { addSecurityHeaders } from '../headers/security.js';
-import { HEADERS } from '../utils/constants.js';
+import { addRateLimitHeaders } from '../headers/rate-limit.js';
 
 /**
  * Handle OPTIONS request (CORS preflight)
@@ -26,12 +26,8 @@ export function handleOptions(request, rateLimit = null) {
   // Adicionar headers de segurança
   addSecurityHeaders(headers);
 
-  // Adicionar rate limit headers se fornecidos
-  if (rateLimit) {
-    headers.set(HEADERS.X_RATELIMIT_LIMIT, rateLimit.limit.toString());
-    headers.set(HEADERS.X_RATELIMIT_REMAINING, rateLimit.remaining.toString());
-    headers.set(HEADERS.X_RATELIMIT_RESET, new Date(rateLimit.resetAt).toISOString());
-  }
+  // Adicionar rate limit headers
+  addRateLimitHeaders(headers, rateLimit);
 
   return new Response(null, {
     status: 204,

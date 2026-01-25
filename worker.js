@@ -14,8 +14,9 @@ import { RateLimiter } from './src/core/rate-limiter.js';
 import { handleError } from './src/middleware/error-handler.js';
 import { Metrics } from './src/middleware/metrics.js';
 import { errorResponse } from './src/utils/response.js';
-import { HTTP_STATUS, HEADERS } from './src/utils/constants.js';
+import { HTTP_STATUS } from './src/utils/constants.js';
 import { initConfig, CONFIG } from './src/config/index.js';
+import { addRateLimitHeaders } from './src/headers/rate-limit.js';
 
 // ============= MODERN ES MODULES EXPORT =============
 // Export default handler for ES modules format (recommended)
@@ -72,15 +73,15 @@ async function handleRequest(request) {
 
     if (!rateLimit.allowed) {
       const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+      const headers = new Headers({
+        'Retry-After': retryAfter.toString()
+      });
+
+      addRateLimitHeaders(headers, { ...rateLimit, remaining: 0 });
 
       return new Response('Too Many Requests', {
         status: HTTP_STATUS.TOO_MANY_REQUESTS,
-        headers: {
-          'Retry-After': retryAfter.toString(),
-          [HEADERS.X_RATELIMIT_LIMIT]: rateLimit.limit.toString(),
-          [HEADERS.X_RATELIMIT_REMAINING]: '0',
-          [HEADERS.X_RATELIMIT_RESET]: new Date(rateLimit.resetAt).toISOString(),
-        }
+        headers
       });
     }
 

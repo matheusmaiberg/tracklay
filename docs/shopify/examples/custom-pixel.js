@@ -12,7 +12,11 @@
 
 const CONFIG = {
   GTM_ID: 'GTM-XXXXXXX',
-  PROXY_DOMAIN: 'https://cdn.suevich.com',
+  PROXY: {
+      DOMAIN: 'https://cdn.suevich.com',
+      PATH: '/cdn/',
+      FILE: 'gtm.js',
+  },
   DEBUG: true,
   DEFAULT_CURRENCY: 'EUR'
 };
@@ -51,7 +55,7 @@ const loadGTM = () => {
 
     const script = document.createElement('script');
     script.async = true;
-    script.src = `${CONFIG.PROXY_DOMAIN}/cdn/gtm.js?id=${CONFIG.GTM_ID}`;
+    script.src = `${CONFIG.PROXY_DOMAIN}?id=${CONFIG.GTM_ID}`;
 
     const firstScript = document.getElementsByTagName('script')[0];
     firstScript.parentNode.insertBefore(script, firstScript);

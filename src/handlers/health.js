@@ -20,6 +20,7 @@ import { generateSecureUUID } from '../core/uuid.js';
 import { CONFIG } from '../config/index.js';
 import { jsonResponse } from '../utils/response.js';
 import { Logger } from '../core/logger.js';
+import { addRateLimitHeaders } from '../headers/rate-limit.js';
 
 // ============= HEALTH CHECK HANDLER =============
 export async function handleHealthCheck(request, rateLimit) {
@@ -54,13 +55,8 @@ export async function handleHealthCheck(request, rateLimit) {
     const response = jsonResponse(health);
     response.headers.set('Cache-Control', 'no-store');
 
-    // Rate limit headers já foram adicionados no health check metrics
-    // Mas vamos garantir que estejam na response também
-    if (rateLimit) {
-      response.headers.set('X-RateLimit-Limit', rateLimit.limit.toString());
-      response.headers.set('X-RateLimit-Remaining', rateLimit.remaining.toString());
-      response.headers.set('X-RateLimit-Reset', new Date(rateLimit.resetAt).toISOString());
-    }
+    // Add rate limit headers
+    addRateLimitHeaders(response.headers, rateLimit);
 
     return response;
 
