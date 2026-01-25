@@ -11,12 +11,11 @@
 
 import { Router } from './src/routing/router.js';
 import { RateLimiter } from './src/core/rate-limiter.js';
-import { validateRequest } from './src/middleware/validator.js';
 import { handleError } from './src/middleware/error-handler.js';
 import { Metrics } from './src/middleware/metrics.js';
 import { errorResponse } from './src/utils/response.js';
 import { HTTP_STATUS, HEADERS } from './src/utils/constants.js';
-import { initConfig } from './src/config/index.js';
+import { initConfig, CONFIG } from './src/config/index.js';
 
 // ============= MODERN ES MODULES EXPORT =============
 // Export default handler for ES modules format (recommended)
@@ -61,10 +60,10 @@ async function handleRequest(request) {
     // Registrar request recebido
     Metrics.recordRequest(request);
 
-    // Validar request
-    const validation = validateRequest(request);
-    if (!validation.valid) {
-      return errorResponse(validation.error, validation.status);
+    // Validar request - verificar tamanho
+    const contentLength = request.headers.get('Content-Length');
+    if (contentLength && parseInt(contentLength) > CONFIG.MAX_REQUEST_SIZE) {
+      return errorResponse('Request too large', 413);
     }
 
     // Rate limiting
