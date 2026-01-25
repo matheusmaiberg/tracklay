@@ -6,7 +6,7 @@
 
 name = "tracklay"
 main = "worker.js"
-compatibility_date = "2024-01-01"
+compatibility_date = "2025-12-01"
 
 # ============================================================
 # WORKER SETTINGS
@@ -154,7 +154,16 @@ format = "modules"
 # https://developers.cloudflare.com/workers/platform/compatibility-dates
 
 # Modern features enabled
-compatibility_flags = []
+compatibility_flags = ["nodejs_compat", "streams_enable_constructors"]
+
+# ============================================================
+# SMART PLACEMENT
+# ============================================================
+# Automatically run the Worker in the optimal location closest to backend services
+# Documentation: https://developers.cloudflare.com/workers/configuration/smart-placement/
+
+[placement]
+mode = "smart"
 
 # ============================================================
 # OBSERVABILITY (Optional)
@@ -164,19 +173,19 @@ compatibility_flags = []
 # Documentation: https://developers.cloudflare.com/workers/observability/
 
 [observability]
-enabled = false
-head_sampling_rate = 1
+enabled = true
+head_sampling_rate = 0.1
 
 [observability.logs]
 enabled = true
-head_sampling_rate = 1
+head_sampling_rate = 0.1
 persist = true
 invocation_logs = true
 
 [observability.traces]
-enabled = false
+enabled = true
 persist = true
-head_sampling_rate = 1
+head_sampling_rate = 0.1
 
 # Tail consumers for log streaming
 # Uncomment to enable external log consumers
