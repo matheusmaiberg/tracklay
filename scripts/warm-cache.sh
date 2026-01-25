@@ -62,29 +62,57 @@ warm_script() {
   fi
 }
 
-# ============= MAIN =============
+# ============= OBTER UUIDs =============
 
 echo "============================================="
-echo "CACHE WARMING - Tracklay Worker"
+echo "CACHE WARMING - Tracklay Worker v3.0.0"
 echo "============================================="
+echo ""
+echo "⚠️  BREAKING CHANGE: Legacy routes removed"
+echo "   Only obfuscated UUID-based routes supported"
 echo ""
 echo "Worker URL: $WORKER_URL"
 echo ""
-echo "Warming cache for third-party scripts..."
+
+# Obter UUIDs do config (via Node.js)
+echo "Detecting obfuscated endpoint UUIDs..."
+UUIDS=$(node -e "
+  import('../src/config/index.js').then(({ CONFIG, initConfig }) => {
+    initConfig(process.env);
+    console.log(JSON.stringify({
+      facebook: CONFIG.FACEBOOK_ENDPOINT_ID,
+      google: CONFIG.GOOGLE_ENDPOINT_ID
+    }));
+  });
+" 2>/dev/null)
+
+if [ -z "$UUIDS" ]; then
+  echo "ERROR: Failed to detect UUIDs from config"
+  echo "Make sure src/config/index.js is accessible"
+  exit 1
+fi
+
+FACEBOOK_UUID=$(echo "$UUIDS" | grep -o '"facebook":"[^"]*"' | sed 's/"facebook":"\(.*\)"/\1/')
+GOOGLE_UUID=$(echo "$UUIDS" | grep -o '"google":"[^"]*"' | sed 's/"google":"\(.*\)"/\1/')
+
+echo "  Facebook UUID: $FACEBOOK_UUID"
+echo "  Google UUID:   $GOOGLE_UUID"
+echo ""
+echo "Warming cache for obfuscated scripts..."
 echo ""
 
 # Contador de sucessos
 SUCCESS_COUNT=0
 TOTAL_COUNT=3
 
-# Warm cache para cada script em paralelo
-(warm_script "/cdn/fbevents.js" "Facebook Pixel") &
+# Warm cache para cada script obfuscado em paralelo
+(warm_script "/cdn/f/${FACEBOOK_UUID}-script.js" "Facebook Pixel (obfuscated)") &
 PID_FB=$!
 
-(warm_script "/cdn/gtag.js" "Google Analytics") &
+(warm_script "/cdn/g/${GOOGLE_UUID}-tag.js" "Google Analytics (obfuscated)") &
 PID_GA=$!
 
-(warm_script "/cdn/gtm.js" "Google Tag Manager") &
+(warm_script "/cdn/g/${GOOGLE_UUID}-gtm.js" "Google Tag Manager (obfuscated)") &
 PID_GTM=$!
 
 # Aguardar todos os processos

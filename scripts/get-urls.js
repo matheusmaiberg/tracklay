@@ -13,7 +13,16 @@ const domain = args[0] || 'https://yourstore.com';
 
 console.log('\n╔════════════════════════════════════════════════════════════╗');
 console.log('║  TRACKLAY - OBFUSCATED TRACKING URLS                       ║');
+console.log('║  VERSION 3.0.0 - LEGACY ROUTES REMOVED                     ║');
 console.log('╚════════════════════════════════════════════════════════════╝\n');
+
+console.log('⚠️  BREAKING CHANGE (v3.0.0)\n');
+console.log('   All legacy detectable routes have been REMOVED:');
+console.log('   ❌ /cdn/fbevents.js, /cdn/gtm.js, /cdn/gtag.js');
+console.log('   ❌ /tr, /g/collect, /j/collect');
+console.log('   ❌ /assets/*, /static/* variants\n');
+console.log('   ✅ Only obfuscated UUID-based routes remain');
+console.log('   📚 Migration guide: docs/MIGRATION-V3.md\n');
 
 // Initialize config (reads from environment variables if set)
 initConfig(process.env);
@@ -27,12 +36,6 @@ console.log(`   ${domain}/cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}.js\n`);
 
 console.log('   Obfuscated Script (recommended):');
 console.log(`   ${domain}/cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}-script.js\n`);
-
-console.log('   Legacy Endpoint (detectable by ad-blockers):');
-console.log(`   ${domain}/tr\n`);
-
-console.log('   Legacy Script (detectable by ad-blockers):');
-console.log(`   ${domain}/cdn/fbevents.js\n`);
 
 // Google Analytics URLs
 console.log('🔴 GOOGLE ANALYTICS / TAG MANAGER\n');
@@ -48,18 +51,10 @@ if (CONFIG.GTM_SERVER_URL) {
 
   console.log('   Obfuscated GTag Script (recommended):');
   console.log(`   ${domain}/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}-tag.js?id=G-XXXXX\n`);
-
-  console.log('   Legacy Endpoints (detectable by ad-blockers):');
-  console.log(`   ${domain}/g/collect`);
-  console.log(`   ${domain}/j/collect\n`);
 } else {
   console.log('   ⚠️  GTM_SERVER_URL not configured');
   console.log('   Set GTM_SERVER_URL to enable Google Analytics endpoints\n');
 }
-
-console.log('   Legacy Scripts (detectable by ad-blockers):');
-console.log(`   ${domain}/cdn/gtm.js?id=GTM-XXXXX`);
-console.log(`   ${domain}/cdn/gtag.js?id=G-XXXXX\n`);
 
 // Configuration info
 console.log('⚙️  CONFIGURATION\n');
@@ -88,9 +83,9 @@ console.log('   🔧 Environment setup:    .env.example\n');
 
 console.log('💡 TIPS\n');
 console.log('   • Use obfuscated URLs for maximum ad-blocker bypass');
-console.log('   • Legacy URLs kept for backward compatibility only');
 console.log('   • Rotate UUIDs periodically for best results');
-console.log('   • See docs/OBFUSCATION.md for advanced strategies\n');
+console.log('   • See docs/OBFUSCATION.md for advanced strategies');
+console.log('   • IMPORTANT: Legacy routes no longer supported (v3.0.0+)\n');
 
 // Generate new UUIDs suggestion
 console.log('🔐 GENERATE NEW UUIDS\n');
