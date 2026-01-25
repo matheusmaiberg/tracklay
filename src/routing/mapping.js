@@ -43,22 +43,21 @@ export function getScriptMap() {
 
     // Google Tag (gtag.js) - Obfuscated UUID-based script
     // Format: /cdn/g/{GOOGLE_ENDPOINT_ID}-tag.js
-    [`/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}-tag.js`]: 'https://www.googletagmanager.com/gtag/js',
+    [`/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}-tag.js`]: 'https://www.googletagmanager.com/gtag/js'
 
-    // ============= LEGACY SCRIPTS (BACKWARD COMPATIBILITY - DETECTABLE) =============
-    // WARNING: These filenames are well-known and blocked by ad-blockers
-    // Kept only for backward compatibility
-    // RECOMMENDATION: Migrate to obfuscated scripts above
-    '/cdn/fbevents.js': 'https://connect.facebook.net/en_US/fbevents.js',
-    '/cdn/gtm.js': 'https://www.googletagmanager.com/gtm.js',
-    '/cdn/gtag.js': 'https://www.googletagmanager.com/gtag/js',
-
-    // Alternative paths - same targets (also detectable)
-    '/assets/fbevents.js': 'https://connect.facebook.net/en_US/fbevents.js',
-    '/assets/gtm.js': 'https://www.googletagmanager.com/gtm.js',
-
-    '/static/fbevents.js': 'https://connect.facebook.net/en_US/fbevents.js',
-    '/static/gtm.js': 'https://www.googletagmanager.com/gtm.js'
+    // ============= REMOVED 2026-01-25: LEGACY SCRIPTS (v3.0.0 BREAKING CHANGE) =============
+    // BREAKING CHANGE: All legacy detectable routes have been removed in v3.0.0
+    // See: docs/MIGRATION-V3.md for migration guide
+    //
+    // REMOVED: '/cdn/fbevents.js' → 'https://connect.facebook.net/en_US/fbevents.js'
+    // REMOVED: '/cdn/gtm.js' → 'https://www.googletagmanager.com/gtm.js'
+    // REMOVED: '/cdn/gtag.js' → 'https://www.googletagmanager.com/gtag/js'
+    //
+    // REMOVED: Alternative paths (also detectable)
+    // REMOVED: '/assets/fbevents.js' → 'https://connect.facebook.net/en_US/fbevents.js'
+    // REMOVED: '/assets/gtm.js' → 'https://www.googletagmanager.com/gtm.js'
+    // REMOVED: '/static/fbevents.js' → 'https://connect.facebook.net/en_US/fbevents.js'
+    // REMOVED: '/static/gtm.js' → 'https://www.googletagmanager.com/gtm.js'
   };
 
   return scriptMapCache;
@@ -97,16 +96,13 @@ export function getEndpointMap() {
     map[`/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}-j.js`] = `${CONFIG.GTM_SERVER_URL}/j/collect`;
   }
 
-  // ============= LEGACY ENDPOINTS (BACKWARD COMPATIBILITY - DETECTABLE) =============
-  // WARNING: These paths are easily blocked by ad-blockers
-  // Kept only for backward compatibility with existing implementations
-  // RECOMMENDATION: Migrate to obfuscated endpoints above
-  map['/tr'] = 'https://www.facebook.com/tr';
-
-  if (CONFIG.GTM_SERVER_URL) {
-    map['/g/collect'] = `${CONFIG.GTM_SERVER_URL}/g/collect`;
-    map['/j/collect'] = `${CONFIG.GTM_SERVER_URL}/j/collect`;
-  }
+  // ============= REMOVED 2026-01-25: LEGACY ENDPOINTS (v3.0.0 BREAKING CHANGE) =============
+  // BREAKING CHANGE: All legacy detectable endpoints have been removed in v3.0.0
+  // See: docs/MIGRATION-V3.md for migration guide
+  //
+  // REMOVED: map['/tr'] = 'https://www.facebook.com/tr'
+  // REMOVED: map['/g/collect'] = `${CONFIG.GTM_SERVER_URL}/g/collect`
+  // REMOVED: map['/j/collect'] = `${CONFIG.GTM_SERVER_URL}/j/collect`
 
   endpointMapCache = map;
   return endpointMapCache;
