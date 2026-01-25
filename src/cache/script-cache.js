@@ -1,13 +1,13 @@
 // ============================================================
 // SCRIPT CACHE - INTELLIGENT CACHING FOR THIRD-PARTY SCRIPTS
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - Cache inteligente de scripts de terceiros (fbevents, gtm, gtag)
 // - Atualização automática a cada 12 horas via Cloudflare Cron
 // - Detecção de mudanças via SHA-256 hash comparison
 // - Fallback para fetch normal se cache falhar
 //
-// FUNÇÕES:
+// FUNCTIONS:
 // - getScriptFromCache(scriptKey) - Retorna script do cache ou null
 // - fetchAndCompareScript(url, scriptKey) - Busca, compara hash, atualiza se necessário
 //

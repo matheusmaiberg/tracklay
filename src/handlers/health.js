@@ -1,7 +1,7 @@
 // ============================================================
 // HEALTH CHECK - HEALTH ENDPOINT COM MÉTRICAS
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - handleHealthCheck(request, rateLimit) → Promise<Response>
 // - Retornar JSON com:
 //   - status: 'ok'
@@ -12,7 +12,7 @@
 //   - cloudflare (colo, country, ray)
 // - Cache-Control: no-store
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - handleHealthCheck(request, rateLimit) → Promise<Response>
 // - rateLimit passado do worker.js para evitar chamada duplicada
 

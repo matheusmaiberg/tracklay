@@ -1,7 +1,7 @@
 // ============================================================
 // SECURITY HEADERS - ADD SECURITY HEADERS
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - addSecurityHeaders(headers) → Headers (mutates)
 // - X-Robots-Tag: noindex, nofollow, noarchive
 // - Permissions-Policy: interest-cohort=()
@@ -9,7 +9,7 @@
 // - X-Content-Type-Options: nosniff
 // - X-Request-Id: crypto.randomUUID()
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - addSecurityHeaders(headers) → Headers
 // - getCSPDirectives() → string (helper, opcional)
 

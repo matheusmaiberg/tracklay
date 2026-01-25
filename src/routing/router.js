@@ -1,7 +1,7 @@
 // ============================================================
 // ROUTER - ROUTE MATCHING E DISPATCH
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - Classe Router para roteamento
 // - match(request) → string (nome do handler)
 // - route(request) → Promise<Response>
@@ -17,7 +17,7 @@
 // - Dynamic route matching based on endpoint/script maps
 // - Backward compatible with legacy paths
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - Router.match(request) → string
 // - Router.route(request) → Promise<Response>
 

@@ -1,7 +1,7 @@
 // ============================================================
 // PROXY - FUNÇÃO PRINCIPAL DE PROXY
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - proxyRequest(targetUrl, request, options) → Promise<Response>
 // - options: { preserveHeaders, allowCache }
 // - Verificar cache (se allowCache=true)
@@ -13,7 +13,7 @@
 // - Salvar em cache (se allowCache=true e .js)
 // - Retornar response modificada
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - proxyRequest(targetUrl, request, options) → Promise<Response>
 
 import { Logger } from '../core/logger.js';

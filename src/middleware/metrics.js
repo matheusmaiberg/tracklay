@@ -1,7 +1,7 @@
 // ============================================================
 // METRICS - METRICS COLLECTION
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - Classe Metrics para coletar métricas
 // - record(request, response, duration) → void
 // - recordRequest(request) → void

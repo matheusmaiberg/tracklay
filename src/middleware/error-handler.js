@@ -1,13 +1,13 @@
 // ============================================================
 // ERROR HANDLER - GLOBAL ERROR HANDLING
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - handleError(error, request) → Response
 // - Logar erro com contexto (stack, path, method)
 // - Retornar response apropriada (500, 502, etc)
 // - createErrorResponse(error, status) → Response
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - handleError(error, request) → Response
 // - createErrorResponse(message, status) → Response
 

@@ -1,7 +1,7 @@
 // ============================================================
 // SCHEDULED SCRIPT UPDATES - CLOUDFLARE CRON HANDLER
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - Handler para Cloudflare Cron Triggers (scheduled events)
 // - Atualizar scripts de terceiros a cada 12 horas
 // - Verificar mudanças via SHA-256 hash

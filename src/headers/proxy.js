@@ -1,7 +1,7 @@
 // ============================================================
 // PROXY HEADERS - BUILD HEADERS PARA UPSTREAM
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - buildProxyHeaders(request, preserveHeaders) → Headers
 // - Se preserveHeaders=false: apenas User-Agent, Accept-Encoding
 // - Se preserveHeaders=true: TODOS headers críticos (18+)
@@ -10,7 +10,7 @@
 //   - GTM headers (X-Client-Data, X-Requested-With)
 //   - IP headers (X-Forwarded-For, X-Real-IP)
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - buildProxyHeaders(request, preserveHeaders) → Headers
 // - getCriticalHeaders() → string[] (lista de headers)
 

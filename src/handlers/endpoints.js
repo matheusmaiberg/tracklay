@@ -1,14 +1,14 @@
 // ============================================================
 // ENDPOINT HANDLER - HANDLE ENDPOINT PROXY
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - handleEndpointProxy(request) → Promise<Response>
 // - Buscar endpoint em ENDPOINT_MAP (mapping.js)
 // - Chamar proxyRequest com allowCache=false, preserveHeaders=true
 // - Retornar 404 se endpoint não encontrado
 // - NUNCA cachear (/g/collect, /tr, /j/collect)
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - handleEndpointProxy(request) → Promise<Response>
 
 import { proxyRequest } from '../proxy/index.js';

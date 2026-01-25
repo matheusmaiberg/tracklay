@@ -1,14 +1,14 @@
 // ============================================================
 // LOGGER - LOGGING ESTRUTURADO
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - Classe Logger com métodos debug, info, warn, error
 // - Logging em JSON estruturado
 // - Filtrar por LOG_LEVEL
 // - Adicionar timestamp automático
 // - Suportar contexto adicional (data object)
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - Logger.debug(message, data)
 // - Logger.info(message, data)
 // - Logger.warn(message, data)

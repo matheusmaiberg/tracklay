@@ -1,7 +1,7 @@
 // ============================================================
 // RESPONSE BUILDER - BUILD RESPONSE COM HEADERS
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - buildResponse(upstreamResponse, request, options) → Response
 // - Criar Response com body de upstream
 // - Adicionar CORS headers (buildCORSHeaders)
@@ -11,7 +11,7 @@
 // - Adicionar rate limit headers (se fornecido)
 // - Retornar response modificada
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - buildResponse(upstreamResponse, request, options) → Response
 // - addCacheHeaders(response, cached, ttl) → Response
 

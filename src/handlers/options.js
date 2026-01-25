@@ -1,13 +1,13 @@
 // ============================================================
 // OPTIONS HANDLER - CORS PREFLIGHT
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - handleOptions(request) → Response
 // - Chamar buildCORSHeaders
 // - Chamar addSecurityHeaders
 // - Retornar Response(null, { status: 204, headers })
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - handleOptions(request) → Response
 
 import { buildCORSHeaders } from '../headers/cors.js';

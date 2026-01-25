@@ -1,14 +1,14 @@
 // ============================================================
 // SCRIPT HANDLER - HANDLE SCRIPT PROXY
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - handleScriptProxy(request) → Promise<Response>
 // - Buscar script em SCRIPT_MAP (mapping.js)
 // - Verificar se é UUID path (/cdn/{uuid}.js)
 // - Chamar proxyRequest com allowCache=true
 // - Retornar 404 se script não encontrado
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - handleScriptProxy(request) → Promise<Response>
 // - isUUIDPath(path) → boolean (helper)
 

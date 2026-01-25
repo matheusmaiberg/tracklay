@@ -1,7 +1,7 @@
 // ============================================================
 // MAPPING - URL MAPPINGS (SCRIPTS E ENDPOINTS)
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - Exportar SCRIPT_MAP: { path → targetUrl }
 // - Exportar ENDPOINT_MAP: { path → targetUrl }
 // - Suportar múltiplos paths (/cdn/, /assets/, /static/)

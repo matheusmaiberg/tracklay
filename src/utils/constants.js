@@ -1,7 +1,7 @@
 // ============================================================
 // CONSTANTS - CONSTANTES DO SISTEMA
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - Exportar constantes reutilizáveis
 // - HTTP status codes
 // - Header names

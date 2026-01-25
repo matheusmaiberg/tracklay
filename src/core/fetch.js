@@ -1,14 +1,14 @@
 // ============================================================
 // FETCH - FETCH COM TIMEOUT E RETRY
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - fetchWithTimeout(url, options) → Promise<Response>
 // - Usar AbortController para timeout
 // - Timeout configurável (default: 10s)
 // - Throw Error('Request timeout') se abortar
 // - Retry opcional (fetchWithRetry)
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - fetchWithTimeout(url, options) → Promise<Response>
 // - fetchWithRetry(url, options, maxRetries) → Promise<Response> (opcional)
 

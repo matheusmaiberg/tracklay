@@ -1,14 +1,14 @@
 // ============================================================
 // UUID GENERATOR - UUID SEGURO COM SHA-256
 // ============================================================
-// RESPONSABILIDADE:
+// RESPONSIBILITY:
 // - Gerar UUID seguro usando SHA-256
 // - Rotação semanal (não diária)
 // - Combinar weekNumber + UUID_SECRET
 // - Retornar primeiros 12 caracteres do hash
 // - Fallback para timestamp em caso de erro
 
-// FUNÇÕES:
+// FUNCTIONS:
 // - generateSecureUUID() → Promise<string> (ex: "a3f9c2e1b8d4")
 // - getWeekNumber() → number (helper)
 
