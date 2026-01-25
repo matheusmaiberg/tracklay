@@ -25,11 +25,33 @@ import { shouldCache, getCacheKey, getCacheTTL } from './cache-strategy.js';
 import { CONFIG } from '../config/index.js';
 import { HTTP_STATUS } from '../utils/constants.js';
 import { errorResponse } from '../utils/response.js';
+import { getScriptFromCache, identifyScriptKey } from '../cache/script-cache.js';
 
 export async function proxyRequest(targetUrl, request, options = {}) {
   const { preserveHeaders = false, allowCache = false, rateLimit = null } = options;
 
   try {
+    // OTIMIZAÇÃO: Verificar script cache inteligente primeiro
+    // Economiza ~300ms por não fazer fetch para scripts conhecidos
+    const scriptKey = identifyScriptKey(targetUrl);
+    if (scriptKey) {
+      const cachedScript = await getScriptFromCache(scriptKey);
+      if (cachedScript) {
+        Logger.debug('Script cache hit (intelligent cache)', {
+          scriptKey,
+          url: targetUrl
+        });
+
+        // Build response com headers CORS/security
+        const response = buildResponse(cachedScript, request, {
+          cacheStatus: 'HIT-SCRIPT',
+          rateLimit
+        });
+
+        return response;
+      }
+    }
+
     // Obter cache key
     const cacheKey = getCacheKey(targetUrl);
 
