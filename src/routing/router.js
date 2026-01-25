@@ -7,24 +7,26 @@
 // - route(request) → Promise<Response>
 // - Roteamento:
 //   - OPTIONS → handleOptions
-//   - /health → handleHealthCheck
+//   - /health → handleHealthCheck (público)
+//   - /endpoints → handleEndpointsInfo (autenticado via query string)
 //   - /cdn/*, /assets/*, /static/* → handleScriptProxy OR handleEndpointProxy (dynamic)
 //   - Legacy: /g/collect, /tr, /j/collect → handleEndpointProxy
 //   - default → 404
 //
 // OBFUSCATION UPDATE:
-// - Now supports UUID-based endpoints: /cdn/f/{UUID}.js, /cdn/g/{UUID}.js
+// - Now supports UUID-based endpoints: /cdn/f/{UUID}, /cdn/g/{UUID}
 // - Dynamic route matching based on endpoint/script maps
+// - UUID rotation support (time-based, deterministic)
 // - Backward compatible with legacy paths
 
 // FUNCTIONS:
-// - Router.match(request) → string
-// - Router.route(request) → Promise<Response>
+// - Router.route(request, rateLimit) → Promise<Response>
 
 import { handleOptions } from '../handlers/options.js';
 import { handleHealthCheck } from '../handlers/health.js';
 import { handleScriptProxy } from '../handlers/scripts.js';
 import { handleEndpointProxy } from '../handlers/endpoints.js';
+import { handleEndpointsInfo } from '../handlers/endpoints-info.js';
 import { getScriptMap, getEndpointMap } from './mapping.js';
 
 export class Router {
@@ -40,6 +42,14 @@ export class Router {
     // Health check
     if (pathname === '/health') {
       return handleHealthCheck(request, rateLimit);
+    }
+
+    // Endpoints info (authenticated, returns current UUIDs)
+    // CRITICAL: Never expose this publicly or to clients
+    // Only for server-side Shopify theme/n8n integration
+    // Authentication via query string: ?token=SECRET
+    if (pathname === '/endpoints') {
+      return handleEndpointsInfo(request);
     }
 
     // Check if path is in endpoint map (includes both obfuscated and legacy endpoints)
