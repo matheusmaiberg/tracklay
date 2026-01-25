@@ -295,9 +295,9 @@ Implementação completa do **sistema de obfuscação baseado em UUID** para byp
 
 ## 📞 Suporte
 
-- **Issues:** [GitHub Issues](https://github.com/matheusmaiberg/tracklay/issues)
+- **Issues:** [GitHub Issues](https://github.com/your-github-username/tracklay/issues)
 - **Documentação:** docs/OBFUSCATION.md
-- **Discussões:** [GitHub Discussions](https://github.com/matheusmaiberg/tracklay/discussions)
+- **Discussões:** [GitHub Discussions](https://github.com/your-github-username/tracklay/discussions)
 
 ---
 

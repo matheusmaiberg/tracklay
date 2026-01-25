@@ -563,8 +563,8 @@ touch tests/unit/handlers/meta-capi.test.js
 
 ## Questions?
 
-- Open an [issue](https://github.com/matheusmaiberg/tracklay/issues)
-- Start a [discussion](https://github.com/matheusmaiberg/tracklay/discussions)
+- Open an [issue](https://github.com/your-github-username/tracklay/issues)
+- Start a [discussion](https://github.com/your-github-username/tracklay/discussions)
 - Check existing documentation
 
 ## License

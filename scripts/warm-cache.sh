@@ -11,7 +11,7 @@
 #   ./scripts/warm-cache.sh [WORKER_URL]
 #
 # EXEMPLO:
-#   ./scripts/warm-cache.sh https://tracklay.groufy-aceleradora.workers.dev
+#   ./scripts/warm-cache.sh https://tracklay.your-account.workers.dev
 
 set -e
 
@@ -37,7 +37,7 @@ if [ -z "$WORKER_URL" ]; then
   echo "Usage: $0 <WORKER_URL>"
   echo ""
   echo "Example:"
-  echo "  $0 https://tracklay.groufy-aceleradora.workers.dev"
+  echo "  $0 https://tracklay.seuworker.workers.dev"
   echo ""
   exit 1
 fi

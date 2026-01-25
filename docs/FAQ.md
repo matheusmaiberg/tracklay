@@ -387,14 +387,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 - **Documentation**: [README.md](README.md)
 - **Quick Start**: [QUICK_START.md](QUICK_START.md)
-- **Issues**: [GitHub Issues](https://github.com/matheusmaiberg/tracklay/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/matheusmaiberg/tracklay/discussions)
+- **Issues**: [GitHub Issues](https://github.com/your-github-username/tracklay/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-github-username/tracklay/discussions)
 
 ### How do I report a bug?
 
 Use the bug report template:
 
-1. Go to [Issues](https://github.com/matheusmaiberg/tracklay/issues)
+1. Go to [Issues](https://github.com/your-github-username/tracklay/issues)
 2. Click **New Issue**
 3. Choose **Bug Report**
 4. Fill in details
@@ -403,7 +403,7 @@ Use the bug report template:
 
 Use the feature request template:
 
-1. Go to [Issues](https://github.com/matheusmaiberg/tracklay/issues)
+1. Go to [Issues](https://github.com/your-github-username/tracklay/issues)
 2. Click **New Issue**
 3. Choose **Feature Request**
 4. Describe your idea
@@ -448,4 +448,4 @@ Or use auto-detection (recommended).
 
 **Still have questions?**
 
-Open a [discussion](https://github.com/matheusmaiberg/tracklay/discussions) or [issue](https://github.com/matheusmaiberg/tracklay/issues)!
+Open a [discussion](https://github.com/your-github-username/tracklay/discussions) or [issue](https://github.com/your-github-username/tracklay/issues)!

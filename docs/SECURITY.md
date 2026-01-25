@@ -197,7 +197,7 @@ For security concerns, contact:
 - **Email**: security@yourdomain.com
 - **PGP Key**: [Your PGP key or link]
 
-For general issues, use [GitHub Issues](https://github.com/matheusmaiberg/tracklay/issues).
+For general issues, use [GitHub Issues](https://github.com/your-github-username/tracklay/issues).
 
 ---
 

@@ -15,7 +15,7 @@ Get your Tracklay running in 5 minutes!
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/matheusmaiberg/tracklay.git
+git clone https://github.com/your-github-username/tracklay.git
 cd tracklay
 ```
 
@@ -366,8 +366,8 @@ Just:
 Need help?
 
 - **Documentation**: [README.md](README.md)
-- **Issues**: [GitHub Issues](https://github.com/matheusmaiberg/tracklay/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/matheusmaiberg/tracklay/discussions)
+- **Issues**: [GitHub Issues](https://github.com/your-github-username/tracklay/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-github-username/tracklay/discussions)
 
 ## Checklist
 

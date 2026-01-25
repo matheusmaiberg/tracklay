@@ -23,7 +23,7 @@
 
 ```bash
 # Clone and setup
-git clone https://github.com/matheusmaiberg/tracklay.git
+git clone https://github.com/your-github-username/tracklay.git
 cd tracklay
 npm install
 
@@ -113,7 +113,7 @@ npm run deploy
 ```
 
 **Option 2: One-click**
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/matheusmaiberg/tracklay)
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/your-github-username/tracklay)
 
 **Option 3: Custom domain**
 1. Cloudflare Dashboard → Workers → Domains & Routes
@@ -136,8 +136,8 @@ npm run deploy
 
 ## Support
 
-- [Issues](https://github.com/matheusmaiberg/tracklay/issues)
-- [Discussions](https://github.com/matheusmaiberg/tracklay/discussions)
+- [Issues](https://github.com/your-github-username/tracklay/issues)
+- [Discussions](https://github.com/your-github-username/tracklay/discussions)
 
 ## License
 

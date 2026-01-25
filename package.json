@@ -27,7 +27,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/matheusmaiberg/tracklay.git"
+    "url": "git+https://github.com/your-github-username/tracklay.git"
   },
   "keywords": [
     "shopify",
@@ -63,11 +63,11 @@
   "author": {
     "name": "Your Name",
     "email": "your.email@example.com",
-    "url": "https://github.com/matheusmaiberg"
+    "url": "https://github.com/your-github-username"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/matheusmaiberg/tracklay/issues"
+    "url": "https://github.com/your-github-username/tracklay/issues"
   },
   "homepage": "https://tracklay.app",
   "engines": {
