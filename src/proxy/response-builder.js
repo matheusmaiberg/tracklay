@@ -16,26 +16,20 @@
 // - addCacheHeaders(response, cached, ttl) → Response
 
 import { CONFIG } from '../config/index.js';
-import { buildCORSHeaders } from '../headers/cors.js';
-import { addSecurityHeaders } from '../headers/security.js';
-import { addRateLimitHeaders } from '../headers/rate-limit.js';
+import { buildFullHeaders } from '../factories/headers-factory.js';
 
 export function buildResponse(upstreamResponse, request, options) {
   const response = new Response(upstreamResponse.body, upstreamResponse);
 
-  const corsHeaders = buildCORSHeaders(request);
-  corsHeaders.forEach((value, key) => response.headers.set(key, value));
-
-  addSecurityHeaders(response.headers);
+  // Apply all standard headers (CORS + Security + Rate Limit)
+  const standardHeaders = buildFullHeaders(request, { rateLimit: options.rateLimit });
+  standardHeaders.forEach((value, key) => response.headers.set(key, value));
 
   // Debug header (only in development/staging)
   // Remove in production to prevent ad-blocker fingerprinting
   if (CONFIG.DEBUG_HEADERS) {
     response.headers.set('X-Cache-Status', options.cacheStatus || 'MISS');
   }
-
-  // Add rate limit headers
-  addRateLimitHeaders(response.headers, options.rateLimit);
 
   return response;
 }
