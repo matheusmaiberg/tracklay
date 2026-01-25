@@ -10,6 +10,8 @@
 // - createScriptResponse() - Creates script Response with cache headers
 // - createHashResponse() - Creates hash Response
 
+import { CONFIG } from '../config/index.js';
+
 /**
  * Creates a script Response object with proper cache headers
  * @param {string} content - Script content
@@ -26,14 +28,20 @@ export function createScriptResponse(content, scriptKey, hash, options) {
 
   const headers = {
     'Content-Type': 'application/javascript; charset=utf-8',
-    'Cache-Control': `public, max-age=${ttl}`,
-    'X-Script-Key': scriptKey,
-    'X-Script-Hash': hash,
-    [`X-Cache-${updateType === 'updated' ? 'Updated' : 'Refreshed'}`]: new Date().toISOString()
+    'Cache-Control': `public, max-age=${ttl}`
   };
 
-  if (isStale) {
-    headers['X-Cache-Type'] = 'stale';
+  // Add debug headers only if DEBUG_HEADERS is enabled
+  // IMPORTANT: Debug headers expose internal implementation details
+  // and can be used for fingerprinting. Only enable in development.
+  if (CONFIG.DEBUG_HEADERS) {
+    headers['X-Script-Key'] = scriptKey;
+    headers['X-Script-Hash'] = hash;
+    headers[`X-Cache-${updateType === 'updated' ? 'Updated' : 'Refreshed'}`] = new Date().toISOString();
+
+    if (isStale) {
+      headers['X-Cache-Type'] = 'stale';
+    }
   }
 
   return new Response(content, {
