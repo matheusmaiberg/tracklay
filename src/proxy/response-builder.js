@@ -7,7 +7,7 @@
 // - Adicionar CORS headers (buildCORSHeaders)
 // - Adicionar security headers (addSecurityHeaders)
 // - Adicionar cache headers (addCacheHeaders)
-// - Adicionar X-Cache-Status (HIT ou MISS)
+// - Adicionar X-Cache-Status (HIT ou MISS) - ONLY if DEBUG_HEADERS enabled
 // - Adicionar rate limit headers (se fornecido)
 // - Retornar response modificada
 
@@ -15,6 +15,7 @@
 // - buildResponse(upstreamResponse, request, options) → Response
 // - addCacheHeaders(response, cached, ttl) → Response
 
+import { CONFIG } from '../config/index.js';
 import { buildCORSHeaders } from '../headers/cors.js';
 import { addSecurityHeaders } from '../headers/security.js';
 import { addRateLimitHeaders } from '../headers/rate-limit.js';
@@ -27,7 +28,11 @@ export function buildResponse(upstreamResponse, request, options) {
 
   addSecurityHeaders(response.headers);
 
-  response.headers.set('X-Cache-Status', options.cacheStatus || 'MISS');
+  // Debug header (only in development/staging)
+  // Remove in production to prevent ad-blocker fingerprinting
+  if (CONFIG.DEBUG_HEADERS) {
+    response.headers.set('X-Cache-Status', options.cacheStatus || 'MISS');
+  }
 
   // Add rate limit headers
   addRateLimitHeaders(response.headers, options.rateLimit);
