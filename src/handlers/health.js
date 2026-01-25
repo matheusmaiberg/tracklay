@@ -31,9 +31,14 @@ export async function handleHealthCheck(request, rateLimit) {
       status: 'ok',
       timestamp: Date.now(),
       date: new Date().toISOString(),
-      uuid: uuid,
-      version: '2.0.0-factory',
-      metrics: {
+      version: '2.0.0-factory'
+    };
+
+    // Debug information (only in development/staging)
+    // Remove in production to prevent information disclosure
+    if (CONFIG.DEBUG_HEADERS) {
+      health.uuid = uuid;
+      health.metrics = {
         rateLimit: {
           remaining: rateLimit?.remaining ?? CONFIG.RATE_LIMIT_REQUESTS,
           limit: rateLimit?.limit ?? CONFIG.RATE_LIMIT_REQUESTS,
@@ -44,13 +49,13 @@ export async function handleHealthCheck(request, rateLimit) {
           timeout: CONFIG.FETCH_TIMEOUT,
           maxSize: CONFIG.MAX_REQUEST_SIZE
         }
-      },
-      cloudflare: {
+      };
+      health.cloudflare = {
         colo: request.cf?.colo || 'unknown',
         country: request.headers.get('CF-IPCountry') || 'unknown',
         ray: request.headers.get('CF-Ray') || 'unknown'
-      }
-    };
+      };
+    }
 
     const response = jsonResponse(health);
     response.headers.set('Cache-Control', 'no-store');
