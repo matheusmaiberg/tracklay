@@ -14,6 +14,7 @@
 
 import { CONFIG } from '../config/index.js';
 import { Logger } from './logger.js';
+import { generateSHA256 } from '../utils/crypto.js';
 
 // ============= UUID SEGURO COM SHA-256 =============
 export async function generateSecureUUID() {
@@ -24,15 +25,9 @@ export async function generateSecureUUID() {
 
     // Criar string com date + week + secret
     const data = `${weekNumber}:${CONFIG.UUID_SECRET}`;
-    const encoder = new TextEncoder();
-    const dataBuffer = encoder.encode(data);
 
     // SHA-256 hash
-    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-
-    // OTIMIZAÇÃO: usar reduce em vez de map().join() para evitar array intermediário
-    const hashHex = hashArray.reduce((hex, b) => hex + b.toString(16).padStart(2, '0'), '');
+    const hashHex = await generateSHA256(data);
 
     // Retornar primeiros 12 caracteres (UUID-like)
     return hashHex.substring(0, 12);
