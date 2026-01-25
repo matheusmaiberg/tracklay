@@ -18,8 +18,6 @@
 // - script:stale:fbevents - Fallback stale (7 dias)
 // - script:stale:gtm - Fallback stale (7 dias)
 // - script:stale:gtag - Fallback stale (7 dias)
-
-import { generateSHA256 } from '../utils/crypto.js';
 // - script:hash:fbevents - SHA-256 hash do script
 // - script:hash:gtm - SHA-256 hash do script
 // - script:hash:gtag - SHA-256 hash do script
@@ -28,6 +26,7 @@ import { generateSHA256 } from '../utils/crypto.js';
 // - Fresh cache: 24 horas (renovado a cada 12h se não mudou)
 // - Stale cache: 7 dias (fallback para alta disponibilidade)
 
+import { generateSHA256 } from '../utils/crypto.js';
 import { Logger } from '../core/logger.js';
 import { CacheManager } from '../core/cache.js';
 import { fetchWithTimeout } from '../core/fetch.js';

@@ -11,7 +11,7 @@
 // ============================================================
 
 const CONFIG = {
-  GTM_ID: 'GTM-XXXXXXX',
+  GTM_ID: 'G' + 'T' + 'M-' + 'XXXXXXX',
   PROXY: {
       DOMAIN: 'https://cdn.suevich.com',
       PATH: '/cdn/',
@@ -22,6 +22,9 @@ const CONFIG = {
 };
 
 const log = (msg, data) => CONFIG.DEBUG && console.log(`[GTM] ${msg}`, data ?? '');
+const error = (msg, err) => console.error(`[GTM] ${msg}`, err ?? '');
+const buildProxyUrl = (params = '') => `${CONFIG.PROXY.DOMAIN}${CONFIG.PROXY.PATH}${CONFIG.PROXY.FILE}${params}`;
+
 const MARKETING_EVENTS = new Set(['product_added_to_cart', 'checkout_started', 'checkout_completed']);
 
 // ============= UTILS =============
@@ -55,14 +58,14 @@ const loadGTM = () => {
 
     const script = document.createElement('script');
     script.async = true;
-    script.src = `${CONFIG.PROXY_DOMAIN}?id=${CONFIG.GTM_ID}`;
+    script.src = buildProxyUrl(`?id=${CONFIG.GTM_ID}`);
 
     const firstScript = document.getElementsByTagName('script')[0];
     firstScript.parentNode.insertBefore(script, firstScript);
 
     log('GTM loaded');
   } catch (e) {
-    console.error('[GTM] Load failed', e);
+    error('Load failed', e);
   }
 };
 
@@ -188,7 +191,7 @@ const updateConsent = () => {
       ad_personalization: consent.marketing ? 'granted' : 'denied'
     });
   } catch (e) {
-    console.error('[GTM] Consent update failed', e);
+    error('Consent update failed', e);
   }
 };
 
@@ -220,6 +223,6 @@ const updateConsent = () => {
 
     log('Initialized ✓');
   } catch (e) {
-    console.error('[GTM] Init failed', e);
+    error('Init failed', e);
   }
 })();

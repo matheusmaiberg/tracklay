@@ -11,7 +11,6 @@
 // - UUID (UUID_SALT_ROTATION, UUID_SECRET)
 // - Cache (CACHE_TTL)
 // - Security (MAX_REQUEST_SIZE)
-// - Paths (CDN_PATHS)
 // - Logging (LOG_LEVEL)
 
 /**
