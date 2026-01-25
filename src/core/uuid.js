@@ -30,7 +30,9 @@ export async function generateSecureUUID() {
     // SHA-256 hash
     const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // OTIMIZAÇÃO: usar reduce em vez de map().join() para evitar array intermediário
+    const hashHex = hashArray.reduce((hex, b) => hex + b.toString(16).padStart(2, '0'), '');
 
     // Retornar primeiros 12 caracteres (UUID-like)
     return hashHex.substring(0, 12);
