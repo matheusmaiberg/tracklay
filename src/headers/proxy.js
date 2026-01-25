@@ -35,7 +35,8 @@ export function buildProxyHeaders(request, preserveHeaders = false) {
   }
 
   // Preservar TODOS headers críticos para EMQ 9+
-  const criticalHeaders = [
+  // OTIMIZAÇÃO: usar Set para lookup O(1) em vez de array
+  const criticalHeaders = new Set([
     'User-Agent',
     'Accept',
     'Accept-Language',
@@ -56,9 +57,9 @@ export function buildProxyHeaders(request, preserveHeaders = false) {
     'sec-ch-ua-model',
     'sec-ch-ua-bitness',
     'sec-ch-ua-full-version-list'
-  ];
+  ]);
 
-  // Copiar headers críticos
+  // Copiar headers críticos usando for...of
   for (const header of criticalHeaders) {
     const value = request.headers.get(header);
     if (value) headers.set(header, value);
