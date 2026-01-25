@@ -55,9 +55,6 @@ async function handleRequest(request) {
   const startTime = Date.now();
 
   try {
-    // Parse URL once and cache it on request object
-    request._parsedUrl = new URL(request.url);
-
     // Registrar request recebido
     Metrics.recordRequest(request);
 
