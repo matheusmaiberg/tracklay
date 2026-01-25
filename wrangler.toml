@@ -102,6 +102,16 @@ ENVIRONMENT = "production"
 # See docs/OBFUSCATION.md for complete guide on anti-detection setup
 
 # ============================================================
+# CRON TRIGGERS
+# ============================================================
+# Scheduled events for automatic script cache updates
+# Documentation: https://developers.cloudflare.com/workers/configuration/crons/
+
+[triggers]
+# Update script cache every 12 hours (00:00 and 12:00 UTC)
+crons = ["0 */12 * * *"]
+
+# ============================================================
 # BINDINGS (Optional)
 # ============================================================
 

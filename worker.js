@@ -25,6 +25,20 @@ export default {
     // Initialize config with environment variables
     initConfig(env);
     return handleRequest(request);
+  },
+
+  // Scheduled event handler (Cloudflare Cron Triggers)
+  // Runs every 12 hours to update script cache
+  async scheduled(event, env, ctx) {
+    try {
+      initConfig(env);
+      const { updateScripts } = await import('./src/scheduled/update-scripts.js');
+
+      // Execute script update in background
+      ctx.waitUntil(updateScripts());
+    } catch (error) {
+      console.error('Scheduled event failed:', error);
+    }
   }
 };
 
