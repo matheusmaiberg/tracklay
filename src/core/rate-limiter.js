@@ -1,16 +1,16 @@
 // ============================================================
-// RATE LIMITER - RATE LIMITING POR IP
+// RATE LIMITER - RATE LIMITING BY IP
 // ============================================================
 // RESPONSIBILITY:
-// - Implementar rate limiting usando Cloudflare Cache API
-// - 100 requests/minuto por IP (configurável)
-// - Armazenar contador no cache com TTL
-// - Reset automático após janela de tempo
-// - Retornar { allowed, remaining, resetAt }
+// - Implement rate limiting using Cloudflare Cache API
+// - 100 requests/minute per IP (configurable)
+// - Store counter in cache with TTL
+// - Automatic reset after time window
+// - Return { allowed, remaining, resetAt }
 
 // FUNCTIONS:
 // - RateLimiter.check(ip) → { allowed: boolean, remaining: number, resetAt: timestamp }
-// - RateLimiter.reset(ip) → void (opcional)
+// - RateLimiter.reset(ip) → void (optional)
 
 import { CONFIG } from '../config/index.js';
 import { Logger } from './logger.js';
