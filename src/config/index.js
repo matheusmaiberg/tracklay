@@ -13,6 +13,18 @@
 // - Security (MAX_REQUEST_SIZE)
 // - Logging (LOG_LEVEL)
 
+import { parsePositiveInt } from '../utils/validation.js';
+
+/**
+ * Parses comma-separated string into trimmed array
+ * @param {string} csvString - Comma-separated values
+ * @returns {string[]} Array of trimmed strings
+ */
+function parseArrayConfig(csvString) {
+  if (!csvString) return [];
+  return csvString.split(',').map(s => s.trim()).filter(s => s.length > 0);
+}
+
 /**
  * Auto-detect request origin for CORS
  * Extracts the origin from the request URL automatically
@@ -132,56 +144,31 @@ export function initConfig(env = {}) {
 
   // Parse ALLOWED_ORIGINS from comma-separated string
   if (env.ALLOWED_ORIGINS) {
-    CONFIG.ALLOWED_ORIGINS = env.ALLOWED_ORIGINS.split(',').map(s => s.trim());
+    CONFIG.ALLOWED_ORIGINS = parseArrayConfig(env.ALLOWED_ORIGINS);
   }
 
-  // Rate limiting
-  if (env.RATE_LIMIT_REQUESTS) {
-    const parsed = parseInt(env.RATE_LIMIT_REQUESTS, 10);
-    if (!isNaN(parsed) && parsed > 0) {
-      CONFIG.RATE_LIMIT_REQUESTS = parsed;
-    }
-  }
-  if (env.RATE_LIMIT_WINDOW) {
-    const parsed = parseInt(env.RATE_LIMIT_WINDOW, 10);
-    if (!isNaN(parsed) && parsed > 0) {
-      CONFIG.RATE_LIMIT_WINDOW = parsed;
-    }
-  }
+  // Parse integer configs
+  const intConfigs = {
+    RATE_LIMIT_REQUESTS: 'RATE_LIMIT_REQUESTS',
+    RATE_LIMIT_WINDOW: 'RATE_LIMIT_WINDOW',
+    FETCH_TIMEOUT: 'FETCH_TIMEOUT',
+    UUID_SALT_ROTATION: 'UUID_SALT_ROTATION',
+    CACHE_TTL: 'CACHE_TTL',
+    MAX_REQUEST_SIZE: 'MAX_REQUEST_SIZE'
+  };
 
-  // Timeouts
-  if (env.FETCH_TIMEOUT) {
-    const parsed = parseInt(env.FETCH_TIMEOUT, 10);
-    if (!isNaN(parsed) && parsed > 0) {
-      CONFIG.FETCH_TIMEOUT = parsed;
+  for (const [configKey, envKey] of Object.entries(intConfigs)) {
+    if (env[envKey]) {
+      const parsed = parsePositiveInt(env[envKey]);
+      if (parsed !== null) {
+        CONFIG[configKey] = parsed;
+      }
     }
   }
 
-  // UUID configuration
-  if (env.UUID_SALT_ROTATION) {
-    const parsed = parseInt(env.UUID_SALT_ROTATION, 10);
-    if (!isNaN(parsed) && parsed > 0) {
-      CONFIG.UUID_SALT_ROTATION = parsed;
-    }
-  }
+  // UUID secret (not parsed as int)
   if (env.UUID_SECRET) {
     CONFIG.UUID_SECRET = env.UUID_SECRET;
-  }
-
-  // Cache
-  if (env.CACHE_TTL) {
-    const parsed = parseInt(env.CACHE_TTL, 10);
-    if (!isNaN(parsed) && parsed > 0) {
-      CONFIG.CACHE_TTL = parsed;
-    }
-  }
-
-  // Security
-  if (env.MAX_REQUEST_SIZE) {
-    const parsed = parseInt(env.MAX_REQUEST_SIZE, 10);
-    if (!isNaN(parsed) && parsed > 0) {
-      CONFIG.MAX_REQUEST_SIZE = parsed;
-    }
   }
 
   // Obfuscation IDs
