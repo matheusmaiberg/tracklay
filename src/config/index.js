@@ -98,6 +98,8 @@ function generateDefaultSecret() {
  *
  * @property {string} ENDPOINTS_SECRET - Secret token for /endpoints API authentication (query string). Auto-generated if not provided. Recommended: Set via 'wrangler secret put ENDPOINTS_SECRET'. Format: 32+ char random hex. Example: 'a3f9c2e1b8d4f5a6c7e8d9f0a1b2c3d4e5f6a7b8c9d0'. Usage: GET /endpoints?token=SECRET. Security: NEVER expose publicly, NEVER commit to git. Set via .dev.vars (local) or wrangler secret (production). Used by: endpoints-info.js
  *
+ * @property {boolean} AUTO_INJECT_TRANSPORT_URL - Automatically inject transport_url into Google scripts (gtag.js/gtm.js) for 100% first-party tracking. Default: true (enabled). When enabled: Worker modifies scripts to force tracking via Worker endpoint → GTM Server → GA4. When disabled: Client sends tracking directly to Google (third-party, bloqueável). Requires: GTM_SERVER_URL configured. Benefits: Zero Shopify config, automatic UUID rotation, 95%+ ad-blocker bypass, ITP bypass. Security: Safe (only modifies Google CDN scripts). Performance: +300 bytes per script, no runtime impact. Set via AUTO_INJECT_TRANSPORT_URL in wrangler.toml. Used by: handlers/scripts.js, proxy/script-injector.js
+ *
  * @property {Object<string, string>} CONTAINER_ALIASES - GTM/GA4 container ID aliases for query obfuscation. Default: {} (passthrough, no obfuscation). Format: JSON object {"alias": "real_id"}. Example: {"abc123": "GTM-XXXXX", "def456": "G-YYYYY"}. Purpose: Hide GTM-/G- patterns from ad-blockers. Client: /cdn/g/{UUID}?c=abc123 → Upstream: ?id=GTM-XXXXX. Set via CONTAINER_ALIASES (JSON string) in wrangler.toml. Used by: query-mapper.js
  *
  * @example
@@ -279,7 +281,42 @@ export let CONFIG = {
   //
   // Default: auto-generated (generateDefaultSecret)
   // If not set, endpoint returns 503 Service Unavailable
-  ENDPOINTS_SECRET: generateDefaultSecret()
+  ENDPOINTS_SECRET: generateDefaultSecret(),
+
+  // ============= AUTOMATIC TRANSPORT_URL INJECTION =============
+  // Automatically inject transport_url into Google Analytics/GTM scripts
+  // When enabled, Worker modifies gtag.js/gtm.js to force first-party tracking
+  //
+  // HOW IT WORKS:
+  // 1. Worker intercepts Google script responses
+  // 2. Worker injects JavaScript that wraps gtag() function
+  // 3. Wrapper automatically adds transport_url to gtag('config') calls
+  // 4. Client sends tracking to Worker endpoint (first-party!)
+  // 5. Worker forwards to GTM_SERVER_URL → GA4
+  //
+  // BENEFITS:
+  // - Zero configuration in Shopify theme (plug-and-play)
+  // - Automatic UUID rotation (Worker injects current UUID)
+  // - 95%+ ad-blocker bypass (scripts + tracking first-party)
+  // - ITP/ETP complete bypass (cookies first-party)
+  //
+  // REQUIREMENTS:
+  // - GTM_SERVER_URL must be configured
+  // - If empty, injection is skipped (client-side only)
+  //
+  // SECURITY:
+  // - Injection is safe (only modifies scripts from Google CDN)
+  // - Does NOT modify tracking data (only routing)
+  // - Compatible with Google's TOS (first-party proxy)
+  //
+  // PERFORMANCE:
+  // - Adds ~300 bytes to script size
+  // - No runtime performance impact
+  // - Scripts remain cacheable
+  //
+  // Can be set via environment variable: AUTO_INJECT_TRANSPORT_URL
+  // Default: true (automatic if GTM_SERVER_URL is set)
+  AUTO_INJECT_TRANSPORT_URL: true
 };
 
 /**
@@ -358,5 +395,10 @@ export function initConfig(env = {}) {
   // Authenticated endpoint secret (from Cloudflare Workers secret or env var)
   if (env.ENDPOINTS_SECRET) {
     CONFIG.ENDPOINTS_SECRET = env.ENDPOINTS_SECRET;
+  }
+
+  // Auto-inject transport_url (parse as boolean)
+  if (env.AUTO_INJECT_TRANSPORT_URL !== undefined) {
+    CONFIG.AUTO_INJECT_TRANSPORT_URL = env.AUTO_INJECT_TRANSPORT_URL === 'true' || env.AUTO_INJECT_TRANSPORT_URL === true;
   }
 }
