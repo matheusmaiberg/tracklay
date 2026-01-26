@@ -40,7 +40,7 @@
 // ============================================================
 
 const CONFIG = {
-  GTM_ID: 'G' + 'T' + 'M-' + 'MJ7DW8H', // Your GTM container ID
+  GTM_ID: 'MJ7DW8H', // Your GTM container ID
 
   // Worker domain (where Tracklay Worker is deployed)
   // This is NOT the GTM Server URL - Worker handles that internally
