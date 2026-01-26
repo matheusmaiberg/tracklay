@@ -162,6 +162,50 @@ Tracklay works out-of-the-box with zero configuration. For advanced setups:
 - Advanced: See [docs/SHOPIFY-INTEGRATION.md](docs/SHOPIFY-INTEGRATION.md)
 - Security: See `.env.example` for all options
 
+### UUID Rotation API
+
+**Authenticated Endpoint:** `/endpoints?token=YOUR_SECRET`
+
+Fetch current UUIDs for automatic rotation (required for Shopify Metafields integration):
+
+```bash
+# Replace YOUR_SECRET with ENDPOINTS_SECRET value
+curl 'https://yourstore.com/endpoints?token=YOUR_SECRET'
+```
+
+**Response:**
+```json
+{
+  "facebook": {
+    "uuid": "a3f9c2e1b8d4",
+    "script": "/cdn/f/a3f9c2e1b8d4",
+    "endpoint": "/cdn/f/a3f9c2e1b8d4"
+  },
+  "google": {
+    "uuid": "b7e4d3f2c9a1",
+    "script": "/cdn/g/b7e4d3f2c9a1",
+    "endpoint": "/cdn/g/b7e4d3f2c9a1"
+  },
+  "rotation": {
+    "enabled": true,
+    "interval": 604800000
+  },
+  "expiresAt": "2026-02-01T00:00:00Z"
+}
+```
+
+**Use cases:**
+- **n8n workflow:** Fetch UUIDs every week and update Shopify Metafields
+- **GitHub Actions:** Automated theme updates on UUID rotation
+- **Manual rotation:** Check current UUIDs before theme changes
+
+**Security:**
+- ⚠️ Never expose `ENDPOINTS_SECRET` in client-side code
+- ✅ Use server-side integration only (n8n/GitHub Actions/backend)
+- ✅ Store secret in Cloudflare Workers secrets (not in code)
+
+**Setup guide:** [docs/SHOPIFY-INTEGRATION.md](docs/SHOPIFY-INTEGRATION.md#strategy-1-metafields-n8n-recommended)
+
 ## Troubleshooting
 
 **Scripts not loading?**
