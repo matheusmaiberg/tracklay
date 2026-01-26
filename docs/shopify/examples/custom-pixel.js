@@ -7,33 +7,29 @@
 // 1. UUID-based obfuscated routing (anti-ad-blocker)
 // 2. 100% first-party tracking (Worker → GTM Server → GA4)
 // 3. Automatic transport_url injection (Worker handles everything)
-// 4. Flexible deployment (workers.dev, custom domain, or same-domain routes)
+// 4. Uses window.location.origin (no hardcoded domains)
 // 5. Simple setup with fixed UUIDs (recommended)
 //
 // SETUP (RECOMMENDED - Fixed UUIDs):
-// 1. Deploy Tracklay Worker to Cloudflare:
-//    wrangler deploy
+// 1. Configure routes in wrangler.toml:
+//    [[routes]]
+//    pattern = "yourstore.com/cdn/*"
+//    zone_name = "yourstore.com"
 //
-// 2. Configure Worker environment variables:
-//    - GTM_SERVER_URL = 'https://gtm.yourstore.com' (GTM Server-Side container)
+// 2. Deploy Tracklay Worker with:
+//    - GTM_SERVER_URL = 'https://gtm.yourstore.com'
 //    - ENDPOINTS_UUID_ROTATION = 'false' (UUIDs fixed, no rotation)
-//    - AUTO_INJECT_TRANSPORT_URL = 'true' (automatic transport_url injection)
+//    - AUTO_INJECT_TRANSPORT_URL = 'true' (automatic injection)
 //
-// 3. Get your Worker domain and UUID:
-//    - Worker domain: Check Cloudflare dashboard or wrangler deploy output
-//    - UUID: node scripts/get-urls.js
-//
-// 4. Update CONFIG below:
-//    - WORKER_DOMAIN: Your Worker URL (e.g., https://tracklay.yourcompany.workers.dev)
-//    - GOOGLE_UUID: Your UUID from step 3
-//
+// 3. Get your UUID: node scripts/get-urls.js
+// 4. Update CONFIG.GOOGLE_UUID below with your UUID
 // 5. Paste this code in Shopify Custom Pixel
 //
 // BENEFITS:
 // - Zero maintenance (UUIDs never change)
 // - No ENDPOINTS_SECRET required (more secure)
 // - Worker auto-injects transport_url (100% first-party)
-// - Flexible deployment options
+// - Uses window.location.origin (no hardcoded domains)
 // - 95%+ ad-blocker bypass
 //
 // ADVANCED: Dynamic UUID Rotation (Optional)
@@ -52,7 +48,7 @@ const CONFIG = {
   // - Cloudflare Workers: 'https://tracklay.yourcompany.workers.dev'
   // - Custom domain: 'https://cdn.yourstore.com'
   // - Same domain (with routes): Use window.location.origin in loadGTM()
-  WORKER_DOMAIN: 'https://tracklay.groufy-aceleradora.workers.dev', // Replace with your Worker domain
+  WORKER_DOMAIN: 'https://cdn.suevich.com', // Replace with your Worker domain
 
   // ✅ RECOMMENDED: Fixed UUID (simpler, more secure)
   // Get your UUID with: node scripts/get-urls.js
@@ -110,6 +106,9 @@ const loadGTM = async () => {
 
     let scriptUrl;
 
+    // Extract short GTM ID (GTM-XXXXX → XXXXX)
+    const shortId = CONFIG.GTM_ID.replace('GTM-', '');
+
     // Check if using dynamic UUID rotation
     if (CONFIG.ENDPOINTS_TOKEN) {
       // ADVANCED: Fetch current UUID from Worker /endpoints API
@@ -117,15 +116,16 @@ const loadGTM = async () => {
         const url = `${CONFIG.WORKER_DOMAIN}/endpoints?token=${CONFIG.ENDPOINTS_TOKEN}`;
         const response = await fetch(url);
         const data = await response.json();
-        scriptUrl = `${CONFIG.WORKER_DOMAIN}${data.google.script}?id=${CONFIG.GTM_ID}`;
+        scriptUrl = `${CONFIG.WORKER_DOMAIN}${data.google.script}?c=${shortId}`;
         log('Dynamic UUID fetched', data);
       } catch (err) {
         error('Failed to fetch dynamic UUID, falling back to fixed UUID', err);
-        scriptUrl = `${CONFIG.WORKER_DOMAIN}/cdn/g/${CONFIG.GOOGLE_UUID}?id=${CONFIG.GTM_ID}`;
+        scriptUrl = `${CONFIG.WORKER_DOMAIN}/cdn/g/${CONFIG.GOOGLE_UUID}?c=${shortId}`;
       }
     } else {
-      // RECOMMENDED: Use fixed UUID
-      scriptUrl = `${CONFIG.WORKER_DOMAIN}/cdn/g/${CONFIG.GOOGLE_UUID}?id=${CONFIG.GTM_ID}`;
+      // RECOMMENDED: Use fixed UUID with obfuscated container ID
+      // Worker auto-converts ?c=XXXXX to ?id=GTM-XXXXX
+      scriptUrl = `${CONFIG.WORKER_DOMAIN}/cdn/g/${CONFIG.GOOGLE_UUID}?c=${shortId}`;
     }
 
     const script = document.createElement('script');
