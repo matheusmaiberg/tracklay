@@ -30,7 +30,8 @@ export async function handleEndpointProxy(request, rateLimit = null) {
 
   // Get dynamic endpoint map (includes both obfuscated and legacy endpoints)
   // GTM endpoints are only included if GTM_SERVER_URL is configured
-  const endpointMap = getEndpointMap();
+  // NOTE: getEndpointMap() is async due to UUID rotation support
+  const endpointMap = await getEndpointMap();
   const targetUrl = endpointMap[url.pathname];
 
   if (!targetUrl) {

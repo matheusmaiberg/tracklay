@@ -3,21 +3,22 @@
 // ============================================================
 // RESPONSIBILITY:
 // - Classe Router para roteamento
-// - match(request) → string (nome do handler)
-// - route(request) → Promise<Response>
+// - route(request, rateLimit) → Promise<Response>
 // - Roteamento:
 //   - OPTIONS → handleOptions
 //   - /health → handleHealthCheck (público)
 //   - /endpoints → handleEndpointsInfo (autenticado via query string)
-//   - /cdn/*, /assets/*, /static/* → handleScriptProxy OR handleEndpointProxy (dynamic)
-//   - Legacy: /g/collect, /tr, /j/collect → handleEndpointProxy
+//   - /cdn/f/{UUID}, /cdn/g/{UUID} → differentiated routing (v3.0.0 ultra-aggressive)
+//   - /cdn/*, /assets/*, /static/* → handleScriptProxy (fallback)
 //   - default → 404
 //
-// OBFUSCATION UPDATE:
-// - Now supports UUID-based endpoints: /cdn/f/{UUID}, /cdn/g/{UUID}
-// - Dynamic route matching based on endpoint/script maps
+// ULTRA-AGGRESSIVE MODE (v3.0.0):
+// - Scripts and endpoints share SAME path (no suffixes)
+// - Differentiation strategy:
+//   - Facebook: HTTP method (POST = endpoint, GET = script)
+//   - Google: Query params (v=2/tid=/_p= = endpoint, c=/id= = script)
 // - UUID rotation support (time-based, deterministic)
-// - Backward compatible with legacy paths
+// - Legacy routes removed (breaking change)
 
 // FUNCTIONS:
 // - Router.route(request, rateLimit) → Promise<Response>
@@ -52,18 +53,57 @@ export class Router {
       return handleEndpointsInfo(request);
     }
 
-    // Check if path is in endpoint map (includes both obfuscated and legacy endpoints)
-    // Note: getEndpointMap() is now async due to UUID rotation support
+    // Get both maps (they share same paths in ultra-aggressive mode)
     const endpointMap = await getEndpointMap();
-    if (endpointMap[pathname]) {
-      return handleEndpointProxy(request, rateLimit);
-    }
-
-    // Check if path is in script map (includes both obfuscated and legacy scripts)
-    // Note: getScriptMap() is now async due to UUID rotation support
     const scriptMap = await getScriptMap();
-    if (scriptMap[pathname]) {
-      return handleScriptProxy(request, rateLimit);
+
+    // Check if path exists in either map
+    const pathExists = endpointMap[pathname] || scriptMap[pathname];
+
+    if (pathExists) {
+      // ULTRA-AGGRESSIVE MODE: Same path for scripts and endpoints
+      // Differentiation strategy:
+      // - Facebook: HTTP method (POST = tracking, GET = script)
+      // - Google: Query params (v=2/tid=/_p= = tracking, c=/id= = script)
+
+      // FACEBOOK: Differentiate by HTTP method
+      if (pathname.startsWith('/cdn/f/')) {
+        if (request.method === 'POST') {
+          // Facebook tracking endpoint (POST)
+          return handleEndpointProxy(request, rateLimit);
+        } else {
+          // Facebook script (GET)
+          return handleScriptProxy(request, rateLimit);
+        }
+      }
+
+      // GOOGLE: Differentiate by query parameters
+      if (pathname.startsWith('/cdn/g/')) {
+        const search = url.search;
+
+        // Detect GA4/GTM tracking hits by query parameters
+        // Tracking events include: v=2, tid=, _p=
+        // Script loading uses: c= (container alias) or id= (container ID)
+        const isTrackingHit = search.includes('v=2') ||
+                              search.includes('tid=') ||
+                              search.includes('_p=');
+
+        if (isTrackingHit) {
+          // Google tracking endpoint
+          return handleEndpointProxy(request, rateLimit);
+        } else {
+          // Google script loading
+          return handleScriptProxy(request, rateLimit);
+        }
+      }
+
+      // Fallback: If path exists but doesn't match known patterns
+      // This handles legacy routes or edge cases
+      if (endpointMap[pathname]) {
+        return handleEndpointProxy(request, rateLimit);
+      } else {
+        return handleScriptProxy(request, rateLimit);
+      }
     }
 
     // Legacy: Script proxy routes (for paths not in script map)
