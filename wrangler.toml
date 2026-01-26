@@ -6,6 +6,7 @@
 
 name = "tracklay"
 main = "worker.js"
+compatibility_date = "2026-01-26"
 
 # Modern features enabled
 compatibility_flags = ["nodejs_compat"]
