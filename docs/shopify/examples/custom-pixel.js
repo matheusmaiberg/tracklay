@@ -34,6 +34,13 @@
 const CONFIG = {
   GTM_ID: 'G' + 'T' + 'M-' + 'MJ7DW8H', // Your GTM container ID
 
+  // Worker domain (where Tracklay is deployed)
+  // Examples:
+  // - Cloudflare Workers subdomain: 'https://tracklay.yourcompany.workers.dev'
+  // - Custom subdomain: 'https://tracking.yourstore.com'
+  // - Same domain with routes: window.location.origin (only if routes configured in wrangler.toml)
+  WORKER_DOMAIN: 'https://cdn.suevich.com', // Replace with your Worker domain
+
   // ✅ RECOMMENDED: Fixed UUID (simpler, more secure)
   // Get your UUID with: node scripts/get-urls.js
   // Set ENDPOINTS_UUID_ROTATION=false in Worker (fixed UUIDs)
@@ -42,10 +49,7 @@ const CONFIG = {
   // ⚠️ ADVANCED: Dynamic UUID Rotation (Uncomment if needed)
   // Requires: ENDPOINTS_UUID_ROTATION=true (rotation) + ENDPOINTS_SECRET in Worker
   // NOT RECOMMENDED: Exposes ENDPOINTS_SECRET in client code
-  // WORKER: {
-  //   DOMAIN: 'https://tracking.yourstore.com', // Worker domain (NOT window.location.origin!)
-  //   ENDPOINTS_TOKEN: 'your-endpoints-secret-token-here',
-  // },
+  // ENDPOINTS_TOKEN: 'your-endpoints-secret-token-here',
 
   DEBUG: true,
   DEFAULT_CURRENCY: 'EUR'
@@ -94,21 +98,21 @@ const loadGTM = async () => {
     let scriptUrl;
 
     // Check if using dynamic UUID rotation
-    if (CONFIG.WORKER?.ENDPOINTS_TOKEN) {
+    if (CONFIG.ENDPOINTS_TOKEN) {
       // ADVANCED: Fetch current UUID from Worker /endpoints API
       try {
-        const url = `${CONFIG.WORKER.DOMAIN}/endpoints?token=${CONFIG.WORKER.ENDPOINTS_TOKEN}`;
+        const url = `${CONFIG.WORKER_DOMAIN}/endpoints?token=${CONFIG.ENDPOINTS_TOKEN}`;
         const response = await fetch(url);
         const data = await response.json();
-        scriptUrl = `${CONFIG.WORKER.DOMAIN}${data.google.script}?id=${CONFIG.GTM_ID}`;
+        scriptUrl = `${CONFIG.WORKER_DOMAIN}${data.google.script}?id=${CONFIG.GTM_ID}`;
         log('Dynamic UUID fetched', data);
       } catch (err) {
         error('Failed to fetch dynamic UUID, falling back to fixed UUID', err);
-        scriptUrl = `${window.location.origin}/cdn/g/${CONFIG.GOOGLE_UUID}?id=${CONFIG.GTM_ID}`;
+        scriptUrl = `${CONFIG.WORKER_DOMAIN}/cdn/g/${CONFIG.GOOGLE_UUID}?id=${CONFIG.GTM_ID}`;
       }
     } else {
       // RECOMMENDED: Use fixed UUID
-      scriptUrl = `${window.location.origin}/cdn/g/${CONFIG.GOOGLE_UUID}?id=${CONFIG.GTM_ID}`;
+      scriptUrl = `${CONFIG.WORKER_DOMAIN}/cdn/g/${CONFIG.GOOGLE_UUID}?id=${CONFIG.GTM_ID}`;
     }
 
     const script = document.createElement('script');
