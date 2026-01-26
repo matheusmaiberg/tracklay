@@ -6,7 +6,6 @@
 
 name = "tracklay"
 main = "worker.js"
-compatibility_date = "2025-12-01"
 
 # Modern features enabled
 compatibility_flags = ["nodejs_compat"]
@@ -187,30 +186,13 @@ mode = "smart"
 # ============================================================
 # OBSERVABILITY (Optional)
 # ============================================================
-# Collect logs and traces to debug your Worker
-# Persist in the dashboard or export to external providers
-# Documentation: https://developers.cloudflare.com/workers/observability/
 
 [observability]
 enabled = true
-head_sampling_rate = 1
-
-[observability.logs]
-enabled = true
-head_sampling_rate = 1
-persist = true
-invocation_logs = true
+head_sampling_rate = 0.2
 
 [observability.traces]
-enabled = true
-persist = true
-head_sampling_rate = 1
-
-# Tail consumers for log streaming
-# Uncomment to enable external log consumers
-
-# [[tail_consumers]]
-# service = "log-consumer-worker"
+head_sampling_rate = 0.05
 
 # ============================================================
 # NOTES
