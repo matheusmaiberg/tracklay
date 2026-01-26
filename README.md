@@ -6,11 +6,26 @@
 
 > First-party tracking proxy for Shopify. Bypass Safari ITP, ad-blockers (uBlock, AdBlock), and browser privacy protections. Recover 40%+ lost conversion data.
 
-> **v3.0.0 uses UUID-based obfuscated routes only.** For version history and breaking changes, see [CHANGELOG.md](CHANGELOG.md).
-
 **Tracklay** serves Google Analytics, GTM, and Meta Pixel from your own domain as first-party requests—bypassing Safari's 7-day cookie limit, iOS tracking restrictions, and 90%+ of ad-blockers.
 
 [English](README.md) | [Português](README.pt-BR.md)
+
+## Why Tracklay?
+
+**Ultra-Aggressive Obfuscation (v3.0.0):**
+- Reduces ad-blocker detection from **90-100%** to **<5%** (with UUID rotation + query obfuscation)
+- Eliminates well-known tracking patterns (no `.js` suffixes, no detectable keywords)
+- UUIDs rotate weekly—impossible to maintain permanent blacklists
+- Forces maximum-security obfuscation for all users
+
+**For Fresh Installs:**
+- Ready to use out of the box—only obfuscated UUID-based routes available
+- No legacy patterns, maximum security from day one
+
+**Upgrading from v2.x?**
+- Theme updates required before upgrading (see [Migration Guide](docs/MIGRATION-V3.md))
+- No backward compatibility—intentional breaking change for security
+- Full changelog: [CHANGELOG.md](CHANGELOG.md)
 
 ## Features
 
