@@ -58,3 +58,6 @@ temp/
 
 # Old reference files (to be deleted)
 _OLD_REFERENCE/
+shopify-theme/
+
+.github/*
