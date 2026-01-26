@@ -17,8 +17,8 @@ compatibility_date = "2025-12-01"
 # https://developers.cloudflare.com/workers/platform/limits
 
 # Account ID (get from: wrangler whoami)
-# Uncomment and replace with your account ID
-# account_id = "your-account-id-here"
+# Replace with your account ID
+account_id = "your-account-id-here"
 
 # ============================================================
 # ROUTES (Custom Domain)
@@ -30,19 +30,19 @@ compatibility_date = "2025-12-01"
 #   Workers > Your Worker > Settings > Domains & Routes
 #
 # Option 2: Configure here (requires zone_id)
-# Uncomment and configure:
-#
-# [[routes]]
-# pattern = "yourstore.com/cdn/*"
-# zone_name = "yourstore.com"
-#
-# [[routes]]
-# pattern = "yourstore.com/assets/*"
-# zone_name = "yourstore.com"
-#
-# [[routes]]
-# pattern = "yourstore.com/static/*"
-# zone_name = "yourstore.com"
+# Configure with your domain:
+
+[[routes]]
+pattern = "yourstore.com/cdn/*"
+zone_name = "yourstore.com"
+
+[[routes]]
+pattern = "yourstore.com/assets/*"
+zone_name = "yourstore.com"
+
+[[routes]]
+pattern = "yourstore.com/static/*"
+zone_name = "yourstore.com"
 
 # ============================================================
 # ENVIRONMENT VARIABLES
@@ -58,33 +58,33 @@ ENVIRONMENT = "production"
 
 # ============= OPTIONAL CONFIGURATION =============
 # All variables below are OPTIONAL and have smart defaults
-# Uncomment and configure only if you need to customize
+# Configure only if you need to customize
 
 # GTM Server-Side URL (optional, leave empty if not using)
-# GTM_SERVER_URL = "https://gtm.yourstore.com"
+GTM_SERVER_URL = "https://gtm.yourstore.com"
 
 # CORS Origins (optional, auto-detected by default)
 # Comma-separated list of allowed origins
-# ALLOWED_ORIGINS = "https://yourstore.com,https://www.yourstore.com"
+ALLOWED_ORIGINS = "https://yourstore.com,https://www.yourstore.com"
 
 # Rate Limiting (optional)
-# RATE_LIMIT_REQUESTS = "100"
-# RATE_LIMIT_WINDOW = "60000"
+RATE_LIMIT_REQUESTS = "100"
+RATE_LIMIT_WINDOW = "60000"
 
 # Fetch Timeout in milliseconds (optional)
-# FETCH_TIMEOUT = "10000"
+FETCH_TIMEOUT = "10000"
 
 # Cache TTL in seconds (optional)
-# CACHE_TTL = "3600"
+CACHE_TTL = "3600"
 
 # Max Request Size in bytes (optional)
-# MAX_REQUEST_SIZE = "1048576"
+MAX_REQUEST_SIZE = "1048576"
 
 # CDN Paths for proxy (optional, comma-separated)
-# CDN_PATHS = "/cdn/,/assets/,/static/"
+CDN_PATHS = "/cdn/,/assets/,/static/"
 
 # Log Level (optional: debug, info, warn, error)
-# LOG_LEVEL = "info"
+LOG_LEVEL = "info"
 
 # ============= OBFUSCATION CONFIGURATION (Anti-Ad-Blocker) =============
 # UUID-based endpoint obfuscation for maximum anti-detection
@@ -92,13 +92,13 @@ ENVIRONMENT = "production"
 # is HIGHLY RECOMMENDED for production deployments
 #
 # Generate UUIDs: node -e "console.log(require('crypto').randomUUID())"
-#
+
 # Facebook Endpoint ID (creates: /cdn/f/{UUID}.js)
-# FACEBOOK_ENDPOINT_ID = "a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e"
-#
+FACEBOOK_ENDPOINT_ID = "a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e"
+
 # Google Endpoint ID (creates: /cdn/g/{UUID}.js)
-# GOOGLE_ENDPOINT_ID = "b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f"
-#
+GOOGLE_ENDPOINT_ID = "b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f"
+
 # See docs/OBFUSCATION.md for complete guide on anti-detection setup
 
 # ============================================================
