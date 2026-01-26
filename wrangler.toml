@@ -18,7 +18,7 @@ compatibility_date = "2025-12-01"
 
 # Account ID (get from: wrangler whoami)
 # Replace with your account ID
-account_id = "your-account-id-here"
+# account_id = "your-account-id-here"
 
 # ============================================================
 # ROUTES (Custom Domain)
