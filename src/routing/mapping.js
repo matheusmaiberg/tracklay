@@ -71,10 +71,6 @@ export async function getScriptMap() {
   return scriptMapCache;
 }
 
-// Note: SCRIPT_MAP is now async and should be accessed via getScriptMap()
-// For backward compatibility, we export a promise that resolves to the map
-export const SCRIPT_MAP = getScriptMap();
-
 // ============= ENDPOINT MAPPINGS =============
 // Map proxy endpoints to original tracking URLs
 // ULTRA-AGGRESSIVE: Same path as scripts (no suffixes, no .js extension)
@@ -125,10 +121,6 @@ export async function getEndpointMap() {
   endpointMapCache = map;
   return endpointMapCache;
 }
-
-// Note: ENDPOINT_MAP is now async and should be accessed via getEndpointMap()
-// For backward compatibility, we export a promise that resolves to the map
-export const ENDPOINT_MAP = getEndpointMap();
 
 // ============= CACHE INVALIDATION =============
 /**
