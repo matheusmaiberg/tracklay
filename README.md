@@ -6,57 +6,7 @@
 
 > First-party tracking proxy for Shopify. Bypass Safari ITP, ad-blockers (uBlock, AdBlock), and browser privacy protections. Recover 40%+ lost conversion data.
 
-## Version 3.0.0 - Breaking Changes
-
-**This version removes ALL legacy detectable routes for maximum anti-tracking protection.**
-
-### What Changed
-
-All non-obfuscated routes have been **permanently removed**:
-
-**Removed Scripts:**
-- `/cdn/fbevents.js` - Facebook Pixel script
-- `/cdn/gtm.js` - Google Tag Manager script
-- `/cdn/gtag.js` - Google Analytics script
-- `/assets/fbevents.js`, `/assets/gtm.js` - Alternative paths
-- `/static/fbevents.js`, `/static/gtm.js` - Alternative paths
-
-**Removed Endpoints:**
-- `/tr` - Facebook Pixel tracking endpoint
-- `/g/collect` - Google Analytics tracking endpoint
-- `/j/collect` - Google Analytics JS error endpoint
-
-### What Remains
-
-Only UUID-obfuscated routes are supported (ultra-aggressive mode - no suffixes):
-
-**Scripts & Endpoints (same path, differentiated by method/query):**
-- `/cdn/f/{UUID}` - Facebook Pixel script (GET) and tracking (POST)
-- `/cdn/g/{UUID}` - Google Tag Manager/Analytics script and tracking
-  - Script loading: `GET /cdn/g/{UUID}?c=alias` or `?id=GTM-XXX`
-  - Tracking hits: `GET /cdn/g/{UUID}?v=2&tid=...` (query params differentiate)
-
-**Note:** Scripts and endpoints share the same path for maximum obfuscation. HTTP method (Facebook) or query string parameters (Google) differentiate between script loading and tracking events.
-
-### Migration Required
-
-If you are upgrading from v2.x or using legacy routes, you **must** update your Shopify theme.
-
-**Migration Guide:** [docs/MIGRATION-V3.md](docs/MIGRATION-V3.md)
-
-### Why This Change?
-
-- Reduces ad-blocker detection from **90-100%** to **<5%** (with UUID rotation + query obfuscation)
-- Eliminates well-known tracking patterns (no `.js` suffixes, no detectable keywords)
-- Forces migration to maximum-security ultra-aggressive obfuscation
-- UUIDs rotate weekly (impossible to maintain permanent blacklists)
-- Aligns with anti-tracking best practices documented in [docs/OBFUSCATION.md](docs/OBFUSCATION.md)
-
-### Upgrade Impact
-
-- **v2.x users:** Theme updates required before upgrading
-- **Fresh installs:** No impact, only obfuscated routes available
-- **Backward compatibility:** None - intentional breaking change for security
+> **v3.0.0 uses UUID-based obfuscated routes only.** For version history and breaking changes, see [CHANGELOG.md](CHANGELOG.md).
 
 **Tracklay** serves Google Analytics, GTM, and Meta Pixel from your own domain as first-party requests—bypassing Safari's 7-day cookie limit, iOS tracking restrictions, and 90%+ of ad-blockers.
 
