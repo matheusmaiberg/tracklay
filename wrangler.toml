@@ -143,22 +143,6 @@ UUID_SALT_ROTATION = "604800000"
 crons = ["0 */12 * * *"]
 
 # ============================================================
-# BINDINGS (Optional)
-# ============================================================
-
-# KV Namespace (for future rate limiting storage)
-# Uncomment if you want to use KV for persistent rate limiting
-# [[kv_namespaces]]
-# binding = "RATE_LIMIT_KV"
-# id = "your-kv-namespace-id"
-
-# Durable Objects (for advanced rate limiting)
-# Uncomment if implementing Durable Objects
-# [[durable_objects.bindings]]
-# name = "RATE_LIMITER"
-# class_name = "RateLimiter"
-
-# ============================================================
 # DEVELOPMENT
 # ============================================================
 # Local development settings
@@ -183,10 +167,6 @@ vars = { ENVIRONMENT = "staging" }
 
 [build]
 command = ""
-
-# Upload rules - which files to include/exclude
-[build.upload]
-format = "modules"
 
 # ============================================================
 # COMPATIBILITY
