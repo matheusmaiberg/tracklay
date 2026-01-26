@@ -421,6 +421,8 @@ export function initConfig(env = {}) {
   console.log('[CONFIG] GTM_SERVER_URL:', CONFIG.GTM_SERVER_URL || '(not set - client-side only)');
   console.log('[CONFIG] AUTO_INJECT_TRANSPORT_URL:', CONFIG.AUTO_INJECT_TRANSPORT_URL);
   console.log('[CONFIG] ENDPOINTS_UUID_ROTATION:', CONFIG.ENDPOINTS_UUID_ROTATION ? 'enabled (weekly rotation)' : 'disabled (fixed UUIDs)');
+  console.log('[CONFIG] FACEBOOK_ENDPOINT_ID:', CONFIG.FACEBOOK_ENDPOINT_ID);
+  console.log('[CONFIG] GOOGLE_ENDPOINT_ID:', CONFIG.GOOGLE_ENDPOINT_ID);
   console.log('[CONFIG] DEBUG_HEADERS:', CONFIG.DEBUG_HEADERS);
   console.log('[CONFIG] RATE_LIMIT:', CONFIG.RATE_LIMIT_REQUESTS, 'requests per', CONFIG.RATE_LIMIT_WINDOW / 1000, 'seconds');
   console.log('[CONFIG] CACHE_TTL:', CONFIG.CACHE_TTL, 'seconds');
