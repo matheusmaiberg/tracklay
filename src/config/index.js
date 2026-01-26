@@ -94,7 +94,7 @@ function generateDefaultSecret() {
  *
  * @property {boolean} DEBUG_HEADERS - Enable debug headers in responses (X-Script-Key, X-Cache-Status, etc). Default: false. Production: MUST be false (exposes implementation). Development: can be true. Security warning: debug headers enable ad-blocker fingerprinting. Set via DEBUG_HEADERS in wrangler.toml. Used by: script-cache.js, response-builder.js
  *
- * @property {boolean} ENDPOINTS_UUID_ROTATION - Control automatic UUID rotation. Default: true (rotation ENABLED - recommended). When true: UUIDs rotate weekly via UUID_SALT_ROTATION (max security, requires /endpoints API). When false: UUIDs fixed from FACEBOOK_ENDPOINT_ID/GOOGLE_ENDPOINT_ID (simpler, less secure). Set via ENDPOINTS_UUID_ROTATION in wrangler.toml. Used by: uuid.js, endpoints-info.js
+ * @property {boolean} ENDPOINTS_UUID_ROTATION - Control automatic UUID rotation. Default: false (fixed UUIDs - RECOMMENDED). When false: UUIDs fixed from FACEBOOK_ENDPOINT_ID/GOOGLE_ENDPOINT_ID (simpler, no /endpoints API needed). When true: UUIDs rotate weekly via UUID_SALT_ROTATION (advanced, max security, requires /endpoints API). Set via ENDPOINTS_UUID_ROTATION in wrangler.toml. Used by: uuid.js, endpoints-info.js
  *
  * @property {string} ENDPOINTS_SECRET - Secret token for /endpoints API authentication (query string). Auto-generated if not provided. Recommended: Set via 'wrangler secret put ENDPOINTS_SECRET'. Format: 32+ char random hex. Example: 'a3f9c2e1b8d4f5a6c7e8d9f0a1b2c3d4e5f6a7b8c9d0'. Usage: GET /endpoints?token=SECRET. Security: NEVER expose publicly, NEVER commit to git. Set via .dev.vars (local) or wrangler secret (production). Used by: endpoints-info.js
  *
@@ -242,22 +242,23 @@ export let CONFIG = {
   // - All workers generate the same UUID at the same time (stateless, deterministic)
   // - No KV/Durable Objects needed (everything is time-based)
   //
-  // ROTATION ENABLED (true - default):
+  // ROTATION DISABLED (false - default, RECOMMENDED):
+  //   - Uses fixed FACEBOOK_ENDPOINT_ID and GOOGLE_ENDPOINT_ID from env
+  //   - UUIDs never change (valid forever)
+  //   - Simpler setup (hardcode in theme)
+  //   - No /endpoints API needed
+  //   - Recommended for most users
+  //
+  // ROTATION ENABLED (true - advanced):
   //   - Uses generateEndpointUUID() with time-based rotation
   //   - UUIDs rotate automatically every UUID_SALT_ROTATION interval
   //   - Maximum security (UUIDs expire automatically)
   //   - Requires Shopify theme to fetch UUIDs dynamically via /endpoints
   //   - Week-based rotation: Math.floor(Date.now() / UUID_SALT_ROTATION)
   //
-  // ROTATION DISABLED (false):
-  //   - Uses fixed FACEBOOK_ENDPOINT_ID and GOOGLE_ENDPOINT_ID from env
-  //   - UUIDs never change (valid forever)
-  //   - Simpler setup (hardcode in theme)
-  //   - Lower security (if discovered, UUIDs remain valid)
-  //
   // Can be set via environment variable: ENDPOINTS_UUID_ROTATION
-  // Default: true (rotation enabled for maximum security)
-  ENDPOINTS_UUID_ROTATION: true,
+  // Default: false (fixed UUIDs - simpler, recommended for most users)
+  ENDPOINTS_UUID_ROTATION: false,
 
   // ============= AUTHENTICATED ENDPOINT SECRET =============
   // Secret token for /endpoints authentication (query string based)

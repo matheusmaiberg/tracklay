@@ -113,8 +113,8 @@ FACEBOOK_ENDPOINT_ID = "a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e"
 GOOGLE_ENDPOINT_ID = "b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f"
 
 # ============= UUID ROTATION & DEBUG =============
-# UUID Rotation (true = enabled, false = disabled)
-ENDPOINTS_UUID_ROTATION = "true"
+# UUID Rotation (false = fixed/recommended, true = rotation/advanced)
+ENDPOINTS_UUID_ROTATION = "false"
 
 # Debug headers (false = production, true = development)
 DEBUG_HEADERS = "false"
