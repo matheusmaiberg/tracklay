@@ -70,11 +70,11 @@ ENVIRONMENT = "production"
 # Configure only if you need to customize
 
 # GTM Server-Side URL (optional, leave empty if not using)
-GTM_SERVER_URL = "https://gtm.yourstore.com"
+GTM_SERVER_URL = "https://gtm.suevich.com"
 
 # CORS Origins (optional, auto-detected by default)
 # Comma-separated list of allowed origins
-ALLOWED_ORIGINS = "https://yourstore.com,https://www.yourstore.com"
+ALLOWED_ORIGINS = "https://suevich.com,https://www.suevich.com"
 
 # Rate Limiting (optional)
 RATE_LIMIT_REQUESTS = "100"
