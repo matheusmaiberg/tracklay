@@ -1,0 +1,15 @@
+# ============================================================
+# LOCAL DEVELOPMENT SECRETS - .dev.vars
+# ============================================================
+# Copy this file to .dev.vars and fill in your secrets
+# .dev.vars is automatically loaded by wrangler dev/deploy
+# This file is gitignored for security
+#
+# Generate secrets with:
+# node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# UUID Secret for hash generation
+UUID_SECRET=your-generated-uuid-secret-here
+
+# Endpoints authentication token (for /endpoints API)
+ENDPOINTS_SECRET=your-generated-secret-token-here
