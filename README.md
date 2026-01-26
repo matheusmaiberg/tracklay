@@ -27,6 +27,23 @@
 - No backward compatibility—intentional breaking change for security
 - Full changelog: [CHANGELOG.md](CHANGELOG.md)
 
+## Configuration Options
+
+Tracklay supports three deployment modes depending on your tracking infrastructure:
+
+| Mode | Description | Components | Data Quality | Use Case |
+|------|-------------|------------|--------------|----------|
+| **Web (Client-side)** | Proxy scripts only | Tracklay proxy → Google servers | Standard (client-side) | Quick setup, no server infrastructure |
+| **GTM Server-Side** | Full server-side tracking | Tracklay proxy + GTM Server container | High (server-side + EMQ 9+) | Enhanced privacy, ad-blocker bypass, server-side enrichment |
+| **GTM Server + GA4 Transport** | Maximum data quality | Tracklay proxy + GTM Server + GA4 `transport_url` | Maximum (direct server → GA4) | Best data accuracy, complete Safari ITP bypass, CAPI-like quality |
+
+**Recommendation:** Start with **Web mode** for quick wins, upgrade to **GTM Server + GA4 Transport** for maximum data quality and conversion tracking accuracy.
+
+**Setup guides:**
+- Web mode: Follow [Quick Start](#quick-start) below
+- GTM Server: See [docs/SHOPIFY-INTEGRATION.md](docs/SHOPIFY-INTEGRATION.md)
+- GA4 Transport: See [docs/shopify/GTM-CONFIGURATION.md](docs/shopify/GTM-CONFIGURATION.md)
+
 ## Features
 
 - ✅ **First-party tracking** - Serve scripts from your domain
