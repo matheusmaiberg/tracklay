@@ -35,6 +35,10 @@ export function buildCORSHeaders(request) {
   } else if (origin && CONFIG.ALLOWED_ORIGINS.includes(origin)) {
     // Manual configuration: check if origin is in allowed list
     allowedOrigin = origin;
+  } else if (origin === 'null') {
+    // Handle sandboxed contexts (Shopify Custom Pixel, iframes)
+    // Origin 'null' cannot be added to CORS allow list, use wildcard
+    allowedOrigin = '*';
   }
 
   // OTIMIZAÇÃO: early return sem alocar Headers se origin não permitido
@@ -47,7 +51,13 @@ export function buildCORSHeaders(request) {
 
   // Complete CORS with all necessary headers
   headers.set('Access-Control-Allow-Origin', allowedOrigin);
-  headers.set('Access-Control-Allow-Credentials', 'true');
+
+  // Only set credentials:true if not using wildcard (CORS restriction)
+  // Wildcard (*) cannot be used with credentials:true
+  if (allowedOrigin !== '*') {
+    headers.set('Access-Control-Allow-Credentials', 'true');
+  }
+
   headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD');
 
   // Allow ALL headers that GTM/Meta can send
