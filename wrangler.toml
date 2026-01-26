@@ -47,15 +47,24 @@ compatibility_date = "2025-12-01"
 # ============================================================
 # ENVIRONMENT VARIABLES
 # ============================================================
-# Secrets should be set via Dashboard or wrangler secret:
-#   wrangler secret put UUID_SECRET
-#   wrangler secret put ENDPOINTS_SECRET
+# ⚠️ SECURITY WARNING: Secrets below are visible in wrangler.toml
+# For production, use: wrangler secret put UUID_SECRET
+#                      wrangler secret put ENDPOINTS_SECRET
 #
 # Non-secret vars can be defined here:
 
 [vars]
 # Environment (development, staging, production)
 ENVIRONMENT = "production"
+
+# ============= SECRETS (⚠️ Visible in file) =============
+# UUID Secret for hash generation
+# Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+UUID_SECRET = "your-generated-uuid-secret-here"
+
+# Endpoints authentication token
+# Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+ENDPOINTS_SECRET = "your-generated-secret-token-here"
 
 # ============= OPTIONAL CONFIGURATION =============
 # All variables below are OPTIONAL and have smart defaults
