@@ -115,16 +115,6 @@ export async function getEndpointMap() {
     map['/g/collect'] = `${CONFIG.GTM_SERVER_URL}/g/collect`;
   }
 
-  // ============= REMOVED 2026-01-25: ALL SUFFIXES (v3.0.0 BREAKING CHANGE) =============
-  // BREAKING CHANGE: Removed ALL detectable suffixes and legacy endpoints
-  // See: docs/MIGRATION-V3.md for migration guide
-  //
-  // REMOVED: /cdn/f/{UUID}.js (suffix '.js' detectable)
-  // REMOVED: /cdn/g/{UUID}.js (suffix '.js' detectable)
-  // REMOVED: /cdn/g/{UUID}-j.js (suffix '-j.js' detectable)
-  //
-  // REMOVED: Legacy endpoints
-  // REMOVED: /tr, /g/collect, /j/collect
 
   endpointMapCache = map;
   return endpointMapCache;

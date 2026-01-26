@@ -28,6 +28,7 @@ import { handleHealthCheck } from '../handlers/health.js';
 import { handleScriptProxy } from '../handlers/scripts.js';
 import { handleEndpointProxy } from '../handlers/endpoints.js';
 import { handleEndpointsInfo } from '../handlers/endpoints-info.js';
+import { handleEventProxy } from '../handlers/events.js';
 import { getScriptMap, getEndpointMap } from './mapping.js';
 import { CONFIG } from '../config/index.js';
 import { Logger } from '../core/logger.js';
@@ -53,6 +54,14 @@ export class Router {
     // Authentication via query string: ?token=SECRET
     if (pathname === '/endpoints') {
       return handleEndpointsInfo(request);
+    }
+
+    // Server-side event forwarding (v3.1.0)
+    // Receives events from browser and forwards to GTM Server-Side
+    // This enables 95%+ ad-blocker bypass by removing client-side tracking code
+    // IMPORTANT: Only accepts POST requests
+    if (pathname === '/cdn/events' && request.method === 'POST') {
+      return handleEventProxy(request, rateLimit);
     }
 
     // Get both maps (they share same paths in ultra-aggressive mode)
