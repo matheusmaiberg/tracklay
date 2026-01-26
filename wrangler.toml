@@ -74,7 +74,7 @@ GTM_SERVER_URL = "https://gtm.suevich.com"
 
 # CORS Origins (optional, auto-detected by default)
 # Comma-separated list of allowed origins
-ALLOWED_ORIGINS = "https://suevich.com,https://www.suevich.com"
+ALLOWED_ORIGINS = "https://suevich.com,https://www.suevich.com,https://cdn.suevich.com"
 
 # Rate Limiting (optional)
 RATE_LIMIT_REQUESTS = "100"
