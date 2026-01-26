@@ -68,146 +68,37 @@ function generateDefaultSecret() {
  *
  * @typedef {Object} Config
  *
- * @property {string} GTM_SERVER_URL
- * GTM Server-Side container URL for proxying GA4/GTM tracking requests
- * - **Optional**: Leave empty for client-side only tracking
- * - **Default**: `''` (empty string)
- * - **Example**: `'https://gtm.yourstore.com'` or `'https://your-container.run.app'`
- * - **Environment**: Set via `GTM_SERVER_URL` in wrangler.toml or .env
- * - **Used by**: [proxy-handler.js](../proxy/proxy-handler.js), [router.js](../routing/router.js)
+ * @property {string} GTM_SERVER_URL - GTM Server-Side container URL for proxying GA4/GTM tracking requests. Optional (leave empty for client-side only). Default: '' (empty). Example: 'https://gtm.yourstore.com'. Set via GTM_SERVER_URL in wrangler.toml. Used by: proxy-handler.js, router.js
  *
- * @property {string[]} ALLOWED_ORIGINS
- * CORS allowed origins for cross-origin requests
- * - **Auto-detection**: Worker automatically detects request origin if empty
- * - **Default**: `[]` (auto-detect mode)
- * - **Example**: `['https://yourstore.com', 'https://www.yourstore.com']`
- * - **Format**: Array of full origin URLs (protocol + hostname)
- * - **Environment**: Set via `ALLOWED_ORIGINS` (comma-separated) in wrangler.toml
- * - **Used by**: [cors.js](../middleware/cors.js), [options.js](../handlers/options.js)
+ * @property {string[]} ALLOWED_ORIGINS - CORS allowed origins for cross-origin requests. Auto-detects if empty. Default: [] (auto-detect). Example: ['https://yourstore.com', 'https://www.yourstore.com']. Set via ALLOWED_ORIGINS (comma-separated) in wrangler.toml. Used by: cors.js, options.js
  *
- * @property {number} RATE_LIMIT_REQUESTS
- * Maximum number of requests allowed per IP per time window
- * - **Default**: `100`
- * - **Range**: 1-10000 (recommended: 50-200 for production)
- * - **Environment**: Set via `RATE_LIMIT_REQUESTS` in wrangler.toml
- * - **Used by**: [rate-limiter.js](../middleware/rate-limiter.js)
+ * @property {number} RATE_LIMIT_REQUESTS - Maximum requests per IP per window. Default: 100. Range: 1-10000 (recommended 50-200). Set via RATE_LIMIT_REQUESTS in wrangler.toml. Used by: rate-limiter.js
  *
- * @property {number} RATE_LIMIT_WINDOW
- * Rate limit time window in milliseconds
- * - **Default**: `60000` (1 minute)
- * - **Common values**: 60000 (1min), 300000 (5min), 3600000 (1hr)
- * - **Environment**: Set via `RATE_LIMIT_WINDOW` in wrangler.toml
- * - **Used by**: [rate-limiter.js](../middleware/rate-limiter.js)
+ * @property {number} RATE_LIMIT_WINDOW - Rate limit time window in milliseconds. Default: 60000 (1 min). Common values: 60000 (1min), 300000 (5min), 3600000 (1hr). Set via RATE_LIMIT_WINDOW in wrangler.toml. Used by: rate-limiter.js
  *
- * @property {number} FETCH_TIMEOUT
- * Timeout for upstream HTTP requests in milliseconds
- * - **Default**: `10000` (10 seconds)
- * - **Range**: 1000-30000 (1s-30s recommended)
- * - **Environment**: Set via `FETCH_TIMEOUT` in wrangler.toml
- * - **Used by**: [proxy-handler.js](../proxy/proxy-handler.js), [script-cache.js](../cache/script-cache.js)
+ * @property {number} FETCH_TIMEOUT - Timeout for upstream HTTP requests in milliseconds. Default: 10000 (10s). Range: 1000-30000. Set via FETCH_TIMEOUT in wrangler.toml. Used by: proxy-handler.js, script-cache.js
  *
- * @property {number} UUID_SALT_ROTATION
- * UUID rotation interval in milliseconds (for time-based deterministic UUIDs)
- * - **Default**: `604800000` (7 days)
- * - **Common values**: 86400000 (1 day), 604800000 (7 days), 2592000000 (30 days)
- * - **Impact**: How often endpoint UUIDs rotate (when ENDPOINTS_UUID_ROTATION=false)
- * - **Environment**: Set via `UUID_SALT_ROTATION` in wrangler.toml
- * - **Used by**: [uuid.js](../core/uuid.js), [endpoints-info.js](../handlers/endpoints-info.js)
+ * @property {number} UUID_SALT_ROTATION - UUID rotation interval in milliseconds for time-based deterministic UUIDs. Default: 604800000 (7 days). Common: 86400000 (1d), 604800000 (7d), 2592000000 (30d). Controls how often endpoint UUIDs rotate when ENDPOINTS_UUID_ROTATION=false. Set via UUID_SALT_ROTATION in wrangler.toml. Used by: uuid.js, endpoints-info.js
  *
- * @property {string} UUID_SECRET
- * Secret key for UUID generation using SHA-256 hashing
- * - **Auto-generated**: Random UUID if not provided (via generateDefaultSecret)
- * - **Recommended**: Set manually for production via `wrangler secret put UUID_SECRET`
- * - **Format**: Any string (recommended: 32+ character random hex)
- * - **Example**: `'a3f9c2e1b8d4f5a6c7e8d9f0a1b2c3d4'`
- * - **Environment**: Set via `UUID_SECRET` in .dev.vars (local) or wrangler secret (production)
- * - **Used by**: [uuid.js](../core/uuid.js)
+ * @property {string} UUID_SECRET - Secret key for UUID generation using SHA-256. Auto-generated if not provided. Recommended: Set via 'wrangler secret put UUID_SECRET'. Format: 32+ char random hex. Example: 'a3f9c2e1b8d4f5a6c7e8d9f0a1b2c3d4'. Set via .dev.vars (local) or wrangler secret (production). Used by: uuid.js
  *
- * @property {number} CACHE_TTL
- * Cache Time-To-Live for proxied static scripts in seconds
- * - **Default**: `3600` (1 hour)
- * - **Range**: 300-86400 (5min-24hr recommended)
- * - **Applies to**: gtm.js, gtag.js, fbevents.js proxied scripts
- * - **Does NOT apply to**: Tracking endpoints (/collect, /g/collect) - never cached
- * - **Environment**: Set via `CACHE_TTL` in wrangler.toml
- * - **Used by**: [cache.js](../core/cache.js), [script-cache.js](../cache/script-cache.js)
+ * @property {number} CACHE_TTL - Cache Time-To-Live for proxied static scripts in seconds. Default: 3600 (1hr). Range: 300-86400 (5min-24hr). Applies to: gtm.js, gtag.js, fbevents.js. Does NOT apply to tracking endpoints (/collect) which are never cached. Set via CACHE_TTL in wrangler.toml. Used by: cache.js, script-cache.js
  *
- * @property {number} MAX_REQUEST_SIZE
- * Maximum request body size in bytes (protection against large payloads)
- * - **Default**: `1048576` (1MB)
- * - **Range**: 10240-10485760 (10KB-10MB)
- * - **Purpose**: Prevents DoS attacks with oversized request bodies
- * - **Environment**: Set via `MAX_REQUEST_SIZE` in wrangler.toml
- * - **Used by**: [validator.js](../middleware/validator.js) - DEPRECATED (inlined in worker.js)
+ * @property {number} MAX_REQUEST_SIZE - Maximum request body size in bytes (DoS protection). Default: 1048576 (1MB). Range: 10240-10485760 (10KB-10MB). Set via MAX_REQUEST_SIZE in wrangler.toml. Used by: validator.js (deprecated, inlined in worker.js)
  *
- * @property {string} FACEBOOK_ENDPOINT_ID
- * Facebook Pixel endpoint UUID for obfuscated routing
- * - **Auto-generated**: Random UUID if not provided
- * - **Format**: UUID or any unique string (recommended: UUID format)
- * - **Example**: `'a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e'`
- * - **Creates routes**: `/cdn/f/{UUID}` (script GET + endpoint POST)
- * - **Environment**: Set via `FACEBOOK_ENDPOINT_ID` in wrangler.toml
- * - **Used by**: [router.js](../routing/router.js), [uuid.js](../core/uuid.js)
+ * @property {string} FACEBOOK_ENDPOINT_ID - Facebook Pixel endpoint UUID for obfuscated routing. Auto-generated if not provided. Format: UUID recommended. Example: 'a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e'. Creates route: /cdn/f/{UUID} (script GET + endpoint POST). Set via FACEBOOK_ENDPOINT_ID in wrangler.toml. Used by: router.js, uuid.js
  *
- * @property {string} GOOGLE_ENDPOINT_ID
- * Google Analytics/GTM endpoint UUID for obfuscated routing
- * - **Auto-generated**: Random UUID if not provided
- * - **Format**: UUID or any unique string (recommended: UUID format)
- * - **Example**: `'b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f'`
- * - **Creates routes**: `/cdn/g/{UUID}` (script GET + endpoint POST)
- * - **Environment**: Set via `GOOGLE_ENDPOINT_ID` in wrangler.toml
- * - **Used by**: [router.js](../routing/router.js), [uuid.js](../core/uuid.js)
+ * @property {string} GOOGLE_ENDPOINT_ID - Google Analytics/GTM endpoint UUID for obfuscated routing. Auto-generated if not provided. Format: UUID recommended. Example: 'b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f'. Creates route: /cdn/g/{UUID} (script GET + endpoint POST). Set via GOOGLE_ENDPOINT_ID in wrangler.toml. Used by: router.js, uuid.js
  *
- * @property {string} LOG_LEVEL
- * Logging verbosity level for worker output
- * - **Default**: `'info'`
- * - **Valid values**: `'debug'` | `'info'` | `'warn'` | `'error'`
- * - **Production**: Use `'info'` or `'warn'`
- * - **Development**: Use `'debug'` for detailed output
- * - **Environment**: Set via `LOG_LEVEL` in wrangler.toml
- * - **Used by**: [logger.js](../core/logger.js)
+ * @property {string} LOG_LEVEL - Logging verbosity level. Default: 'info'. Valid: 'debug' | 'info' | 'warn' | 'error'. Production: use 'info' or 'warn'. Development: use 'debug' for detail. Set via LOG_LEVEL in wrangler.toml. Used by: logger.js
  *
- * @property {boolean} DEBUG_HEADERS
- * Enable debug headers in responses (X-Script-Key, X-Cache-Status, etc.)
- * - **Default**: `false`
- * - **Production**: MUST be `false` (debug headers expose implementation details)
- * - **Development**: Can be `true` for debugging
- * - **Impact**: When enabled, adds X-Script-Key, X-Script-Hash, X-Cache-* headers
- * - **Security**: Debug headers can be used for ad-blocker fingerprinting
- * - **Environment**: Set via `DEBUG_HEADERS` in wrangler.toml
- * - **Used by**: [script-cache.js](../cache/script-cache.js), [response-builder.js](../proxy/response-builder.js)
+ * @property {boolean} DEBUG_HEADERS - Enable debug headers in responses (X-Script-Key, X-Cache-Status, etc). Default: false. Production: MUST be false (exposes implementation). Development: can be true. Security warning: debug headers enable ad-blocker fingerprinting. Set via DEBUG_HEADERS in wrangler.toml. Used by: script-cache.js, response-builder.js
  *
- * @property {boolean} ENDPOINTS_UUID_ROTATION
- * Control whether endpoint UUIDs rotate automatically
- * - **Default**: `false` (rotation ENABLED - recommended)
- * - **When false**: UUIDs rotate weekly based on UUID_SALT_ROTATION (max security)
- * - **When true**: UUIDs are fixed (FACEBOOK_ENDPOINT_ID, GOOGLE_ENDPOINT_ID never change)
- * - **Rotation enabled (false)**: Requires Shopify theme to fetch UUIDs via /endpoints API
- * - **Rotation disabled (true)**: Can hardcode UUIDs in Shopify theme (simpler but less secure)
- * - **Environment**: Set via `ENDPOINTS_UUID_ROTATION` in wrangler.toml
- * - **Used by**: [uuid.js](../core/uuid.js), [endpoints-info.js](../handlers/endpoints-info.js)
+ * @property {boolean} ENDPOINTS_UUID_ROTATION - Control automatic UUID rotation. Default: false (rotation ENABLED - recommended). When false: UUIDs rotate weekly via UUID_SALT_ROTATION (max security, requires /endpoints API). When true: UUIDs fixed from FACEBOOK_ENDPOINT_ID/GOOGLE_ENDPOINT_ID (simpler, less secure). Set via ENDPOINTS_UUID_ROTATION in wrangler.toml. Used by: uuid.js, endpoints-info.js
  *
- * @property {string} ENDPOINTS_SECRET
- * Secret token for /endpoints API authentication (query string based)
- * - **Auto-generated**: Random UUID if not provided
- * - **Recommended**: Set manually for production via `wrangler secret put ENDPOINTS_SECRET`
- * - **Format**: Any string (recommended: 32+ character random hex)
- * - **Example**: `'a3f9c2e1b8d4f5a6c7e8d9f0a1b2c3d4e5f6a7b8c9d0'`
- * - **Usage**: GET /endpoints?token=YOUR_SECRET
- * - **Security**: NEVER expose publicly, NEVER commit to git
- * - **Environment**: Set via `ENDPOINTS_SECRET` in .dev.vars (local) or wrangler secret (production)
- * - **Used by**: [endpoints-info.js](../handlers/endpoints-info.js)
+ * @property {string} ENDPOINTS_SECRET - Secret token for /endpoints API authentication (query string). Auto-generated if not provided. Recommended: Set via 'wrangler secret put ENDPOINTS_SECRET'. Format: 32+ char random hex. Example: 'a3f9c2e1b8d4f5a6c7e8d9f0a1b2c3d4e5f6a7b8c9d0'. Usage: GET /endpoints?token=SECRET. Security: NEVER expose publicly, NEVER commit to git. Set via .dev.vars (local) or wrangler secret (production). Used by: endpoints-info.js
  *
- * @property {Object<string, string>} CONTAINER_ALIASES
- * GTM/GA4 container ID aliases for query string obfuscation
- * - **Default**: `{}` (passthrough mode, no obfuscation)
- * - **Format**: JSON object mapping aliases to real container IDs
- * - **Example**: `{ "abc123": "GTM-XXXXX", "def456": "G-YYYYY" }`
- * - **Purpose**: Hide GTM-/G- patterns from ad-blocker detection
- * - **Client request**: `/cdn/g/{UUID}?c=abc123`
- * - **Upstream receives**: `?id=GTM-XXXXX`
- * - **Environment**: Set via `CONTAINER_ALIASES` (JSON string) in wrangler.toml
- * - **Used by**: [query-mapper.js](../proxy/query-mapper.js)
+ * @property {Object<string, string>} CONTAINER_ALIASES - GTM/GA4 container ID aliases for query obfuscation. Default: {} (passthrough, no obfuscation). Format: JSON object {"alias": "real_id"}. Example: {"abc123": "GTM-XXXXX", "def456": "G-YYYYY"}. Purpose: Hide GTM-/G- patterns from ad-blockers. Client: /cdn/g/{UUID}?c=abc123 → Upstream: ?id=GTM-XXXXX. Set via CONTAINER_ALIASES (JSON string) in wrangler.toml. Used by: query-mapper.js
  *
  * @example
  * // Access configuration values
