@@ -63,8 +63,31 @@ function generateDefaultSecret() {
   return `${timestamp}-${random}`;
 }
 
-// ============= CONFIG OBJECT =============
-// Will be initialized with environment variables via initConfig()
+/**
+ * @typedef {Object} Config
+ * @property {string} GTM_SERVER_URL - GTM Server-Side container URL (optional)
+ * @property {string[]} ALLOWED_ORIGINS - CORS allowed origins (auto-detected if empty)
+ * @property {number} RATE_LIMIT_REQUESTS - Maximum requests per IP per window
+ * @property {number} RATE_LIMIT_WINDOW - Rate limit time window in milliseconds
+ * @property {number} FETCH_TIMEOUT - Upstream request timeout in milliseconds
+ * @property {number} UUID_SALT_ROTATION - UUID rotation interval in milliseconds
+ * @property {string} UUID_SECRET - Secret for UUID generation (SHA-256)
+ * @property {number} CACHE_TTL - Cache TTL for static scripts in seconds
+ * @property {number} MAX_REQUEST_SIZE - Maximum request body size in bytes
+ * @property {string} FACEBOOK_ENDPOINT_ID - Facebook endpoint UUID for obfuscation
+ * @property {string} GOOGLE_ENDPOINT_ID - Google endpoint UUID for obfuscation
+ * @property {string} LOG_LEVEL - Log level ('debug'|'info'|'warn'|'error')
+ * @property {boolean} DEBUG_HEADERS - Enable debug headers in responses
+ * @property {boolean} ENDPOINTS_UUID_ROTATION - Enable/disable UUID rotation
+ * @property {string} ENDPOINTS_SECRET - Secret token for /endpoints authentication
+ * @property {Object<string, string>} CONTAINER_ALIASES - GTM/GA4 container ID aliases
+ */
+
+/**
+ * Configuration object for Tracklay worker
+ * Initialized with defaults and overridden by environment variables via initConfig()
+ * @type {Config}
+ */
 export let CONFIG = {
   // ============= SERVER CONFIGURATION =============
   // GTM Server-Side URL (server container)
