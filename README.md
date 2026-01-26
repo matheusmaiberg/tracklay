@@ -60,6 +60,20 @@ Tracklay supports multiple tracking platforms and deployment modes:
 - GA4 Transport: See [docs/shopify/GTM-CONFIGURATION.md](docs/shopify/GTM-CONFIGURATION.md)
 - UUID Rotation: See [docs/SHOPIFY-INTEGRATION.md](docs/SHOPIFY-INTEGRATION.md#strategy-1-metafields-n8n-recommended)
 
+## Deploy Options
+
+**Option 1: Manual**
+```bash
+npm run deploy
+```
+
+**Option 2: One-click**
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/your-github-username/tracklay)
+
+**Option 3: Custom domain**
+1. Cloudflare Dashboard → Workers → Domains & Routes
+2. Add route: `yourstore.com/cdn/*` → tracklay worker
+
 ## Features
 
 - ✅ **First-party tracking** - Serve scripts from your domain
@@ -147,20 +161,6 @@ Tracklay works out-of-the-box with zero configuration. For advanced setups:
 - Setup: See [Quick Start](#quick-start) above
 - Advanced: See [docs/SHOPIFY-INTEGRATION.md](docs/SHOPIFY-INTEGRATION.md)
 - Security: See `.env.example` for all options
-
-## Deploy Options
-
-**Option 1: Manual**
-```bash
-npm run deploy
-```
-
-**Option 2: One-click**
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/your-github-username/tracklay)
-
-**Option 3: Custom domain**
-1. Cloudflare Dashboard → Workers → Domains & Routes
-2. Add route: `yourstore.com/cdn/*` → tracklay worker
 
 ## Troubleshooting
 
