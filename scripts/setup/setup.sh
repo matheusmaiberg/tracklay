@@ -174,10 +174,11 @@ main() {
     echo ""
 
     echo "3. ${GREEN}Update Shopify Theme${NC}"
-    echo "   Replace GTM/Analytics URLs with proxy URLs"
+    echo "   Replace GTM/Analytics URLs with obfuscated UUID-based proxy URLs"
     echo "   Example:"
     echo "     Before: https://www.googletagmanager.com/gtag/js?id=G-XXXXX"
-    echo "     After:  https://yourstore.com/cdn/gtag/js?id=G-XXXXX"
+    echo "     After:  https://yourstore.com/cdn/g/YOUR-UUID?id=G-XXXXX"
+    echo "   Note: Use the UUIDs from step 1 (run 'node scripts/get-urls.js' to see them)"
     echo ""
 
     echo "4. ${GREEN}Test Deployment${NC}"

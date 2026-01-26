@@ -1,5 +1,16 @@
 # Frequently Asked Questions (FAQ)
 
+> ⚠️ **v3.0.0 UPDATE** - This FAQ references some legacy routes that were removed in v3.0.0
+>
+> **Key Changes:**
+> - ❌ Legacy routes removed: `/cdn/gtag/js`, `/cdn/gtm.js`, `/cdn/fbevents.js`
+> - ✅ UUID-based routes only: `/cdn/f/{UUID}`, `/cdn/g/{UUID}`
+> - ✅ See [MIGRATION-V3.md](docs/MIGRATION-V3.md) for complete details
+>
+> Some examples below use old paths for clarity - replace with your UUID-based paths.
+>
+> ---
+
 Common questions and answers about Tracklay.
 
 ## General Questions
@@ -28,10 +39,12 @@ The Cloudflare Workers free tier includes 100,000 requests/day, which is enough 
 
 ### How does it work?
 
-1. Your store loads scripts from your domain (e.g., `yourstore.com/cdn/gtag/js`)
+1. Your store loads scripts from your domain (e.g., `yourstore.com/cdn/g/{UUID}`)
 2. Cloudflare Worker proxies the request to Google's servers
 3. Worker adds proper CORS headers and returns the script
 4. Browser treats it as first-party and doesn't block it
+
+Note: v3.0.0 uses UUID-based obfuscated paths instead of detectable patterns.
 
 ### What gets proxied?
 
@@ -181,7 +194,8 @@ Yes. In Cloudflare Dashboard:
 Test:
 
 ```bash
-curl https://yourstore.com/cdn/gtag/js?id=G-XXXXX
+# Replace YOUR-UUID with your actual Google UUID (see: node scripts/get-urls.js)
+curl https://yourstore.com/cdn/g/YOUR-UUID?id=G-XXXXX
 ```
 
 ### I'm getting CORS errors. Why?

@@ -106,13 +106,14 @@ SUCCESS_COUNT=0
 TOTAL_COUNT=3
 
 # Warm cache para cada script obfuscado em paralelo
-(warm_script "/cdn/f/${FACEBOOK_UUID}-script.js" "Facebook Pixel (obfuscated)") &
+# v3.0.0: No suffixes - same path for scripts and endpoints
+(warm_script "/cdn/f/${FACEBOOK_UUID}" "Facebook Pixel (obfuscated)") &
 PID_FB=$!
 
-(warm_script "/cdn/g/${GOOGLE_UUID}-tag.js" "Google Analytics (obfuscated)") &
+(warm_script "/cdn/g/${GOOGLE_UUID}?id=G-XXXXX" "Google Analytics (obfuscated)") &
 PID_GA=$!
 
-(warm_script "/cdn/g/${GOOGLE_UUID}-gtm.js" "Google Tag Manager (obfuscated)") &
+(warm_script "/cdn/g/${GOOGLE_UUID}?id=GTM-XXXXX" "Google Tag Manager (obfuscated)") &
 PID_GTM=$!
 
 # Aguardar todos os processos

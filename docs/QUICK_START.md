@@ -1,5 +1,23 @@
 # Quick Start Guide
 
+> ⚠️ **OUTDATED DOCUMENTATION** - This guide is for v2.x and earlier
+>
+> **v3.0.0 removed ALL legacy routes** mentioned in this document (e.g., `/cdn/gtag/js`, `/cdn/gtm.js`).
+>
+> **For v3.0.0+ setup**, please see:
+> - **Migration Guide**: [docs/MIGRATION-V3.md](MIGRATION-V3.md) - How to upgrade from v2.x
+> - **Shopify Integration**: [docs/SHOPIFY-INTEGRATION.md](SHOPIFY-INTEGRATION.md) - Complete setup guide
+> - **Main README**: [README.md](../README.md) - v3.0.0 features and examples
+>
+> **Key v3.0.0 Changes:**
+> - ❌ Legacy routes removed: `/cdn/gtag/js`, `/cdn/gtm.js`, `/cdn/fbevents.js`
+> - ✅ UUID-based routes only: `/cdn/f/{UUID}`, `/cdn/g/{UUID}`
+> - ✅ Same path for scripts and endpoints (no suffixes)
+> - ✅ Automatic UUID rotation support
+> - ✅ Container aliases for query obfuscation
+>
+> ---
+
 Get your Tracklay running in 5 minutes!
 
 ## Prerequisites Checklist

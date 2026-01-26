@@ -31,11 +31,9 @@ console.log(`📍 Domain: ${domain}\n`);
 
 // Facebook Pixel URLs
 console.log('🔵 FACEBOOK PIXEL (Meta Pixel)\n');
-console.log('   Obfuscated Endpoint (recommended):');
-console.log(`   ${domain}/cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}.js\n`);
-
-console.log('   Obfuscated Script (recommended):');
-console.log(`   ${domain}/cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}-script.js\n`);
+console.log('   Obfuscated Path (script + endpoint share same path):');
+console.log(`   ${domain}/cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}\n`);
+console.log('   ℹ️  Same path for both script (GET) and endpoint (POST)\n');
 
 // Google Analytics URLs
 console.log('🔴 GOOGLE ANALYTICS / TAG MANAGER\n');
@@ -43,14 +41,14 @@ console.log('🔴 GOOGLE ANALYTICS / TAG MANAGER\n');
 if (CONFIG.GTM_SERVER_URL) {
   console.log(`   GTM Server URL: ${CONFIG.GTM_SERVER_URL}\n`);
 
-  console.log('   Obfuscated Endpoint (recommended):');
-  console.log(`   ${domain}/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}.js\n`);
+  console.log('   Obfuscated Path (script + endpoint share same path):');
+  console.log(`   ${domain}/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}\n`);
 
-  console.log('   Obfuscated GTM Script (recommended):');
-  console.log(`   ${domain}/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}-gtm.js?id=GTM-XXXXX\n`);
-
-  console.log('   Obfuscated GTag Script (recommended):');
-  console.log(`   ${domain}/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}-tag.js?id=G-XXXXX\n`);
+  console.log('   Usage Examples:');
+  console.log(`   • GTM Script:  ${domain}/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}?id=GTM-XXXXX`);
+  console.log(`   • GA4 Script:  ${domain}/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}?id=G-XXXXX`);
+  console.log(`   • With Alias:  ${domain}/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}?c=abc123\n`);
+  console.log('   ℹ️  Same path for both script (GET) and endpoint (GET with v=2/tid=/_p=)\n');
 } else {
   console.log('   ⚠️  GTM_SERVER_URL not configured');
   console.log('   Set GTM_SERVER_URL to enable Google Analytics endpoints\n');
