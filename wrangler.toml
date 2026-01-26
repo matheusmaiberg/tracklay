@@ -49,6 +49,7 @@ compatibility_date = "2025-12-01"
 # ============================================================
 # Secrets should be set via Dashboard or wrangler secret:
 #   wrangler secret put UUID_SECRET
+#   wrangler secret put ENDPOINTS_SECRET
 #
 # Non-secret vars can be defined here:
 
@@ -98,6 +99,19 @@ FACEBOOK_ENDPOINT_ID = "a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e"
 
 # Google Endpoint ID (creates: /cdn/g/{UUID}.js)
 GOOGLE_ENDPOINT_ID = "b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f"
+
+# ============= UUID ROTATION & DEBUG =============
+# UUID Rotation (false = enabled, true = disabled)
+ENDPOINTS_UUID_ROTATION = "false"
+
+# Debug headers (false = production, true = development)
+DEBUG_HEADERS = "false"
+
+# Container aliases for query obfuscation (JSON string)
+CONTAINER_ALIASES = "{}"
+
+# UUID salt rotation interval in milliseconds (default: 7 days)
+UUID_SALT_ROTATION = "604800000"
 
 # See docs/OBFUSCATION.md for complete guide on anti-detection setup
 
