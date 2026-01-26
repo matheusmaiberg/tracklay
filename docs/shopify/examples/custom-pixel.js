@@ -1,21 +1,27 @@
 // ============================================================
-// SHOPIFY CUSTOM PIXEL - GTM INTEGRATION
+// SHOPIFY CUSTOM PIXEL - GTM INTEGRATION (v3.0.0)
 // ============================================================
 // Shopify Admin → Settings → Customer Events → Add Custom Pixel
 //
-// SIMPLE APPROACH:
-// 1. Load GTM from proxy
-// 2. Subscribe to all_events
-// 3. Extract ALL available data
-// 4. Push to dataLayer (GTM handles mapping)
+// v3.0.0 FEATURES:
+// 1. UUID-based obfuscated routing (anti-ad-blocker)
+// 2. Automatic UUID rotation support (weekly by default)
+// 3. Dynamic UUID fetching from Worker /endpoints API
+// 4. Zero manual configuration (UUIDs fetched automatically)
+// 5. 100% first-party tracking (Worker → GTM Server → GA4)
+//
+// SETUP:
+// 1. Deploy Tracklay Worker with GTM_SERVER_URL configured
+// 2. Set ENDPOINTS_SECRET in Worker (wrangler secret put)
+// 3. Update CONFIG.WORKER below with your domain and token
+// 4. Paste this code in Shopify Custom Pixel
 // ============================================================
 
 const CONFIG = {
-  GTM_ID: 'G' + 'T' + 'M-' + 'XXXXXXX',
-  PROXY: {
-      DOMAIN: 'https://cdn.suevich.com',
-      PATH: '/cdn/',
-      FILE: 'gtm.js',
+  GTM_ID: 'G' + 'T' + 'M-' + 'XXXXXXX', // Your GTM container ID
+  WORKER: {
+    DOMAIN: window.location.origin, // Auto-detect store domain
+    ENDPOINTS_TOKEN: 'your-endpoints-secret-token-here', // Same as ENDPOINTS_SECRET in Worker
   },
   DEBUG: true,
   DEFAULT_CURRENCY: 'EUR'
@@ -23,7 +29,46 @@ const CONFIG = {
 
 const log = (msg, data) => CONFIG.DEBUG && console.log(`[GTM] ${msg}`, data ?? '');
 const error = (msg, err) => console.error(`[GTM] ${msg}`, err ?? '');
-const buildProxyUrl = (params = '') => `${CONFIG.PROXY.DOMAIN}${CONFIG.PROXY.PATH}${CONFIG.PROXY.FILE}${params}`;
+
+// ============= DYNAMIC UUID FETCHING (v3.0.0) =============
+let CACHED_ENDPOINTS = null;
+
+/**
+ * Fetch current UUIDs from Worker /endpoints API
+ * Supports automatic UUID rotation (UUIDs change weekly by default)
+ * @returns {Promise<Object>} { google: { uuid, script, endpoint }, facebook: {...} }
+ */
+const fetchEndpoints = async () => {
+  if (CACHED_ENDPOINTS) return CACHED_ENDPOINTS;
+
+  try {
+    const url = `${CONFIG.WORKER.DOMAIN}/endpoints?token=${CONFIG.WORKER.ENDPOINTS_TOKEN}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    CACHED_ENDPOINTS = data;
+    log('Endpoints fetched', data);
+    return data;
+  } catch (err) {
+    error('Failed to fetch endpoints', err);
+    throw err;
+  }
+};
+
+/**
+ * Build proxy URL using dynamic UUID from /endpoints
+ * @param {string} containerId - GTM container ID (e.g., 'GTM-XXXXXXX')
+ * @returns {Promise<string>} Full script URL with UUID
+ */
+const buildProxyUrl = async (containerId) => {
+  const endpoints = await fetchEndpoints();
+  const { google } = endpoints;
+  return `${CONFIG.WORKER.DOMAIN}${google.script}?id=${containerId}`;
+};
 
 const MARKETING_EVENTS = new Set(['product_added_to_cart', 'checkout_started', 'checkout_completed']);
 
@@ -50,20 +95,28 @@ const clean = (obj) => {
   );
 };
 
-// ============= LOAD GTM =============
-const loadGTM = () => {
+// ============= LOAD GTM (v3.0.0) =============
+/**
+ * Load GTM script from Worker using dynamic UUID
+ * Fetches current UUID from /endpoints API (supports rotation)
+ * Worker automatically injects transport_url for 100% first-party tracking
+ */
+const loadGTM = async () => {
   try {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' });
 
+    // Fetch current UUID and build script URL
+    const scriptUrl = await buildProxyUrl(CONFIG.GTM_ID);
+
     const script = document.createElement('script');
     script.async = true;
-    script.src = buildProxyUrl(`?id=${CONFIG.GTM_ID}`);
+    script.src = scriptUrl;
 
     const firstScript = document.getElementsByTagName('script')[0];
     firstScript.parentNode.insertBefore(script, firstScript);
 
-    log('GTM loaded');
+    log('GTM loaded from', scriptUrl);
   } catch (e) {
     error('Load failed', e);
   }
@@ -195,12 +248,13 @@ const updateConsent = () => {
   }
 };
 
-// ============= INIT =============
-(function() {
+// ============= INIT (v3.0.0) =============
+(async function() {
   try {
-    log('Initializing...');
+    log('Initializing (v3.0.0)...');
 
-    loadGTM();
+    // Load GTM with dynamic UUID (async)
+    await loadGTM();
     updateConsent();
 
     if (init.customerPrivacy?.subscribe) {
@@ -221,7 +275,7 @@ const updateConsent = () => {
       }
     });
 
-    log('Initialized ✓');
+    log('Initialized ✓ (v3.0.0 UUID-based routing active)');
   } catch (e) {
     error('Init failed', e);
   }
