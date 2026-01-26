@@ -34,32 +34,37 @@ import { Logger } from '../core/logger.js';
  * @returns {string} Modified script with transport_url injection
  */
 function injectTransportUrlGTM(scriptContent, transportUrl) {
-  Logger.debug('Injecting GTM transport_url via dataLayer', { transportUrl });
+  Logger.debug('Injecting GTM transport_url by modifying internal code', { transportUrl });
 
-  // JavaScript code to inject BEFORE GTM script runs
-  // GTM must have server_container_url set before initialization
-  const injectionCode = `
-;(function() {
-  // Initialize dataLayer if not exists
-  window.dataLayer = window.dataLayer || [];
+  // GTM sends hits to /g/collect by default
+  // We need to replace the hardcoded endpoint with our Worker endpoint
+  // This is more aggressive than dataLayer configuration
 
-  // Push GTM Server configuration BEFORE gtm.js runs
-  // This tells GTM to send all hits to our server-side endpoint
-  window.dataLayer.push({
-    'gtm.serverContainerUrl': '${transportUrl}',
-    'event': 'gtm.init'
-  });
-})();
-`;
+  // Replace all occurrences of Google's collect endpoints with our Worker endpoint
+  let modifiedScript = scriptContent;
 
-  // PREPEND injection code to the start of the script
-  // This is critical - GTM must read server_container_url during initialization
-  const modifiedScript = injectionCode + scriptContent;
+  // Replace /g/collect endpoint (used by GA4 Measurement Protocol)
+  modifiedScript = modifiedScript.replace(
+    /["']\/g\/collect["']/g,
+    `"${transportUrl}"`
+  );
 
-  Logger.debug('GTM transport_url injected successfully', {
+  // Replace www.google-analytics.com/g/collect (full URL)
+  modifiedScript = modifiedScript.replace(
+    /https?:\/\/www\.google-analytics\.com\/g\/collect/g,
+    transportUrl
+  );
+
+  // Replace region1.google-analytics.com (regional endpoints)
+  modifiedScript = modifiedScript.replace(
+    /https?:\/\/region\d\.google-analytics\.com\/g\/collect/g,
+    transportUrl
+  );
+
+  Logger.debug('GTM endpoint override applied', {
     originalSize: scriptContent.length,
     modifiedSize: modifiedScript.length,
-    injectedBytes: injectionCode.length
+    transportUrl
   });
 
   return modifiedScript;
