@@ -33,16 +33,16 @@ compatibility_date = "2025-12-01"
 # Configure with your domain:
 
 [[routes]]
-pattern = "yourstore.com/cdn/*"
-zone_name = "yourstore.com"
+# pattern = "yourstore.com/cdn/*"
+# zone_name = "yourstore.com"
 
 [[routes]]
-pattern = "yourstore.com/assets/*"
-zone_name = "yourstore.com"
+# pattern = "yourstore.com/assets/*"
+# zone_name = "yourstore.com"
 
 [[routes]]
-pattern = "yourstore.com/static/*"
-zone_name = "yourstore.com"
+# pattern = "yourstore.com/static/*"
+# zone_name = "yourstore.com"
 
 # ============================================================
 # ENVIRONMENT VARIABLES
