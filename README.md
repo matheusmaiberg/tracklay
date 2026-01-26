@@ -29,7 +29,9 @@
 
 ## Configuration Options
 
-Tracklay supports three deployment modes depending on your tracking infrastructure:
+Tracklay supports multiple tracking platforms and deployment modes:
+
+### Google Analytics / GTM
 
 | Mode | Description | Components | Data Quality | Use Case |
 |------|-------------|------------|--------------|----------|
@@ -37,12 +39,26 @@ Tracklay supports three deployment modes depending on your tracking infrastructu
 | **GTM Server-Side** | Full server-side tracking | Tracklay proxy + GTM Server container | High (server-side + EMQ 9+) | Enhanced privacy, ad-blocker bypass, server-side enrichment |
 | **GTM Server + GA4 Transport** | Maximum data quality | Tracklay proxy + GTM Server + GA4 `transport_url` | Maximum (direct server → GA4) | Best data accuracy, complete Safari ITP bypass, CAPI-like quality |
 
-**Recommendation:** Start with **Web mode** for quick wins, upgrade to **GTM Server + GA4 Transport** for maximum data quality and conversion tracking accuracy.
+### Meta Pixel (Facebook)
+
+| Mode | Description | Components | Data Quality | Use Case |
+|------|-------------|------------|--------------|----------|
+| **Web (Client-side)** | Proxy Meta Pixel script + tracking | Tracklay proxy → Facebook servers | Standard (client-side) | Quick setup, bypass ad-blockers |
+| **CAPI (Planned)** | Server-side conversions | Tracklay proxy + Meta CAPI integration | Maximum (server-side + EMQ 9+) | Best conversion tracking, future release |
+
+### Additional Features
+
+- **UUID Rotation:** Automatic weekly rotation (via `/endpoints` + n8n) or manual fixed UUIDs
+- **Container Aliases:** Query string obfuscation (`?c=alias` → `?id=GTM-XXX`)
+- **Combined Setup:** Run Google + Meta simultaneously on same proxy
+
+**Recommendation:** Start with **Web mode** for quick wins, upgrade to **GTM Server + GA4 Transport** (Google) and **CAPI** (Meta) for maximum data quality.
 
 **Setup guides:**
 - Web mode: Follow [Quick Start](#quick-start) below
 - GTM Server: See [docs/SHOPIFY-INTEGRATION.md](docs/SHOPIFY-INTEGRATION.md)
 - GA4 Transport: See [docs/shopify/GTM-CONFIGURATION.md](docs/shopify/GTM-CONFIGURATION.md)
+- UUID Rotation: See [docs/SHOPIFY-INTEGRATION.md](docs/SHOPIFY-INTEGRATION.md#strategy-1-metafields-n8n-recommended)
 
 ## Features
 
