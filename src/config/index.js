@@ -356,6 +356,10 @@ export function initConfig(env = {}) {
   // UUID secret (not parsed as int)
   if (env.UUID_SECRET) {
     CONFIG.UUID_SECRET = env.UUID_SECRET;
+  } else {
+    // Log auto-generated UUID secret for development
+    console.log('[CONFIG] UUID_SECRET auto-generated (not set in env)');
+    console.log('[CONFIG] ℹ️ INFO: This is used for UUID generation (deterministic hashing)');
   }
 
   // Obfuscation IDs
@@ -395,10 +399,30 @@ export function initConfig(env = {}) {
   // Authenticated endpoint secret (from Cloudflare Workers secret or env var)
   if (env.ENDPOINTS_SECRET) {
     CONFIG.ENDPOINTS_SECRET = env.ENDPOINTS_SECRET;
+  } else {
+    // Log auto-generated secret for development/debugging
+    // In production, ALWAYS set via: wrangler secret put ENDPOINTS_SECRET
+    console.log('[CONFIG] ENDPOINTS_SECRET auto-generated (not set in env)');
+    console.log('[CONFIG] Auto-generated token:', CONFIG.ENDPOINTS_SECRET);
+    console.log('[CONFIG] ⚠️ WARNING: Use this token for /endpoints API access');
+    console.log('[CONFIG] ⚠️ PRODUCTION: Set via "wrangler secret put ENDPOINTS_SECRET"');
   }
 
   // Auto-inject transport_url (parse as boolean)
   if (env.AUTO_INJECT_TRANSPORT_URL !== undefined) {
     CONFIG.AUTO_INJECT_TRANSPORT_URL = env.AUTO_INJECT_TRANSPORT_URL === 'true' || env.AUTO_INJECT_TRANSPORT_URL === true;
   }
+
+  // Log configuration summary (useful for debugging in Cloudflare logs)
+  console.log('[CONFIG] ============================================================');
+  console.log('[CONFIG] Tracklay Worker Configuration Summary');
+  console.log('[CONFIG] ============================================================');
+  console.log('[CONFIG] GTM_SERVER_URL:', CONFIG.GTM_SERVER_URL || '(not set - client-side only)');
+  console.log('[CONFIG] AUTO_INJECT_TRANSPORT_URL:', CONFIG.AUTO_INJECT_TRANSPORT_URL);
+  console.log('[CONFIG] ENDPOINTS_UUID_ROTATION:', CONFIG.ENDPOINTS_UUID_ROTATION ? 'disabled (fixed UUIDs)' : 'enabled (weekly rotation)');
+  console.log('[CONFIG] DEBUG_HEADERS:', CONFIG.DEBUG_HEADERS);
+  console.log('[CONFIG] RATE_LIMIT:', CONFIG.RATE_LIMIT_REQUESTS, 'requests per', CONFIG.RATE_LIMIT_WINDOW / 1000, 'seconds');
+  console.log('[CONFIG] CACHE_TTL:', CONFIG.CACHE_TTL, 'seconds');
+  console.log('[CONFIG] LOG_LEVEL:', CONFIG.LOG_LEVEL);
+  console.log('[CONFIG] ============================================================');
 }
