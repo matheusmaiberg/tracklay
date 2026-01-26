@@ -24,21 +24,24 @@ compatibility_flags = ["nodejs_compat"]
 # account_id = "your-account-id-here"
 
 # ============================================================
-# ROUTES (Custom Domain)
+# ROUTES (Custom Domain) - OPTIONAL
 # ============================================================
 # Configure routes to serve the worker from your domain
-# This allows the Worker to respond on your store domain (e.g., suevich.com/cdn/*)
-# instead of requiring a separate subdomain (cdn.suevich.com)
+# Example: yourstore.com/cdn/* → worker
 #
-# REQUIRED: Your domain must be in Cloudflare (orange cloud)
-
-[[routes]]
-pattern = "suevich.com/cdn/*"
-zone_name = "suevich.com"
-
-[[routes]]
-pattern = "www.suevich.com/cdn/*"
-zone_name = "suevich.com"
+# Option 1: Configure via Dashboard
+#   Workers > Your Worker > Settings > Domains & Routes
+#
+# Option 2: Configure here (requires zone_id)
+# Configure with your domain:
+#
+# [[routes]]
+# pattern = "yourstore.com/cdn/*"
+# zone_name = "yourstore.com"
+#
+# [[routes]]
+# pattern = "www.yourstore.com/cdn/*"
+# zone_name = "yourstore.com"
 
 # ============================================================
 # ENVIRONMENT VARIABLES
