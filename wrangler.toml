@@ -8,6 +8,9 @@ name = "tracklay"
 main = "worker.js"
 compatibility_date = "2025-12-01"
 
+# Modern features enabled
+compatibility_flags = ["nodejs_compat", "streams_enable_constructors"]
+
 # ============================================================
 # WORKER SETTINGS
 # ============================================================
@@ -146,19 +149,23 @@ crons = ["0 */12 * * *"]
 # DEVELOPMENT
 # ============================================================
 # Local development settings
+# Uncomment to enable development environment
+# Deploy with: wrangler deploy --env development
 
-[env.development]
-name = "tracklay-dev"
-vars = { ENVIRONMENT = "development" }
+# [env.development]
+# name = "tracklay-dev"
+# vars = { ENVIRONMENT = "development" }
 
 # ============================================================
 # STAGING
 # ============================================================
 # Staging environment
+# Uncomment to enable staging environment
+# Deploy with: wrangler deploy --env staging
 
-[env.staging]
-name = "tracklay-staging"
-vars = { ENVIRONMENT = "staging" }
+# [env.staging]
+# name = "tracklay-staging"
+# vars = { ENVIRONMENT = "staging" }
 
 # ============================================================
 # BUILD
@@ -167,15 +174,6 @@ vars = { ENVIRONMENT = "staging" }
 
 [build]
 command = ""
-
-# ============================================================
-# COMPATIBILITY
-# ============================================================
-# Compatibility flags for specific features
-# https://developers.cloudflare.com/workers/platform/compatibility-dates
-
-# Modern features enabled
-compatibility_flags = ["nodejs_compat", "streams_enable_constructors"]
 
 # ============================================================
 # SMART PLACEMENT
