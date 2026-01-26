@@ -75,13 +75,12 @@
     "npm": ">=9.0.0"
   },
   "devDependencies": {
-    "wrangler": "^3.0.0",
-    "vitest": "^1.0.0",
-    "@vitest/coverage-v8": "^1.0.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "eslint": "^8.0.0",
     "prettier": "^3.0.0",
-    "eslint": "^8.0.0"
+    "vitest": "^4.0.18",
+    "wrangler": "^4.60.0"
   },
-  "optionalDependencies": {},
   "files": [
     "worker.js",
     "src/",
