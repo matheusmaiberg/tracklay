@@ -32,7 +32,7 @@
 // ============================================================
 
 const CONFIG = {
-  GTM_ID: 'G' + 'T' + 'M-' + 'XXXXXXX', // Your GTM container ID
+  GTM_ID: 'G' + 'T' + 'M-' + 'MJ7DW8H', // Your GTM container ID
 
   // ✅ RECOMMENDED: Fixed UUID (simpler, more secure)
   // Get your UUID with: node scripts/get-urls.js
@@ -43,7 +43,7 @@ const CONFIG = {
   // Requires: ENDPOINTS_UUID_ROTATION=true (rotation) + ENDPOINTS_SECRET in Worker
   // NOT RECOMMENDED: Exposes ENDPOINTS_SECRET in client code
   // WORKER: {
-  //   DOMAIN: window.location.origin,
+  //   DOMAIN: 'https://tracking.yourstore.com', // Worker domain (NOT window.location.origin!)
   //   ENDPOINTS_TOKEN: 'your-endpoints-secret-token-here',
   // },
 
