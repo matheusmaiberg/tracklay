@@ -44,6 +44,7 @@ Shopify Theme → Read metafields (public, rotating)
 ### Pros & Cons
 
 ✅ **Pros:**
+
 - Secret never exposed to client
 - Automatic rotation every 7 days
 - UUIDs public but rotate frequently
@@ -51,6 +52,7 @@ Shopify Theme → Read metafields (public, rotating)
 - Zero manual intervention
 
 ❌ **Cons:**
+
 - Requires n8n or GitHub Actions setup
 - Needs Shopify Admin API token
 - Initial setup complexity (30-60 minutes)
@@ -183,8 +185,8 @@ document.head.appendChild(gtagScript);
 ```bash
 # .env or Cloudflare Dashboard
 ENDPOINTS_UUID_ROTATION=true
-FACEBOOK_ENDPOINT_ID=a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e
-GOOGLE_ENDPOINT_ID=b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f
+ENDPOINTS_FACEBOOK=a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e
+ENDPOINTS_GOOGLE=b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f
 ```
 
 **Step 2: Hardcode in Theme**
@@ -206,10 +208,10 @@ node -e "console.log(require('crypto').randomUUID())"
 # Output: a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e
 
 # Update worker env vars
-wrangler secret put FACEBOOK_ENDPOINT_ID
+wrangler secret put ENDPOINTS_FACEBOOK
 # Paste new UUID
 
-wrangler secret put GOOGLE_ENDPOINT_ID
+wrangler secret put ENDPOINTS_GOOGLE
 # Paste new UUID
 
 # Update theme code with new UUIDs
@@ -219,12 +221,14 @@ wrangler secret put GOOGLE_ENDPOINT_ID
 ### Pros & Cons
 
 ✅ **Pros:**
+
 - Zero infrastructure (no n8n/GitHub Actions)
 - Simple setup (5 minutes)
 - Works immediately
 - No external dependencies
 
 ❌ **Cons:**
+
 - UUIDs don't auto-rotate
 - Manual rotation needed (every 1-3 months)
 - If discovered, valid until manually rotated
@@ -239,13 +243,14 @@ wrangler secret put GOOGLE_ENDPOINT_ID
 ```javascript
 // ❌ PROBLEM: Secret exposed in browser source code
 fetch('https://cdn.yourstore.com/endpoints?token=abc123...')
-  .then(r => r.json())
-  .then(data => {
+  .then((r) => r.json())
+  .then((data) => {
     // Use data.facebook.uuid and data.google.uuid
   });
 ```
 
 **Ad-blockers can:**
+
 1. Inspect page source (View Source or DevTools)
 2. Extract `ENDPOINTS_SECRET` from fetch URL
 3. Scrape `/endpoints?token=SECRET` themselves
@@ -260,11 +265,11 @@ fetch('https://cdn.yourstore.com/endpoints?token=abc123...')
 
 ## 📋 Comparison Table
 
-| Strategy | Security | Complexity | Auto-Rotation | Setup Time | Maintenance |
-|----------|----------|------------|---------------|------------|-------------|
-| **Metafields + n8n** | ⭐⭐⭐⭐⭐ | Medium | ✅ Yes (7d) | 30-60 min | Zero |
-| **Fixed UUIDs** | ⭐⭐⭐ | Low | ❌ Manual | 5 min | Monthly |
-| **Client-Side Fetch** | ⭐ (INSECURE) | Low | ✅ Yes (7d) | 10 min | Zero |
+| Strategy              | Security      | Complexity | Auto-Rotation | Setup Time | Maintenance |
+| --------------------- | ------------- | ---------- | ------------- | ---------- | ----------- |
+| **Metafields + n8n**  | ⭐⭐⭐⭐⭐    | Medium     | ✅ Yes (7d)   | 30-60 min  | Zero        |
+| **Fixed UUIDs**       | ⭐⭐⭐        | Low        | ❌ Manual     | 5 min      | Monthly     |
+| **Client-Side Fetch** | ⭐ (INSECURE) | Low        | ✅ Yes (7d)   | 10 min     | Zero        |
 
 **Recommendation:** Use Strategy 1 (Metafields + n8n) for production. Use Strategy 2 for testing or low-traffic sites.
 
@@ -300,8 +305,8 @@ name: Update Shopify Tracking Metafields
 
 on:
   schedule:
-    - cron: '0 0 */6 * *'  # Every 6 days at midnight UTC
-  workflow_dispatch:  # Manual trigger button
+    - cron: '0 0 */6 * *' # Every 6 days at midnight UTC
+  workflow_dispatch: # Manual trigger button
 
 jobs:
   update:
@@ -375,6 +380,7 @@ Result: `gid://shopify/Shop/12345678` → Use `12345678`
    wrangler secret list
    ```
 2. Check query string format:
+
    ```bash
    # ✅ Correct
    curl 'https://cdn.yourstore.com/endpoints?token=abc123'
@@ -382,6 +388,7 @@ Result: `gid://shopify/Shop/12345678` → Use `12345678`
    # ❌ Wrong (missing quotes)
    curl https://cdn.yourstore.com/endpoints?token=abc123
    ```
+
 3. Ensure secret is set in Cloudflare:
    ```bash
    wrangler secret put ENDPOINTS_SECRET

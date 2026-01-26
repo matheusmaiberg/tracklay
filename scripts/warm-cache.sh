@@ -80,8 +80,8 @@ UUIDS=$(node -e "
   import('../src/config/index.js').then(({ CONFIG, initConfig }) => {
     initConfig(process.env);
     console.log(JSON.stringify({
-      facebook: CONFIG.FACEBOOK_ENDPOINT_ID,
-      google: CONFIG.GOOGLE_ENDPOINT_ID
+      facebook: CONFIG.ENDPOINTS_FACEBOOK,
+      google: CONFIG.ENDPOINTS_GOOGLE
     }));
   });
 " 2>/dev/null)

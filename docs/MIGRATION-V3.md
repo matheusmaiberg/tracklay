@@ -23,6 +23,7 @@ This is a **BREAKING CHANGE** that requires updating your Shopify theme before u
 ### Removed Routes (10 Total)
 
 **Scripts (7 routes):**
+
 ```
 ❌ /cdn/fbevents.js
 ❌ /cdn/gtm.js
@@ -34,6 +35,7 @@ This is a **BREAKING CHANGE** that requires updating your Shopify theme before u
 ```
 
 **Endpoints (3 routes):**
+
 ```
 ❌ /tr (Facebook Pixel tracking)
 ❌ /g/collect (Google Analytics tracking)
@@ -43,6 +45,7 @@ This is a **BREAKING CHANGE** that requires updating your Shopify theme before u
 ### Remaining Routes (Ultra-Aggressive - No Suffixes)
 
 **Scripts & Endpoints (same path, differentiated by method/query):**
+
 ```
 ✅ /cdn/f/{FACEBOOK_UUID}
    - Script: GET /cdn/f/{UUID}
@@ -54,6 +57,7 @@ This is a **BREAKING CHANGE** that requires updating your Shopify theme before u
 ```
 
 **Note:** v3.0.0 implements ultra-aggressive obfuscation:
+
 - NO file extensions (no `.js`)
 - NO suffixes (no `-script`, `-gtm`, `-tag`)
 - Same path for scripts and endpoints
@@ -66,43 +70,49 @@ This is a **BREAKING CHANGE** that requires updating your Shopify theme before u
 ### Facebook Pixel (Meta Pixel)
 
 **BEFORE (v2.x - Legacy, Detectable):**
+
 ```html
 <!-- Script Loading -->
 <script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src='https://yourstore.com/cdn/fbevents.js';  ❌ REMOVED
-s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script');
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src='https://yourstore.com/cdn/fbevents.js';  ❌ REMOVED
+  s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script');
 
-fbq('init', 'YOUR_PIXEL_ID');
-fbq('track', 'PageView');
+  fbq('init', 'YOUR_PIXEL_ID');
+  fbq('track', 'PageView');
 </script>
 
 <!-- Tracking Endpoint -->
-<img height="1" width="1" style="display:none"
-     src="https://yourstore.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1" />
-     ❌ REMOVED
+<img
+  height="1"
+  width="1"
+  style="display:none"
+  src="https://yourstore.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
+/>
+❌ REMOVED
 ```
 
 **AFTER (v3.0.0 - Ultra-Aggressive, Undetectable):**
+
 ```html
 <!-- Script Loading (NO SUFFIX - ultra-aggressive mode) -->
 <script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src='https://yourstore.com/cdn/f/a8f3c2e1';  ✅ ULTRA-OBFUSCATED (no .js, no -script)
-s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script');
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src='https://yourstore.com/cdn/f/a8f3c2e1';  ✅ ULTRA-OBFUSCATED (no .js, no -script)
+  s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script');
 
-fbq('init', 'YOUR_PIXEL_ID');
-fbq('track', 'PageView');
+  fbq('init', 'YOUR_PIXEL_ID');
+  fbq('track', 'PageView');
 </script>
 
 <!-- Tracking Endpoint: Same path, differentiated by POST method -->
@@ -112,6 +122,7 @@ fbq('track', 'PageView');
 ### Google Tag Manager (GTM)
 
 **BEFORE (v2.x - Legacy, Detectable):**
+
 ```html
 <!-- GTM Script -->
 <script async src="https://yourstore.com/cdn/gtm.js?id=GTM-XXXXX"></script>
@@ -119,13 +130,18 @@ fbq('track', 'PageView');
 
 <!-- GTM Iframe (noscript fallback) -->
 <noscript>
-  <iframe src="https://yourstore.com/g/collect?id=GTM-XXXXX"
-          height="0" width="0" style="display:none;visibility:hidden"></iframe>
+  <iframe
+    src="https://yourstore.com/g/collect?id=GTM-XXXXX"
+    height="0"
+    width="0"
+    style="display:none;visibility:hidden"
+  ></iframe>
   ❌ REMOVED
 </noscript>
 ```
 
 **AFTER (v3.0.0 - Ultra-Aggressive, Undetectable):**
+
 ```html
 <!-- GTM Script (NO SUFFIX - ultra-aggressive mode) -->
 <script async src="https://yourstore.com/cdn/g/b7e4d3f2?id=GTM-XXXXX"></script>
@@ -141,6 +157,7 @@ fbq('track', 'PageView');
 ### Google Analytics 4 (GA4 / GTag)
 
 **BEFORE (v2.x - Legacy, Detectable):**
+
 ```html
 <!-- GA4 Script -->
 <script async src="https://yourstore.com/cdn/gtag.js?id=G-XXXXXXXXXX"></script>
@@ -148,13 +165,16 @@ fbq('track', 'PageView');
 
 <script>
   window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
+  function gtag() {
+    dataLayer.push(arguments);
+  }
   gtag('js', new Date());
   gtag('config', 'G-XXXXXXXXXX');
 </script>
 ```
 
 **AFTER (v3.0.0 - Ultra-Aggressive, Undetectable):**
+
 ```html
 <!-- GA4 Script (NO SUFFIX - ultra-aggressive mode) -->
 <script async src="https://yourstore.com/cdn/g/b7e4d3f2?id=G-XXXXXXXXXX"></script>
@@ -162,12 +182,14 @@ fbq('track', 'PageView');
 
 <script>
   window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
+  function gtag() {
+    dataLayer.push(arguments);
+  }
   gtag('js', new Date());
 
   // Configure with obfuscated transport_url (NO SUFFIX)
   gtag('config', 'G-XXXXXXXXXX', {
-    'transport_url': 'https://yourstore.com/cdn/g/b7e4d3f2'
+    transport_url: 'https://yourstore.com/cdn/g/b7e4d3f2',
   });
 </script>
 
@@ -175,7 +197,7 @@ fbq('track', 'PageView');
 <script async src="https://yourstore.com/cdn/g/b7e4d3f2?c=def456"></script>
 <script>
   gtag('config', 'G-XXXXXXXXXX', {
-    'transport_url': 'https://yourstore.com/cdn/g/b7e4d3f2'
+    transport_url: 'https://yourstore.com/cdn/g/b7e4d3f2',
   });
 </script>
 ✅ MAXIMUM OBFUSCATION (G-XXXXXXXXXX hidden via CONTAINER_ALIASES)
@@ -228,9 +250,10 @@ cat .env | grep ENDPOINT_ID
 ```
 
 You'll see:
+
 ```
-FACEBOOK_ENDPOINT_ID=a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e
-GOOGLE_ENDPOINT_ID=b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f
+ENDPOINTS_FACEBOOK=a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e
+ENDPOINTS_GOOGLE=b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f
 ```
 
 **Option C: Generate new UUIDs (recommended for fresh start)**
@@ -304,11 +327,13 @@ npm run deploy
 Tracklay uses UUIDs (Universally Unique Identifiers) to create unique, undetectable tracking routes.
 
 **Example UUID:**
+
 ```
 a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e
 ```
 
 **Benefits:**
+
 - Ad-blockers can't pattern-match UUIDs (no "fbevents" or "gtm" in URL)
 - Each installation has unique UUIDs
 - Can be rotated for maximum security
@@ -316,18 +341,20 @@ a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e
 ### How UUIDs Are Generated
 
 **Default (Auto-generated):**
+
 - Tracklay auto-generates UUIDs on first run
 - Stored in Cloudflare Workers environment variables
 - Remain constant unless manually changed
 
 **Custom (Recommended for production):**
+
 ```bash
 # Generate random UUID
 node -e "console.log(require('crypto').randomUUID())"
 
 # Set in .env
-FACEBOOK_ENDPOINT_ID=your-uuid-here
-GOOGLE_ENDPOINT_ID=your-uuid-here
+ENDPOINTS_FACEBOOK=your-uuid-here
+ENDPOINTS_GOOGLE=your-uuid-here
 
 # Deploy
 npm run deploy
@@ -338,6 +365,7 @@ npm run deploy
 **v3.0.0 includes AUTOMATIC UUID rotation** for maximum security:
 
 **How it works:**
+
 - UUIDs rotate weekly (default: 7 days)
 - Time-based deterministic generation (all workers synchronized)
 - No manual intervention required
@@ -364,8 +392,8 @@ FB_UUID=$(node -e "console.log(require('crypto').randomUUID())")
 GOOGLE_UUID=$(node -e "console.log(require('crypto').randomUUID())")
 
 # 2. Update Cloudflare Workers environment
-wrangler secret put FACEBOOK_ENDPOINT_ID
-wrangler secret put GOOGLE_ENDPOINT_ID
+wrangler secret put ENDPOINTS_FACEBOOK
+wrangler secret put ENDPOINTS_GOOGLE
 
 # 3. Update Shopify theme with new UUIDs
 # 4. Deploy: npm run deploy
@@ -402,6 +430,7 @@ wrangler secret put GOOGLE_ENDPOINT_ID
 ```
 
 **Theme Settings Schema (config/settings_schema.json):**
+
 ```json
 {
   "name": "Tracking",
@@ -450,6 +479,7 @@ wrangler secret put GOOGLE_ENDPOINT_ID
 ```
 
 **Theme Settings Schema:**
+
 ```json
 {
   "type": "text",
@@ -495,6 +525,7 @@ wrangler secret put GOOGLE_ENDPOINT_ID
 ```
 
 **Theme Settings Schema:**
+
 ```json
 {
   "type": "text",
@@ -513,6 +544,7 @@ wrangler secret put GOOGLE_ENDPOINT_ID
 **Problem:** Browser console shows 404 errors for script URLs
 
 **Solutions:**
+
 1. Verify UUIDs are correct (run `npm run urls`)
 2. Check Cloudflare Workers deployment status
 3. Test Worker directly: `curl https://yourstore.com/health`
@@ -521,12 +553,14 @@ wrangler secret put GOOGLE_ENDPOINT_ID
 ### Tracking events not arriving
 
 **Facebook Pixel:**
+
 1. Check Events Manager → Test Events
 2. Verify Pixel ID is correct in theme
 3. Check browser console for JavaScript errors
 4. Verify `fbq` function is defined: Open console, type `fbq`, should show function
 
 **Google Analytics:**
+
 1. Check Real-Time reports (Audience → Real-Time → Overview)
 2. Verify Measurement ID / Container ID is correct
 3. Check browser console for errors
@@ -537,6 +571,7 @@ wrangler secret put GOOGLE_ENDPOINT_ID
 **Problem:** Console shows CORS errors when loading scripts
 
 **Solutions:**
+
 1. Verify `ALLOWED_ORIGINS` in Cloudflare Workers includes your shop domain
 2. Check that both `yourstore.myshopify.com` AND custom domain are listed
 3. Redeploy Worker after updating ALLOWED_ORIGINS
@@ -548,9 +583,10 @@ wrangler secret put GOOGLE_ENDPOINT_ID
 **Cause:** Auto-generation creates new UUIDs on each deploy if not set in environment
 
 **Solution:** Set UUIDs explicitly in Cloudflare Dashboard or .env:
+
 ```bash
-wrangler secret put FACEBOOK_ENDPOINT_ID
-wrangler secret put GOOGLE_ENDPOINT_ID
+wrangler secret put ENDPOINTS_FACEBOOK
+wrangler secret put ENDPOINTS_GOOGLE
 ```
 
 ### Ad-blockers still blocking
@@ -558,11 +594,13 @@ wrangler secret put GOOGLE_ENDPOINT_ID
 **Problem:** Some users still have tracking blocked
 
 **Possible causes:**
+
 1. Using legacy URLs (check theme code)
 2. Ad-blocker has UUID in custom blacklist (rotate UUIDs)
 3. Browser privacy settings blocking all tracking (user choice, can't bypass)
 
 **Verification:**
+
 - v3.0.0 should have ~10-20% detection rate (down from 90-100%)
 - Test with uBlock Origin, AdBlock Plus in Incognito mode
 - Obfuscated routes should load successfully

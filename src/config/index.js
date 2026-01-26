@@ -86,15 +86,15 @@ function generateDefaultSecret() {
  *
  * @property {number} MAX_REQUEST_SIZE - Maximum request body size in bytes (DoS protection). Default: 1048576 (1MB). Range: 10240-10485760 (10KB-10MB). Set via MAX_REQUEST_SIZE in wrangler.toml. Used by: validator.js (deprecated, inlined in worker.js)
  *
- * @property {string} FACEBOOK_ENDPOINT_ID - Facebook Pixel endpoint UUID for obfuscated routing. Auto-generated if not provided. Format: UUID recommended. Example: 'a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e'. Creates route: /cdn/f/{UUID} (script GET + endpoint POST). Set via FACEBOOK_ENDPOINT_ID in wrangler.toml. Used by: router.js, uuid.js
+ * @property {string} ENDPOINTS_FACEBOOK - Facebook Pixel endpoint UUID for obfuscated routing. Auto-generated if not provided. Format: UUID recommended. Example: 'a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e'. Creates route: /cdn/f/{UUID} (script GET + endpoint POST). Set via ENDPOINTS_FACEBOOK in wrangler.toml. Used by: router.js, uuid.js
  *
- * @property {string} GOOGLE_ENDPOINT_ID - Google Analytics/GTM endpoint UUID for obfuscated routing. Auto-generated if not provided. Format: UUID recommended. Example: 'b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f'. Creates route: /cdn/g/{UUID} (script GET + endpoint POST). Set via GOOGLE_ENDPOINT_ID in wrangler.toml. Used by: router.js, uuid.js
+ * @property {string} ENDPOINTS_GOOGLE - Google Analytics/GTM endpoint UUID for obfuscated routing. Auto-generated if not provided. Format: UUID recommended. Example: 'b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f'. Creates route: /cdn/g/{UUID} (script GET + endpoint POST). Set via ENDPOINTS_GOOGLE in wrangler.toml. Used by: router.js, uuid.js
  *
  * @property {string} LOG_LEVEL - Logging verbosity level. Default: 'info'. Valid: 'debug' | 'info' | 'warn' | 'error'. Production: use 'info' or 'warn'. Development: use 'debug' for detail. Set via LOG_LEVEL in wrangler.toml. Used by: logger.js
  *
  * @property {boolean} DEBUG_HEADERS - Enable debug headers in responses (X-Script-Key, X-Cache-Status, etc). Default: false. Production: MUST be false (exposes implementation). Development: can be true. Security warning: debug headers enable ad-blocker fingerprinting. Set via DEBUG_HEADERS in wrangler.toml. Used by: script-cache.js, response-builder.js
  *
- * @property {boolean} ENDPOINTS_UUID_ROTATION - Control automatic UUID rotation. Default: false (fixed UUIDs - RECOMMENDED). When false: UUIDs fixed from FACEBOOK_ENDPOINT_ID/GOOGLE_ENDPOINT_ID (simpler, no /endpoints API needed). When true: UUIDs rotate weekly via UUID_SALT_ROTATION (advanced, max security, requires /endpoints API). Set via ENDPOINTS_UUID_ROTATION in wrangler.toml. Used by: uuid.js, endpoints-info.js
+ * @property {boolean} ENDPOINTS_UUID_ROTATION - Control automatic UUID rotation. Default: false (fixed UUIDs - RECOMMENDED). When false: UUIDs fixed from ENDPOINTS_FACEBOOK/ENDPOINTS_GOOGLE (simpler, no /endpoints API needed). When true: UUIDs rotate weekly via UUID_SALT_ROTATION (advanced, max security, requires /endpoints API). Set via ENDPOINTS_UUID_ROTATION in wrangler.toml. Used by: uuid.js, endpoints-info.js
  *
  * @property {string} ENDPOINTS_SECRET - Secret token for /endpoints API authentication (query string). Auto-generated if not provided. Recommended: Set via 'wrangler secret put ENDPOINTS_SECRET'. Format: 32+ char random hex. Example: 'a3f9c2e1b8d4f5a6c7e8d9f0a1b2c3d4e5f6a7b8c9d0'. Usage: GET /endpoints?token=SECRET. Security: NEVER expose publicly, NEVER commit to git. Set via .dev.vars (local) or wrangler secret (production). Used by: endpoints-info.js
  *
@@ -193,15 +193,15 @@ export let CONFIG = {
   // UUID-based obfuscated endpoints for anti-ad-blocker detection
   // Format: /cdn/{provider}/{uuid}.js
   // These IDs should be unique per deployment for maximum obfuscation
-  // Can be set via environment variables: FACEBOOK_ENDPOINT_ID, GOOGLE_ENDPOINT_ID
+  // Can be set via environment variables: ENDPOINTS_FACEBOOK, ENDPOINTS_GOOGLE
 
   // Facebook endpoint ID (f prefix: /cdn/f/{ID}.js)
   // AUTO-GENERATED: Random UUID for obfuscation
-  FACEBOOK_ENDPOINT_ID: generateDefaultSecret(),
+  ENDPOINTS_FACEBOOK: generateDefaultSecret(),
 
   // Google endpoint ID (g prefix: /cdn/g/{ID}.js)
   // AUTO-GENERATED: Random UUID for obfuscation
-  GOOGLE_ENDPOINT_ID: generateDefaultSecret(),
+  ENDPOINTS_GOOGLE: generateDefaultSecret(),
 
   // ============= LOGGING =============
   // Log level for debugging and monitoring
@@ -243,7 +243,7 @@ export let CONFIG = {
   // - No KV/Durable Objects needed (everything is time-based)
   //
   // ROTATION DISABLED (false - default, RECOMMENDED):
-  //   - Uses fixed FACEBOOK_ENDPOINT_ID and GOOGLE_ENDPOINT_ID from env
+  //   - Uses fixed ENDPOINTS_FACEBOOK and ENDPOINTS_GOOGLE from env
   //   - UUIDs never change (valid forever)
   //   - Simpler setup (hardcode in theme)
   //   - No /endpoints API needed
@@ -364,11 +364,11 @@ export function initConfig(env = {}) {
   }
 
   // Obfuscation IDs
-  if (env.FACEBOOK_ENDPOINT_ID) {
-    CONFIG.FACEBOOK_ENDPOINT_ID = env.FACEBOOK_ENDPOINT_ID;
+  if (env.ENDPOINTS_FACEBOOK) {
+    CONFIG.ENDPOINTS_FACEBOOK = env.ENDPOINTS_FACEBOOK;
   }
-  if (env.GOOGLE_ENDPOINT_ID) {
-    CONFIG.GOOGLE_ENDPOINT_ID = env.GOOGLE_ENDPOINT_ID;
+  if (env.ENDPOINTS_GOOGLE) {
+    CONFIG.ENDPOINTS_GOOGLE = env.ENDPOINTS_GOOGLE;
   }
 
   // Logging
@@ -421,8 +421,8 @@ export function initConfig(env = {}) {
   console.log('[CONFIG] GTM_SERVER_URL:', CONFIG.GTM_SERVER_URL || '(not set - client-side only)');
   console.log('[CONFIG] AUTO_INJECT_TRANSPORT_URL:', CONFIG.AUTO_INJECT_TRANSPORT_URL);
   console.log('[CONFIG] ENDPOINTS_UUID_ROTATION:', CONFIG.ENDPOINTS_UUID_ROTATION ? 'enabled (weekly rotation)' : 'disabled (fixed UUIDs)');
-  console.log('[CONFIG] FACEBOOK_ENDPOINT_ID:', CONFIG.FACEBOOK_ENDPOINT_ID);
-  console.log('[CONFIG] GOOGLE_ENDPOINT_ID:', CONFIG.GOOGLE_ENDPOINT_ID);
+  console.log('[CONFIG] ENDPOINTS_FACEBOOK:', CONFIG.ENDPOINTS_FACEBOOK);
+  console.log('[CONFIG] ENDPOINTS_GOOGLE:', CONFIG.ENDPOINTS_GOOGLE);
   console.log('[CONFIG] DEBUG_HEADERS:', CONFIG.DEBUG_HEADERS);
   console.log('[CONFIG] RATE_LIMIT:', CONFIG.RATE_LIMIT_REQUESTS, 'requests per', CONFIG.RATE_LIMIT_WINDOW / 1000, 'seconds');
   console.log('[CONFIG] CACHE_TTL:', CONFIG.CACHE_TTL, 'seconds');

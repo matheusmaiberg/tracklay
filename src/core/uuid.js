@@ -70,13 +70,13 @@ export async function generateEndpointUUID(provider) {
   // Check if rotation is disabled (use fixed UUIDs from env vars)
   if (CONFIG.ENDPOINTS_UUID_ROTATION === false) {
     if (provider === 'facebook') {
-      return CONFIG.FACEBOOK_ENDPOINT_ID;
+      return CONFIG.ENDPOINTS_FACEBOOK;
     } else if (provider === 'google') {
-      return CONFIG.GOOGLE_ENDPOINT_ID;
+      return CONFIG.ENDPOINTS_GOOGLE;
     }
     // Fallback to default if provider not recognized
     Logger.warn('Unknown provider for endpoint UUID', { provider });
-    return CONFIG.FACEBOOK_ENDPOINT_ID;
+    return CONFIG.ENDPOINTS_FACEBOOK;
   }
 
   // Rotation enabled: use generateSecureUUID() with provider-specific salt

@@ -59,8 +59,8 @@ Create `.env` file:
 ALLOWED_ORIGINS=https://yourstore.myshopify.com,https://www.yourstore.com
 
 # Generate UUIDs for obfuscation (run: node -e "console.log(crypto.randomUUID())")
-FACEBOOK_ENDPOINT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-GOOGLE_ENDPOINT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+ENDPOINTS_FACEBOOK=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+ENDPOINTS_GOOGLE=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 UUID_SECRET=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 # Rate limiting
@@ -77,11 +77,13 @@ npm run deploy
 ### 1.3 Configure Custom Domain
 
 In Cloudflare dashboard:
+
 1. Go to Workers & Pages → Your Worker → Settings → Triggers
 2. Add custom domain: `cdn.yourstore.com`
 3. Verify DNS is configured correctly
 
 Test the worker:
+
 ```bash
 curl https://cdn.yourstore.com/cdn/health
 # Should return: {"status":"ok","version":"2.0.0"}
@@ -103,16 +105,16 @@ Edit these values at the top of the file:
 ```javascript
 const CONFIG = {
   // Your GTM container ID
-  GTM_ID: 'GTM-XXXXXXX',  // ← Replace with your GTM ID
+  GTM_ID: 'GTM-XXXXXXX', // ← Replace with your GTM ID
 
   // Your proxy domain
-  PROXY_DOMAIN: 'https://cdn.yourstore.com',  // ← Replace with your domain
+  PROXY_DOMAIN: 'https://cdn.yourstore.com', // ← Replace with your domain
 
   // Enable debug logging (disable in production)
-  DEBUG: true,  // ← Set to false in production
+  DEBUG: true, // ← Set to false in production
 
   // Default currency
-  DEFAULT_CURRENCY: 'EUR'  // ← Your store currency
+  DEFAULT_CURRENCY: 'EUR', // ← Your store currency
 };
 ```
 
@@ -128,6 +130,7 @@ const CONFIG = {
 ### 2.4 Grant Permissions
 
 The pixel needs these permissions (Shopify will ask):
+
 - ✅ Customer events - Read
 - ✅ Customer privacy - Read
 
@@ -181,12 +184,13 @@ Event Endpoint: https://cdn.yourstore.com/tr/19ea1d6f-xxxx-xxxx-xxxx-xxxxxxxxxxx
 2. Click on "Fields to Set"
 3. Add these fields:
 
-| Field Name | Value |
-|------------|-------|
-| `transport_url` | `{{Proxy Domain}}/g/collect` |
-| `first_party_collection` | `true` |
+| Field Name               | Value                        |
+| ------------------------ | ---------------------------- |
+| `transport_url`          | `{{Proxy Domain}}/g/collect` |
+| `first_party_collection` | `true`                       |
 
 Or direct:
+
 ```
 transport_url: https://cdn.yourstore.com/g/collect
 first_party_collection: true
@@ -208,8 +212,9 @@ first_party_collection: true
 ### 4.1 Enable Debug Mode
 
 In Custom Pixel, set:
+
 ```javascript
-DEBUG: true
+DEBUG: true;
 ```
 
 ### 4.2 Test Standard Events
@@ -239,6 +244,7 @@ Open browser console and:
 ### 4.5 Check Event Match Quality
 
 Good EMQ requires these parameters:
+
 - ✅ `em` (email) - hashed
 - ✅ `ph` (phone) - hashed
 - ✅ `client_ip_address`
@@ -257,12 +263,14 @@ The Worker adds IP and User-Agent automatically.
 ### 5.1 Consent Mode Configuration
 
 The Custom Pixel automatically:
+
 - ✅ Reads Shopify's consent state
 - ✅ Updates GTM Consent Mode
 - ✅ Respects user privacy choices
 - ✅ Subscribes to consent changes
 
 Events are filtered based on consent:
+
 - **Marketing events** (add_to_cart, checkout, purchase) require `marketingAllowed`
 - **Analytics events** (page_view, view_item) require `analyticsProcessingAllowed`
 
@@ -287,13 +295,15 @@ Events are filtered based on consent:
 ### 6.1 Disable Debug Mode
 
 In Custom Pixel:
+
 ```javascript
-DEBUG: false
+DEBUG: false;
 ```
 
 ### 6.2 Monitor Performance
 
 Check Cloudflare Analytics:
+
 - Requests per minute
 - Cache hit rate (should be >80%)
 - Error rate (should be <1%)
@@ -302,6 +312,7 @@ Check Cloudflare Analytics:
 ### 6.3 Monitor Event Quality
 
 Check Meta Events Manager:
+
 - Event Match Quality (target: 7-9)
 - Events received
 - Deduplication rate
@@ -309,6 +320,7 @@ Check Meta Events Manager:
 ### 6.4 Set Up Alerts (Optional)
 
 In Cloudflare:
+
 1. Workers → Your Worker → Triggers → Configure alerts
 2. Set alert for:
    - Error rate >5%
@@ -323,6 +335,7 @@ In Cloudflare:
 **Symptoms**: Console shows events pushed, but GTM doesn't see them
 
 **Solutions**:
+
 1. Check if GTM loaded: `console.log(window.dataLayer)`
 2. Verify GTM ID is correct in Custom Pixel
 3. Check browser console for errors
@@ -333,8 +346,9 @@ In Cloudflare:
 **Symptoms**: GTM fires Meta tag, but Meta doesn't receive
 
 **Solutions**:
+
 1. Check proxy URLs in Meta Pixel tag settings
-2. Verify UUID is correct (`FACEBOOK_ENDPOINT_ID`)
+2. Verify UUID is correct (`ENDPOINTS_FACEBOOK`)
 3. Check Network tab: requests should go to `cdn.yourstore.com/tr/...`
 4. Check Cloudflare logs for errors
 
@@ -343,6 +357,7 @@ In Cloudflare:
 **Symptoms**: EMQ below 6
 
 **Solutions**:
+
 1. Verify customer email/phone are included (checkout events)
 2. Check if Worker forwards IP and User-Agent correctly
 3. Ensure `fbp` and `fbc` cookies are set
@@ -353,6 +368,7 @@ In Cloudflare:
 **Symptoms**: 429 errors in console
 
 **Solutions**:
+
 1. Increase `RATE_LIMIT` in `.env` (default: 100 req/min)
 2. Check if bot is hitting your endpoints
 3. Review Cloudflare Analytics for traffic patterns
@@ -362,6 +378,7 @@ In Cloudflare:
 **Symptoms**: Console shows CORS errors
 
 **Solutions**:
+
 1. Verify `ALLOWED_ORIGINS` includes all your store domains
 2. Include both `yourstore.myshopify.com` and custom domain
 3. Check if domain has `www` subdomain variant
@@ -377,7 +394,7 @@ If your store uses multiple currencies:
 ```javascript
 const CONFIG = {
   // ...
-  DEFAULT_CURRENCY: 'USD',  // Fallback currency
+  DEFAULT_CURRENCY: 'USD', // Fallback currency
 };
 ```
 
@@ -394,15 +411,16 @@ const EventMappers = {
   my_custom_event(event) {
     return {
       event: 'custom_action',
-      custom_param: getPath(event, 'data.customField')
+      custom_param: getPath(event, 'data.customField'),
     };
-  }
+  },
 };
 ```
 
 ### Additional Tracking Tags
 
 To add more tracking providers (TikTok, Pinterest, etc):
+
 1. Create tag in GTM
 2. Configure to use proxy URLs
 3. Add endpoint mapping in Worker if needed
@@ -414,6 +432,7 @@ To add more tracking providers (TikTok, Pinterest, etc):
 ### 1. Cache Optimization
 
 Worker automatically caches:
+
 - GTM script: 1 hour
 - Meta Pixel script: 1 hour
 - UUID-rotated scripts: 1 hour
@@ -421,6 +440,7 @@ Worker automatically caches:
 ### 2. Request Optimization
 
 Custom Pixel:
+
 - Uses `all_standard_events` (1 subscription instead of 10+)
 - Pushes directly to dataLayer (no unnecessary analytics.publish calls)
 - No retry queue (dataLayer.push is synchronous)
