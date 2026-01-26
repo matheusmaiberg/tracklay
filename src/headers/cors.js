@@ -37,8 +37,10 @@ export function buildCORSHeaders(request) {
     allowedOrigin = origin;
   } else if (origin === 'null') {
     // Handle sandboxed contexts (Shopify Custom Pixel, iframes)
-    // Origin 'null' cannot be added to CORS allow list, use wildcard
-    allowedOrigin = '*';
+    // IMPORTANT: Use literal 'null' string, NOT wildcard
+    // Wildcard (*) cannot be used with credentials: 'include'
+    // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSNotSupportingCredentials
+    allowedOrigin = 'null';
   }
 
   // OTIMIZAÇÃO: early return sem alocar Headers se origin não permitido
@@ -52,11 +54,10 @@ export function buildCORSHeaders(request) {
   // Complete CORS with all necessary headers
   headers.set('Access-Control-Allow-Origin', allowedOrigin);
 
-  // Only set credentials:true if not using wildcard (CORS restriction)
-  // Wildcard (*) cannot be used with credentials:true
-  if (allowedOrigin !== '*') {
-    headers.set('Access-Control-Allow-Credentials', 'true');
-  }
+  // ALWAYS set credentials:true for proper cookie handling
+  // When origin is 'null' (literal string), credentials CAN be used
+  // Only wildcard (*) is incompatible with credentials
+  headers.set('Access-Control-Allow-Credentials', 'true');
 
   headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD');
 
