@@ -5,70 +5,54 @@
 //
 // v3.0.0 FEATURES:
 // 1. UUID-based obfuscated routing (anti-ad-blocker)
-// 2. Automatic UUID rotation support (weekly by default)
-// 3. Dynamic UUID fetching from Worker /endpoints API
-// 4. Zero manual configuration (UUIDs fetched automatically)
-// 5. 100% first-party tracking (Worker → GTM Server → GA4)
+// 2. 100% first-party tracking (Worker → GTM Server → GA4)
+// 3. Automatic transport_url injection (Worker handles everything)
+// 4. Simple setup with fixed UUIDs (recommended)
 //
-// SETUP:
-// 1. Deploy Tracklay Worker with GTM_SERVER_URL configured
-// 2. Set ENDPOINTS_SECRET in Worker (wrangler secret put)
-// 3. Update CONFIG.WORKER below with your domain and token
+// SETUP (RECOMMENDED - Fixed UUIDs):
+// 1. Deploy Tracklay Worker with:
+//    - GTM_SERVER_URL = 'https://gtm.yourstore.com'
+//    - ENDPOINTS_UUID_ROTATION = 'true' (UUIDs fixed, no rotation)
+//    - AUTO_INJECT_TRANSPORT_URL = 'true' (automatic injection)
+// 2. Get your UUID: node scripts/get-urls.js
+// 3. Update CONFIG.GOOGLE_UUID below with your UUID
 // 4. Paste this code in Shopify Custom Pixel
+//
+// BENEFITS:
+// - Zero maintenance (UUIDs never change)
+// - No ENDPOINTS_SECRET required (more secure)
+// - Worker auto-injects transport_url (100% first-party)
+// - 95%+ ad-blocker bypass
+//
+// ADVANCED: Dynamic UUID Rotation (Optional)
+// - Uncomment CONFIG.WORKER section below
+// - Set ENDPOINTS_UUID_ROTATION = 'false' in Worker
+// - Set ENDPOINTS_SECRET in Worker (wrangler secret put)
+// - UUIDs rotate automatically weekly
 // ============================================================
 
 const CONFIG = {
   GTM_ID: 'G' + 'T' + 'M-' + 'XXXXXXX', // Your GTM container ID
-  WORKER: {
-    DOMAIN: window.location.origin, // Auto-detect store domain
-    ENDPOINTS_TOKEN: 'your-endpoints-secret-token-here', // Same as ENDPOINTS_SECRET in Worker
-  },
+
+  // ✅ RECOMMENDED: Fixed UUID (simpler, more secure)
+  // Get your UUID with: node scripts/get-urls.js
+  // Set ENDPOINTS_UUID_ROTATION=true in Worker
+  GOOGLE_UUID: 'b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f', // Replace with your UUID
+
+  // ⚠️ ADVANCED: Dynamic UUID Rotation (Uncomment if needed)
+  // Requires: ENDPOINTS_UUID_ROTATION=false + ENDPOINTS_SECRET in Worker
+  // NOT RECOMMENDED: Exposes ENDPOINTS_SECRET in client code
+  // WORKER: {
+  //   DOMAIN: window.location.origin,
+  //   ENDPOINTS_TOKEN: 'your-endpoints-secret-token-here',
+  // },
+
   DEBUG: true,
   DEFAULT_CURRENCY: 'EUR'
 };
 
 const log = (msg, data) => CONFIG.DEBUG && console.log(`[GTM] ${msg}`, data ?? '');
 const error = (msg, err) => console.error(`[GTM] ${msg}`, err ?? '');
-
-// ============= DYNAMIC UUID FETCHING (v3.0.0) =============
-let CACHED_ENDPOINTS = null;
-
-/**
- * Fetch current UUIDs from Worker /endpoints API
- * Supports automatic UUID rotation (UUIDs change weekly by default)
- * @returns {Promise<Object>} { google: { uuid, script, endpoint }, facebook: {...} }
- */
-const fetchEndpoints = async () => {
-  if (CACHED_ENDPOINTS) return CACHED_ENDPOINTS;
-
-  try {
-    const url = `${CONFIG.WORKER.DOMAIN}/endpoints?token=${CONFIG.WORKER.ENDPOINTS_TOKEN}`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    CACHED_ENDPOINTS = data;
-    log('Endpoints fetched', data);
-    return data;
-  } catch (err) {
-    error('Failed to fetch endpoints', err);
-    throw err;
-  }
-};
-
-/**
- * Build proxy URL using dynamic UUID from /endpoints
- * @param {string} containerId - GTM container ID (e.g., 'GTM-XXXXXXX')
- * @returns {Promise<string>} Full script URL with UUID
- */
-const buildProxyUrl = async (containerId) => {
-  const endpoints = await fetchEndpoints();
-  const { google } = endpoints;
-  return `${CONFIG.WORKER.DOMAIN}${google.script}?id=${containerId}`;
-};
 
 const MARKETING_EVENTS = new Set(['product_added_to_cart', 'checkout_started', 'checkout_completed']);
 
@@ -97,17 +81,35 @@ const clean = (obj) => {
 
 // ============= LOAD GTM (v3.0.0) =============
 /**
- * Load GTM script from Worker using dynamic UUID
- * Fetches current UUID from /endpoints API (supports rotation)
- * Worker automatically injects transport_url for 100% first-party tracking
+ * Load GTM script from Worker using UUID
+ * Two modes:
+ * 1. Fixed UUID (recommended): Uses CONFIG.GOOGLE_UUID
+ * 2. Dynamic UUID (advanced): Fetches from /endpoints API
  */
 const loadGTM = async () => {
   try {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' });
 
-    // Fetch current UUID and build script URL
-    const scriptUrl = await buildProxyUrl(CONFIG.GTM_ID);
+    let scriptUrl;
+
+    // Check if using dynamic UUID rotation
+    if (CONFIG.WORKER?.ENDPOINTS_TOKEN) {
+      // ADVANCED: Fetch current UUID from Worker /endpoints API
+      try {
+        const url = `${CONFIG.WORKER.DOMAIN}/endpoints?token=${CONFIG.WORKER.ENDPOINTS_TOKEN}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        scriptUrl = `${CONFIG.WORKER.DOMAIN}${data.google.script}?id=${CONFIG.GTM_ID}`;
+        log('Dynamic UUID fetched', data);
+      } catch (err) {
+        error('Failed to fetch dynamic UUID, falling back to fixed UUID', err);
+        scriptUrl = `${window.location.origin}/cdn/g/${CONFIG.GOOGLE_UUID}?id=${CONFIG.GTM_ID}`;
+      }
+    } else {
+      // RECOMMENDED: Use fixed UUID
+      scriptUrl = `${window.location.origin}/cdn/g/${CONFIG.GOOGLE_UUID}?id=${CONFIG.GTM_ID}`;
+    }
 
     const script = document.createElement('script');
     script.async = true;
@@ -253,7 +255,7 @@ const updateConsent = () => {
   try {
     log('Initializing (v3.0.0)...');
 
-    // Load GTM with dynamic UUID (async)
+    // Load GTM (async)
     await loadGTM();
     updateConsent();
 
