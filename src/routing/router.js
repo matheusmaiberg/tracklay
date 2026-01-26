@@ -57,6 +57,11 @@ export class Router {
     const endpointMap = await getEndpointMap();
     const scriptMap = await getScriptMap();
 
+    // DEBUG: Log maps and pathname
+    console.log('[DEBUG] Router pathname:', pathname);
+    console.log('[DEBUG] scriptMap keys:', Object.keys(scriptMap));
+    console.log('[DEBUG] endpointMap keys:', Object.keys(endpointMap));
+
     // Check if path exists in either map
     const pathExists = endpointMap[pathname] || scriptMap[pathname];
 
