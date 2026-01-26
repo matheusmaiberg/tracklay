@@ -26,21 +26,55 @@
 import { Logger } from '../core/logger.js';
 
 /**
- * Inject transport_url into Google Analytics/GTM scripts
- * Wraps gtag() function to automatically add transport_url parameter
+ * Inject transport_url into GTM scripts (dataLayer API)
+ * Must be prepended BEFORE GTM initializes to configure server_container_url
  *
- * @param {string} scriptContent - Original script content from Google
+ * @param {string} scriptContent - Original GTM script content from Google
  * @param {string} transportUrl - Worker endpoint URL (e.g., 'https://yourstore.com/cdn/g/{UUID}')
  * @returns {string} Modified script with transport_url injection
- *
- * @example
- * const script = await fetch('https://www.googletagmanager.com/gtag/js?id=G-XXX');
- * const content = await script.text();
- * const modified = injectTransportUrl(content, 'https://yourstore.com/cdn/g/abc123');
- * // Modified script now sends tracking to yourstore.com/cdn/g/abc123 instead of Google
  */
-export function injectTransportUrl(scriptContent, transportUrl) {
-  Logger.debug('Injecting transport_url', { transportUrl });
+function injectTransportUrlGTM(scriptContent, transportUrl) {
+  Logger.debug('Injecting GTM transport_url via dataLayer', { transportUrl });
+
+  // JavaScript code to inject BEFORE GTM script runs
+  // GTM must have server_container_url set before initialization
+  const injectionCode = `
+;(function() {
+  // Initialize dataLayer if not exists
+  window.dataLayer = window.dataLayer || [];
+
+  // Push GTM Server configuration BEFORE gtm.js runs
+  // This tells GTM to send all hits to our server-side endpoint
+  window.dataLayer.push({
+    'gtm.serverContainerUrl': '${transportUrl}',
+    'event': 'gtm.init'
+  });
+})();
+`;
+
+  // PREPEND injection code to the start of the script
+  // This is critical - GTM must read server_container_url during initialization
+  const modifiedScript = injectionCode + scriptContent;
+
+  Logger.debug('GTM transport_url injected successfully', {
+    originalSize: scriptContent.length,
+    modifiedSize: modifiedScript.length,
+    injectedBytes: injectionCode.length
+  });
+
+  return modifiedScript;
+}
+
+/**
+ * Inject transport_url into gtag scripts (gtag API)
+ * Wraps gtag() function to automatically add transport_url parameter
+ *
+ * @param {string} scriptContent - Original gtag script content from Google
+ * @param {string} transportUrl - Worker endpoint URL (e.g., 'https://yourstore.com/cdn/g/{UUID}')
+ * @returns {string} Modified script with transport_url injection
+ */
+function injectTransportUrlGtag(scriptContent, transportUrl) {
+  Logger.debug('Injecting gtag transport_url via gtag() wrapper', { transportUrl });
 
   // JavaScript code to inject
   // Wraps gtag() function to add transport_url to all config() calls
@@ -77,11 +111,11 @@ export function injectTransportUrl(scriptContent, transportUrl) {
 })();
 `;
 
-  // Append injection code to the end of the script
+  // APPEND injection code to the end of the script
   // This ensures gtag() is defined before we wrap it
   const modifiedScript = scriptContent + injectionCode;
 
-  Logger.debug('Transport_url injected successfully', {
+  Logger.debug('gtag transport_url injected successfully', {
     originalSize: scriptContent.length,
     modifiedSize: modifiedScript.length,
     injectedBytes: injectionCode.length
@@ -91,20 +125,70 @@ export function injectTransportUrl(scriptContent, transportUrl) {
 }
 
 /**
- * Check if script content should have transport_url injected
- * Only inject for Google Analytics/GTM scripts
+ * Inject transport_url into Google Analytics/GTM scripts
+ * Automatically detects script type and applies appropriate injection method
+ *
+ * @param {string} scriptContent - Original script content from Google
+ * @param {string} transportUrl - Worker endpoint URL (e.g., 'https://yourstore.com/cdn/g/{UUID}')
+ * @param {string} scriptType - Script type ('gtm' | 'gtag' | 'analytics')
+ * @returns {string} Modified script with transport_url injection
+ *
+ * @example
+ * // GTM script (dataLayer API)
+ * const gtmScript = await fetch('https://www.googletagmanager.com/gtm.js?id=GTM-XXX');
+ * const gtmContent = await gtmScript.text();
+ * const gtmModified = injectTransportUrl(gtmContent, 'https://yourstore.com/cdn/g/abc123', 'gtm');
+ *
+ * @example
+ * // gtag script (gtag API)
+ * const gtagScript = await fetch('https://www.googletagmanager.com/gtag/js?id=G-XXX');
+ * const gtagContent = await gtagScript.text();
+ * const gtagModified = injectTransportUrl(gtagContent, 'https://yourstore.com/cdn/g/abc123', 'gtag');
+ */
+export function injectTransportUrl(scriptContent, transportUrl, scriptType = 'gtag') {
+  try {
+    // Route to appropriate injection method based on script type
+    if (scriptType === 'gtm') {
+      // GTM uses dataLayer API - inject BEFORE script runs
+      return injectTransportUrlGTM(scriptContent, transportUrl);
+    } else {
+      // gtag/analytics use gtag() API - inject AFTER script runs
+      return injectTransportUrlGtag(scriptContent, transportUrl);
+    }
+  } catch (error) {
+    Logger.error('Transport_url injection failed', {
+      error: error.message,
+      scriptType,
+      transportUrl
+    });
+    // Graceful degradation: return original script
+    return scriptContent;
+  }
+}
+
+/**
+ * Detect script type for appropriate injection method
  *
  * @param {string} url - Script URL
- * @returns {boolean} True if injection should happen
+ * @returns {Object} Object with shouldInject (boolean) and scriptType ('gtm' | 'gtag' | 'analytics' | null)
  */
 export function shouldInjectTransportUrl(url) {
   const urlLower = url.toLowerCase();
 
-  // Inject for Google Analytics/GTM scripts
-  const isGoogleScript =
-    urlLower.includes('googletagmanager.com/gtag/js') ||
-    urlLower.includes('googletagmanager.com/gtm.js') ||
-    urlLower.includes('google-analytics.com/analytics.js');
+  // Detect GTM script (uses dataLayer API)
+  if (urlLower.includes('googletagmanager.com/gtm.js')) {
+    return { shouldInject: true, scriptType: 'gtm' };
+  }
 
-  return isGoogleScript;
+  // Detect gtag script (uses gtag() API)
+  if (urlLower.includes('googletagmanager.com/gtag/js')) {
+    return { shouldInject: true, scriptType: 'gtag' };
+  }
+
+  // Detect legacy analytics.js (uses ga() API, similar to gtag)
+  if (urlLower.includes('google-analytics.com/analytics.js')) {
+    return { shouldInject: true, scriptType: 'analytics' };
+  }
+
+  return { shouldInject: false, scriptType: null };
 }

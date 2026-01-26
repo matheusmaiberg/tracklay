@@ -58,10 +58,11 @@ export async function handleScriptProxy(request, rateLimit = null) {
     // 1. AUTO_INJECT_TRANSPORT_URL is enabled (default: true)
     // 2. GTM_SERVER_URL is configured (required for first-party tracking)
     // 3. Script is from Google (gtag.js, gtm.js, analytics.js)
+    const injectionInfo = shouldInjectTransportUrl(targetUrl);
     const shouldInject =
       CONFIG.AUTO_INJECT_TRANSPORT_URL &&
       CONFIG.GTM_SERVER_URL &&
-      shouldInjectTransportUrl(targetUrl);
+      injectionInfo.shouldInject;
 
     if (shouldInject) {
       try {
@@ -73,10 +74,18 @@ export async function handleScriptProxy(request, rateLimit = null) {
         const origin = new URL(request.url).origin;
         const transportUrl = `${origin}/cdn/g/${googleUUID}`;
 
-        // Inject transport_url into script
-        const modifiedScript = injectTransportUrl(scriptContent, transportUrl);
+        // Log script type detection for monitoring
+        Logger.info('Detected Google script for injection', {
+          scriptType: injectionInfo.scriptType,
+          targetUrl,
+          transportUrl
+        });
+
+        // Inject transport_url into script with appropriate method
+        const modifiedScript = injectTransportUrl(scriptContent, transportUrl, injectionInfo.scriptType);
 
         Logger.info('Transport_url injected', {
+          scriptType: injectionInfo.scriptType,
           targetUrl,
           transportUrl,
           originalSize: scriptContent.length,
@@ -99,7 +108,8 @@ export async function handleScriptProxy(request, rateLimit = null) {
         // If injection fails, return original response (graceful degradation)
         Logger.warn('Transport_url injection failed, returning original script', {
           error: injectionError.message,
-          targetUrl
+          targetUrl,
+          scriptType: injectionInfo.scriptType
         });
         return response;
       }

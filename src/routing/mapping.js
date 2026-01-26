@@ -105,6 +105,14 @@ export async function getEndpointMap() {
   // UUID ROTATION: Changes weekly if ENDPOINTS_UUID_ROTATION=false
   if (CONFIG.GTM_SERVER_URL) {
     map[`/cdn/g/${googleUUID}`] = `${CONFIG.GTM_SERVER_URL}/g/collect`;
+
+    // Fallback route for GTM direct hits (when transport_url fails)
+    // IMPORTANT: This should be avoided in production - transport_url should be configured
+    // This catches cases where:
+    // 1. GTM script injection failed
+    // 2. AUTO_INJECT_TRANSPORT_URL is disabled
+    // 3. Client-side GTM configuration doesn't have transport_url
+    map['/g/collect'] = `${CONFIG.GTM_SERVER_URL}/g/collect`;
   }
 
   // ============= REMOVED 2026-01-25: ALL SUFFIXES (v3.0.0 BREAKING CHANGE) =============

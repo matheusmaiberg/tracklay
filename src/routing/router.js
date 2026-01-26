@@ -29,6 +29,8 @@ import { handleScriptProxy } from '../handlers/scripts.js';
 import { handleEndpointProxy } from '../handlers/endpoints.js';
 import { handleEndpointsInfo } from '../handlers/endpoints-info.js';
 import { getScriptMap, getEndpointMap } from './mapping.js';
+import { CONFIG } from '../config/index.js';
+import { Logger } from '../core/logger.js';
 
 export class Router {
   static async route(request, rateLimit = null) {
@@ -110,6 +112,18 @@ export class Router {
     // This catches any custom paths under /cdn/, /assets/, /static/
     if (pathname.startsWith('/cdn/') || pathname.startsWith('/assets/') || pathname.startsWith('/static/')) {
       return handleScriptProxy(request, rateLimit);
+    }
+
+    // Fallback: Handle direct /g/collect requests (GTM default endpoint)
+    // This catches requests when transport_url injection fails or is disabled
+    // IMPORTANT: This should be avoided in production - transport_url should be configured
+    if (pathname === '/g/collect' && CONFIG.GTM_SERVER_URL) {
+      Logger.warn('GTM hit to fallback /g/collect endpoint - transport_url may be misconfigured', {
+        origin: request.headers.get('Origin'),
+        referrer: request.headers.get('Referer'),
+        search: url.search
+      });
+      return handleEndpointProxy(request, rateLimit);
     }
 
     // Default 404
