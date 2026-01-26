@@ -133,111 +133,20 @@ Tracklay serves tracking scripts as **first-party requests** from your domain:
 - [Performance Analysis](/tmp/tracklay-performance-analysis.md)
 - [Architecture](worker.js)
 
-## Configuration
+## Advanced Configuration
 
-Edit `src/config/index.js`:
+Tracklay works out-of-the-box with zero configuration. For advanced setups:
 
-```javascript
-export const CONFIG = {
-  GTM_SERVER_URL: 'https://gtm.yourstore.com', // Optional
-  ALLOWED_ORIGINS: [], // Auto-detect (recommended)
-  RATE_LIMIT_REQUESTS: 100,
-  CACHE_TTL: 3600,
-  DEBUG_HEADERS: false, // Production-safe default
-};
-```
+**Environment Variables:**
+- `GTM_SERVER_URL` - Your GTM Server-Side container URL (optional)
+- `ENDPOINTS_UUID_ROTATION` - Enable automatic UUID rotation (default: disabled)
+- `ENDPOINTS_SECRET` - Authentication token for `/endpoints` API
+- `DEBUG_HEADERS` - Enable debug headers (⚠️ never in production)
 
-### Debug Headers (Development Mode)
-
-**⚠️ SECURITY WARNING: Never enable DEBUG_HEADERS in production!**
-
-Debug headers expose internal state and can be used for ad-blocker fingerprinting.
-
-**What DEBUG_HEADERS controls:**
-- `X-Script-Key`: Which script is being served (fbevents/gtm/gtag)
-- `X-Script-Hash`: SHA-256 hash of script content
-- `X-Cache-Updated/Refreshed`: Timestamp of cache updates
-- `X-Cache-Type`: Cache state (stale/fresh)
-- `X-Cache-Status`: Cache hit/miss status
-- Health endpoint: UUID, metrics, Cloudflare info
-
-**Usage:**
-```bash
-# Production (default) - Maximum obfuscation
-DEBUG_HEADERS=false
-
-# Development/Staging - Enable debug headers
-DEBUG_HEADERS=true
-```
-
-**Why disable in production?**
-- Ad-blockers can fingerprint your proxy via custom headers
-- Headers like `X-Script-Key` reveal which tracking script is being served
-- Unique headers are uncommon for legitimate Google/Facebook scripts
-- Increases detection rate from <10% to 50%+
-
-See [docs/OBFUSCATION.md](docs/OBFUSCATION.md) for security details.
-
-### UUID Rotation (Maximum Security)
-
-**Tracklay now supports automatic UUID rotation** to prevent permanent blacklisting.
-
-**How it works:**
-- UUIDs rotate weekly (default: 7 days)
-- Time-based deterministic generation (all workers synchronized)
-- No persistent storage needed (Cloudflare Workers compatible)
-- Ad-blockers cannot blacklist permanently
-
-**Configuration:**
-
-```bash
-# Rotation enabled (default - RECOMMENDED)
-ENDPOINTS_UUID_ROTATION=false
-
-# Rotation disabled (simpler but less secure)
-ENDPOINTS_UUID_ROTATION=true
-FACEBOOK_ENDPOINT_ID=your-fixed-uuid
-GOOGLE_ENDPOINT_ID=your-fixed-uuid
-```
-
-**Shopify Integration Strategies:**
-
-1. **Metafields + n8n (RECOMMENDED)** - Server-side fetch, auto-update
-2. **Fixed UUIDs** - Manual rotation every 1-3 months
-3. **Client-side fetch** - NOT recommended (exposes secret)
-
-See [docs/SHOPIFY-INTEGRATION.md](docs/SHOPIFY-INTEGRATION.md) for complete integration guide.
-
-**Fetching current UUIDs:**
-
-```bash
-# Authenticated endpoint (query string token)
-curl 'https://cdn.yourstore.com/endpoints?token=your-secret'
-
-# Response:
-{
-  "facebook": {
-    "uuid": "a3f9c2e1b8d4",
-    "script": "/cdn/f/a3f9c2e1b8d4",
-    "endpoint": "/cdn/f/a3f9c2e1b8d4"
-  },
-  "google": {
-    "uuid": "b7e4d3f2c9a1",
-    "script": "/cdn/g/b7e4d3f2c9a1",
-    "endpoint": "/cdn/g/b7e4d3f2c9a1"
-  },
-  "rotation": {
-    "enabled": true,
-    "interval": 604800000
-  },
-  "expiresAt": "2026-02-01T00:00:00Z"
-}
-```
-
-**Security:**
-- Never expose `ENDPOINTS_SECRET` in client-side code
-- Use server-side integration (n8n/GitHub Actions)
-- UUIDs expire automatically (7-day max lifespan)
+**Configuration guides:**
+- Setup: See [Quick Start](#quick-start) above
+- Advanced: See [docs/SHOPIFY-INTEGRATION.md](docs/SHOPIFY-INTEGRATION.md)
+- Security: See `.env.example` for all options
 
 ## Deploy Options
 
