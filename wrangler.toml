@@ -189,10 +189,13 @@ mode = "smart"
 # ============================================================
 
 [observability]
+[observability.logs]
 enabled = true
 head_sampling_rate = 0.2
+invocation_logs = true
 
 [observability.traces]
+enabled = true
 head_sampling_rate = 0.05
 
 # ============================================================
