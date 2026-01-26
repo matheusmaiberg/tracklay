@@ -116,6 +116,14 @@ ENDPOINTS_UUID_ROTATION = "false"
 # Debug headers (false = production, true = development)
 DEBUG_HEADERS = "false"
 
+# ============= AUTOMATIC TRANSPORT_URL INJECTION =============
+# Automatically inject transport_url into Google scripts (gtag.js/gtm.js)
+# When enabled, Worker modifies scripts to force first-party tracking
+# Requires: GTM_SERVER_URL configured
+# Benefits: Zero Shopify config, 95%+ ad-blocker bypass, automatic UUID rotation
+# Default: true (enabled - plug-and-play setup)
+AUTO_INJECT_TRANSPORT_URL = "true"
+
 # Container aliases for query obfuscation (JSON string)
 CONTAINER_ALIASES = "{}"
 
