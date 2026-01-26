@@ -47,10 +47,10 @@ export async function generateSecureUUID(salt = '') {
  * @returns {Promise<string>} UUID for endpoint
  *
  * Behavior:
- * - If ENDPOINTS_UUID_ROTATION=true: Returns fixed UUID from CONFIG (env vars)
- * - If ENDPOINTS_UUID_ROTATION=false: Returns rotating UUID via generateSecureUUID()
+ * - If ENDPOINTS_UUID_ROTATION=true: Returns rotating UUID via generateSecureUUID()
+ * - If ENDPOINTS_UUID_ROTATION=false: Returns fixed UUID from CONFIG (env vars)
  *
- * Rotation Details (when ENDPOINTS_UUID_ROTATION=false):
+ * Rotation Details (when ENDPOINTS_UUID_ROTATION=true):
  * - Deterministic time-based generation (stateless)
  * - Week-based rotation: Math.floor(Date.now() / UUID_SALT_ROTATION)
  * - Provider-specific salt ensures different UUIDs for Facebook vs Google
@@ -68,7 +68,7 @@ export async function generateSecureUUID(salt = '') {
  */
 export async function generateEndpointUUID(provider) {
   // Check if rotation is disabled (use fixed UUIDs from env vars)
-  if (CONFIG.ENDPOINTS_UUID_ROTATION === true) {
+  if (CONFIG.ENDPOINTS_UUID_ROTATION === false) {
     if (provider === 'facebook') {
       return CONFIG.FACEBOOK_ENDPOINT_ID;
     } else if (provider === 'google') {

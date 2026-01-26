@@ -44,7 +44,7 @@ export async function getScriptMap() {
     // Format: /cdn/f/{UUID}
     // NOTE: Same path as endpoint - differentiated by HTTP method
     //       GET = script loading, POST = tracking event
-    // UUID ROTATION: Changes weekly if ENDPOINTS_UUID_ROTATION=false
+    // UUID ROTATION: Changes weekly if ENDPOINTS_UUID_ROTATION=true
     [`/cdn/f/${fbUUID}`]: 'https://connect.facebook.net/en_US/fbevents.js',
 
     // Google Tag Manager & GTag - Pure UUID + obfuscated query
@@ -52,7 +52,7 @@ export async function getScriptMap() {
     // NOTE: Same path for GTM and GTag - differentiated by query string
     //       Query with c= or id= = script loading (cacheable)
     //       Query with v=2, tid=, _p= = tracking event (never cache)
-    // UUID ROTATION: Changes weekly if ENDPOINTS_UUID_ROTATION=false
+    // UUID ROTATION: Changes weekly if ENDPOINTS_UUID_ROTATION=true
     [`/cdn/g/${googleUUID}`]: 'https://www.googletagmanager.com/gtm.js'
 
     // ============= REMOVED 2026-01-25: ALL SUFFIXES (v3.0.0 BREAKING CHANGE) =============
@@ -150,7 +150,7 @@ export function invalidateMapCache() {
  * - Deobfuscates query strings: ?c=abc123 → ?id=GTM-XXXXX
  * - Supports both Google paths (/cdn/g/{UUID})
  * - Facebook paths (/cdn/f/{UUID}) don't use query strings
- * - UUID rotation: UUIDs change weekly if ENDPOINTS_UUID_ROTATION=false
+ * - UUID rotation: UUIDs change weekly if ENDPOINTS_UUID_ROTATION=true
  *
  * @param {string} path - Request path (e.g., '/cdn/g/{UUID}')
  * @param {string} search - Query string (e.g., '?c=abc123' or '?id=GTM-XXXX')

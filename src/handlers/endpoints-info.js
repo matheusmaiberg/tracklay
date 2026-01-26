@@ -83,7 +83,7 @@ export async function handleEndpointsInfo(request) {
 
   // Calculate expiration (only relevant if rotation enabled)
   let expiresAt = null;
-  if (CONFIG.ENDPOINTS_UUID_ROTATION === false) {
+  if (CONFIG.ENDPOINTS_UUID_ROTATION === true) {
     expiresAt = getNextRotationISO(Date.now(), CONFIG.UUID_SALT_ROTATION);
   }
 
@@ -100,7 +100,7 @@ export async function handleEndpointsInfo(request) {
       endpoint: `/cdn/g/${googleUUID}`
     },
     rotation: {
-      enabled: CONFIG.ENDPOINTS_UUID_ROTATION === false,
+      enabled: CONFIG.ENDPOINTS_UUID_ROTATION === true,
       interval: CONFIG.UUID_SALT_ROTATION
     },
     expiresAt,

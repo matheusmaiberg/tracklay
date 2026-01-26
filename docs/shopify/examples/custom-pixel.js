@@ -12,7 +12,7 @@
 // SETUP (RECOMMENDED - Fixed UUIDs):
 // 1. Deploy Tracklay Worker with:
 //    - GTM_SERVER_URL = 'https://gtm.yourstore.com'
-//    - ENDPOINTS_UUID_ROTATION = 'true' (UUIDs fixed, no rotation)
+//    - ENDPOINTS_UUID_ROTATION = 'false' (UUIDs fixed, no rotation)
 //    - AUTO_INJECT_TRANSPORT_URL = 'true' (automatic injection)
 // 2. Get your UUID: node scripts/get-urls.js
 // 3. Update CONFIG.GOOGLE_UUID below with your UUID
@@ -26,7 +26,7 @@
 //
 // ADVANCED: Dynamic UUID Rotation (Optional)
 // - Uncomment CONFIG.WORKER section below
-// - Set ENDPOINTS_UUID_ROTATION = 'false' in Worker
+// - Set ENDPOINTS_UUID_ROTATION = 'true' in Worker
 // - Set ENDPOINTS_SECRET in Worker (wrangler secret put)
 // - UUIDs rotate automatically weekly
 // ============================================================
@@ -36,11 +36,11 @@ const CONFIG = {
 
   // ✅ RECOMMENDED: Fixed UUID (simpler, more secure)
   // Get your UUID with: node scripts/get-urls.js
-  // Set ENDPOINTS_UUID_ROTATION=true in Worker
+  // Set ENDPOINTS_UUID_ROTATION=false in Worker (fixed UUIDs)
   GOOGLE_UUID: 'b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f', // Replace with your UUID
 
   // ⚠️ ADVANCED: Dynamic UUID Rotation (Uncomment if needed)
-  // Requires: ENDPOINTS_UUID_ROTATION=false + ENDPOINTS_SECRET in Worker
+  // Requires: ENDPOINTS_UUID_ROTATION=true (rotation) + ENDPOINTS_SECRET in Worker
   // NOT RECOMMENDED: Exposes ENDPOINTS_SECRET in client code
   // WORKER: {
   //   DOMAIN: window.location.origin,
