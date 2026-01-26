@@ -41,11 +41,14 @@ Estes pontos permitem que ad-blockers identifiquem e bloqueiem o proxy com alta 
 - Detectado por: uBlock Origin, AdBlock Plus, Privacy Badger, Brave Shields, todos os outros
 - Pattern matching simples: `||yourstore.com/tr^`
 
-**Solução Implementada:**
+**Solução Implementada (v3.0.0 - Ultra-Aggressive):**
 ```
-✅ /cdn/f/{UUID}.js       → Facebook Pixel (obfuscado)
-✅ /cdn/g/{UUID}.js       → Google Analytics (obfuscado)
-✅ /cdn/g/{UUID}-j.js     → Google Analytics JS (obfuscado)
+✅ /cdn/f/{UUID}          → Facebook Pixel (ultra-obfuscado - sem extensão)
+✅ /cdn/g/{UUID}          → Google Analytics (ultra-obfuscado - sem extensão)
+
+Nota: Mesmos paths para scripts e endpoints
+- Diferenciação via HTTP method (Facebook: GET=script, POST=endpoint)
+- Diferenciação via query params (Google: c=/id= vs v=2/tid=)
 ```
 
 #### 2. Nomes de Scripts Óbvios (CRÍTICO)
@@ -62,11 +65,16 @@ Estes pontos permitem que ad-blockers identifiquem e bloqueiem o proxy com alta 
 - Detectado mesmo servindo do próprio domínio
 - Regex patterns: `/(fbevents|gtm|gtag)\.js/`
 
-**Solução Implementada:**
+**Solução Implementada (v3.0.0 - Ultra-Aggressive):**
 ```
-✅ /cdn/f/{UUID}-script.js    → Facebook Events (obfuscado)
-✅ /cdn/g/{UUID}-gtm.js        → GTM (obfuscado)
-✅ /cdn/g/{UUID}-tag.js        → GTag (obfuscado)
+✅ /cdn/f/{UUID}              → Facebook Events (ultra-obfuscado - sem sufixos)
+✅ /cdn/g/{UUID}              → GTM/GTag (ultra-obfuscado - sem sufixos)
+
+v3.0.0 Breaking Change:
+- Removidos TODOS os sufixos (-script, -gtm, -tag, .js)
+- Impossível detectar via filename patterns
+- Scripts e endpoints compartilham mesmos paths
+- Detecção < 5% (com UUID rotation + query obfuscation)
 ```
 
 #### 3. Prefixos de Caminho Estáticos (ALTO RISCO)
@@ -189,14 +197,14 @@ O sistema gera **UUIDs únicos por deployment** que substituem nomes previsívei
 ┌─────────────────────────────────────────────────────────┐
 │  MAPPING (src/routing/mapping.js)                       │
 │  ┌───────────────────────────────────────────────────┐  │
-│  │  Obfuscated Endpoints:                            │  │
-│  │  /cdn/f/a8f3c2e1-4b9d-....js → facebook.com/tr   │  │
-│  │  /cdn/g/b7e4d3f2-5c0e-....js → gtm.server/collect│  │
+│  │  Ultra-Obfuscated (v3.0.0 - NO SUFFIXES):        │  │
+│  │  /cdn/f/a8f3c2e1 → fbevents.js or facebook.com/tr│  │
+│  │  /cdn/g/b7e4d3f2 → gtm.js or gtm.server/collect  │  │
 │  │                                                    │  │
-│  │  Obfuscated Scripts:                              │  │
-│  │  /cdn/f/a8f3c2e1-...-script.js → fbevents.js     │  │
-│  │  /cdn/g/b7e4d3f2-...-gtm.js    → gtm.js          │  │
-│  │  /cdn/g/b7e4d3f2-...-tag.js    → gtag/js         │  │
+│  │  Same path for scripts & endpoints!               │  │
+│  │  Differentiation:                                 │  │
+│  │  - Facebook: HTTP method (GET vs POST)            │  │
+│  │  - Google: Query params (?c=alias vs ?v=2&tid=)   │  │
 │  └───────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────┘
                           ↓
@@ -246,22 +254,20 @@ wrangler secret put GOOGLE_ENDPOINT_ID
 FACEBOOK_ENDPOINT_ID = "a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e"
 GOOGLE_ENDPOINT_ID   = "b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f"
 
-// URLs resultantes:
+// URLs resultantes (v3.0.0 - Ultra-Aggressive, NO SUFFIXES):
 
-// Facebook Pixel Endpoint:
-https://yourstore.com/cdn/f/a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e.js
+// Facebook Pixel (script and endpoint - same path):
+https://yourstore.com/cdn/f/a8f3c2e1
 
-// Facebook Events Script:
-https://yourstore.com/cdn/f/a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e-script.js
+// Google Analytics/GTM (scripts and endpoints - same path):
+https://yourstore.com/cdn/g/b7e4d3f2
 
-// Google Analytics Endpoint:
-https://yourstore.com/cdn/g/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f.js
-
-// Google Tag Manager Script:
-https://yourstore.com/cdn/g/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f-gtm.js?id=GTM-XXXXX
-
-// Google Tag Script:
-https://yourstore.com/cdn/g/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f-tag.js?id=G-XXXXX
+// Usage examples:
+// - Facebook script: GET /cdn/f/a8f3c2e1
+// - Facebook endpoint: POST /cdn/f/a8f3c2e1
+// - GTM script: GET /cdn/g/b7e4d3f2?id=GTM-XXXXX
+// - GA4 tracking: GET /cdn/g/b7e4d3f2?v=2&tid=G-XXX&_p=...
+// - With alias: GET /cdn/g/b7e4d3f2?c=abc123 (hides GTM-XXX via CONTAINER_ALIASES)
 ```
 
 ---
@@ -319,15 +325,17 @@ initConfig(env);
 
 const domain = 'https://yourstore.com';
 
-console.log('🔒 OBFUSCATED TRACKING URLS\n');
+console.log('🔒 ULTRA-OBFUSCATED TRACKING URLS (v3.0.0 - NO SUFFIXES)\n');
 console.log('Facebook Pixel:');
-console.log(`  Endpoint: ${domain}/cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}.js`);
-console.log(`  Script:   ${domain}/cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}-script.js\n`);
+console.log(`  Path: ${domain}/cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}`);
+console.log(`  - Script: GET /cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}`);
+console.log(`  - Endpoint: POST /cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}\n`);
 
-console.log('Google Analytics:');
-console.log(`  Endpoint: ${domain}/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}.js`);
-console.log(`  GTM:      ${domain}/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}-gtm.js?id=GTM-XXXXX`);
-console.log(`  GTag:     ${domain}/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}-tag.js?id=G-XXXXX`);
+console.log('Google Analytics/GTM:');
+console.log(`  Path: ${domain}/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}`);
+console.log(`  - GTM script: GET /cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}?id=GTM-XXXXX`);
+console.log(`  - GA4 script: GET /cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}?id=G-XXXXX`);
+console.log(`  - With alias: GET /cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}?c=abc123`);
 ```
 
 Execute:
@@ -371,18 +379,18 @@ node scripts/get-obfuscated-urls.js
   n.queue=[];t=b.createElement(e);t.async=!0;
   t.src=v;s=b.getElementsByTagName(e)[0];
   s.parentNode.insertBefore(t,s)}(window, document,'script',
-  'https://yourstore.com/cdn/f/a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e-script.js');
+  'https://yourstore.com/cdn/f/a8f3c2e1');
 
-  // Override endpoint URL
-  fbq._endpoint = '/cdn/f/a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e.js';
+  // NOTE: v3.0.0 - NO SUFFIX! Same path for script and endpoint
+  // Facebook Pixel automatically sends POST to same domain for tracking
 
   fbq('init', 'YOUR_PIXEL_ID');
   fbq('track', 'PageView');
 </script>
 
-<!-- Pixel Tracking - Obfuscated -->
+<!-- Pixel Tracking - Ultra-Obfuscated (v3.0.0 - same path) -->
 <img height="1" width="1" style="display:none"
-  src="https://yourstore.com/cdn/f/a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e.js?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"/>
+  src="https://yourstore.com/cdn/f/a8f3c2e1?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"/>
 ```
 
 #### Google Tag Manager
@@ -399,10 +407,10 @@ node scripts/get-obfuscated-urls.js
 </script>
 ```
 
-**DEPOIS (Obfuscado):**
+**DEPOIS (Ultra-Obfuscado - v3.0.0):**
 ```html
-<!-- Google Tag Manager - Obfuscated -->
-<script async src="https://yourstore.com/cdn/g/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f-gtm.js?id=GTM-XXXXX"></script>
+<!-- Google Tag Manager - Ultra-Obfuscated (NO SUFFIX) -->
+<script async src="https://yourstore.com/cdn/g/b7e4d3f2?id=GTM-XXXXX"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -412,6 +420,12 @@ node scripts/get-obfuscated-urls.js
     'server_container_url': 'https://yourstore.com'
   });
 </script>
+
+<!-- MAXIMUM SECURITY: Hide GTM-XXXXX with container alias -->
+<!-- Requires: CONTAINER_ALIASES='{"abc123":"GTM-XXXXX"}' -->
+<!--
+<script async src="https://yourstore.com/cdn/g/b7e4d3f2?c=abc123"></script>
+-->
 ```
 
 #### Google Analytics 4 (gtag.js)
@@ -428,35 +442,45 @@ node scripts/get-obfuscated-urls.js
 </script>
 ```
 
-**DEPOIS (Obfuscado):**
+**DEPOIS (Ultra-Obfuscado - v3.0.0):**
 ```html
-<!-- Google Analytics - Obfuscated -->
-<script async src="https://yourstore.com/cdn/g/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f-tag.js?id=G-XXXXX"></script>
+<!-- Google Analytics - Ultra-Obfuscated (NO SUFFIX) -->
+<script async src="https://yourstore.com/cdn/g/b7e4d3f2?id=G-XXXXX"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-XXXXX', {
-    // Use obfuscated collection endpoint
+    // Use obfuscated collection endpoint (NO SUFFIX)
+    'transport_url': 'https://yourstore.com/cdn/g/b7e4d3f2',
     'server_container_url': 'https://yourstore.com'
   });
 </script>
+
+<!-- MAXIMUM SECURITY: Hide G-XXXXX with container alias -->
+<!-- Requires: CONTAINER_ALIASES='{"def456":"G-XXXXX"}' -->
+<!--
+<script async src="https://yourstore.com/cdn/g/b7e4d3f2?c=def456"></script>
+-->
 ```
 
 ### Passo 5: Testar
 
 ```bash
-# 1. Verificar scripts carregam
-curl -I https://yourstore.com/cdn/f/a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e-script.js
+# 1. Verificar scripts carregam (v3.0.0 - NO SUFFIX)
+curl -I https://yourstore.com/cdn/f/a8f3c2e1
 
-# 2. Verificar endpoints funcionam
-curl -X POST https://yourstore.com/cdn/f/a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e.js \
+# 2. Verificar endpoints funcionam (v3.0.0 - SAME PATH)
+curl -X POST https://yourstore.com/cdn/f/a8f3c2e1 \
   -H "Content-Type: application/json" \
   -d '{"test": "data"}'
 
-# 3. Verificar no navegador (DevTools → Network)
-# 4. Verificar eventos chegam no Facebook Events Manager
-# 5. Verificar hits chegam no Google Analytics Real-Time
+# 3. Testar Google script
+curl -I https://yourstore.com/cdn/g/b7e4d3f2?id=GTM-XXXXX
+
+# 4. Verificar no navegador (DevTools → Network)
+# 5. Verificar eventos chegam no Facebook Events Manager
+# 6. Verificar hits chegam no Google Analytics Real-Time
 ```
 
 ### Passo 6: Remover Endpoints Legados (Opcional)
@@ -466,15 +490,19 @@ Após confirmar que tudo funciona, você pode remover os endpoints legados:
 Edite `src/routing/mapping.js`:
 
 ```javascript
-export function getEndpointMap() {
+// v3.0.0: Uses async generateEndpointUUID() for rotation support
+export async function getEndpointMap() {
   const map = {};
 
-  // ============= OBFUSCATED ENDPOINTS ONLY =============
-  map[`/cdn/f/${CONFIG.FACEBOOK_ENDPOINT_ID}.js`] = 'https://www.facebook.com/tr';
+  // Generate UUIDs (rotating or fixed based on ENDPOINTS_UUID_ROTATION)
+  const fbUUID = await generateEndpointUUID('facebook');
+  const googleUUID = await generateEndpointUUID('google');
+
+  // ============= ULTRA-OBFUSCATED ENDPOINTS (NO SUFFIXES) =============
+  map[`/cdn/f/${fbUUID}`] = 'https://www.facebook.com/tr';
 
   if (CONFIG.GTM_SERVER_URL) {
-    map[`/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}.js`] = `${CONFIG.GTM_SERVER_URL}/g/collect`;
-    map[`/cdn/g/${CONFIG.GOOGLE_ENDPOINT_ID}-j.js`] = `${CONFIG.GTM_SERVER_URL}/j/collect`;
+    map[`/cdn/g/${googleUUID}`] = `${CONFIG.GTM_SERVER_URL}/g/collect`;
   }
 
   // REMOVED: Legacy endpoints

@@ -40,21 +40,24 @@ This is a **BREAKING CHANGE** that requires updating your Shopify theme before u
 ❌ /j/collect (Google Analytics JS errors)
 ```
 
-### Remaining Routes (6 UUID-obfuscated)
+### Remaining Routes (Ultra-Aggressive - No Suffixes)
 
-**Scripts:**
+**Scripts & Endpoints (same path, differentiated by method/query):**
 ```
-✅ /cdn/f/{FACEBOOK_UUID}-script.js
-✅ /cdn/g/{GOOGLE_UUID}-gtm.js
-✅ /cdn/g/{GOOGLE_UUID}-tag.js
+✅ /cdn/f/{FACEBOOK_UUID}
+   - Script: GET /cdn/f/{UUID}
+   - Endpoint: POST /cdn/f/{UUID} (tracking events)
+
+✅ /cdn/g/{GOOGLE_UUID}
+   - Script: GET /cdn/g/{UUID}?c=alias or ?id=GTM-XXX
+   - Endpoint: GET /cdn/g/{UUID}?v=2&tid=... (tracking events)
 ```
 
-**Endpoints:**
-```
-✅ /cdn/f/{FACEBOOK_UUID}.js
-✅ /cdn/g/{GOOGLE_UUID}.js
-✅ /cdn/g/{GOOGLE_UUID}-j.js
-```
+**Note:** v3.0.0 implements ultra-aggressive obfuscation:
+- NO file extensions (no `.js`)
+- NO suffixes (no `-script`, `-gtm`, `-tag`)
+- Same path for scripts and endpoints
+- HTTP method or query params differentiate script vs tracking
 
 ---
 
@@ -85,16 +88,16 @@ fbq('track', 'PageView');
      ❌ REMOVED
 ```
 
-**AFTER (v3.0.0 - Obfuscated, Undetectable):**
+**AFTER (v3.0.0 - Ultra-Aggressive, Undetectable):**
 ```html
-<!-- Script Loading -->
+<!-- Script Loading (NO SUFFIX - ultra-aggressive mode) -->
 <script>
 !function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
 if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
 n.queue=[];t=b.createElement(e);t.async=!0;
-t.src='https://yourstore.com/cdn/f/a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e-script.js';  ✅ OBFUSCATED
+t.src='https://yourstore.com/cdn/f/a8f3c2e1';  ✅ ULTRA-OBFUSCATED (no .js, no -script)
 s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script');
 
@@ -102,7 +105,8 @@ fbq('init', 'YOUR_PIXEL_ID');
 fbq('track', 'PageView');
 </script>
 
-<!-- Tracking Endpoint (auto-configured by script, no manual noscript needed) -->
+<!-- Tracking Endpoint: Same path, differentiated by POST method -->
+<!-- Facebook Pixel automatically sends POST to same domain when tracking -->
 ```
 
 ### Google Tag Manager (GTM)
@@ -121,11 +125,15 @@ fbq('track', 'PageView');
 </noscript>
 ```
 
-**AFTER (v3.0.0 - Obfuscated, Undetectable):**
+**AFTER (v3.0.0 - Ultra-Aggressive, Undetectable):**
 ```html
-<!-- GTM Script -->
-<script async src="https://yourstore.com/cdn/g/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f-gtm.js?id=GTM-XXXXX"></script>
-✅ OBFUSCATED
+<!-- GTM Script (NO SUFFIX - ultra-aggressive mode) -->
+<script async src="https://yourstore.com/cdn/g/b7e4d3f2?id=GTM-XXXXX"></script>
+✅ ULTRA-OBFUSCATED (no .js, no -gtm suffix)
+
+<!-- Or with container alias for query obfuscation (maximum security): -->
+<script async src="https://yourstore.com/cdn/g/b7e4d3f2?c=abc123"></script>
+✅ MAXIMUM OBFUSCATION (GTM-XXXXX hidden via CONTAINER_ALIASES)
 
 <!-- GTM Iframe (noscript fallback) - not needed, GTM handles endpoint internally -->
 ```
@@ -146,22 +154,31 @@ fbq('track', 'PageView');
 </script>
 ```
 
-**AFTER (v3.0.0 - Obfuscated, Undetectable):**
+**AFTER (v3.0.0 - Ultra-Aggressive, Undetectable):**
 ```html
-<!-- GA4 Script -->
-<script async src="https://yourstore.com/cdn/g/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f-tag.js?id=G-XXXXXXXXXX"></script>
-✅ OBFUSCATED
+<!-- GA4 Script (NO SUFFIX - ultra-aggressive mode) -->
+<script async src="https://yourstore.com/cdn/g/b7e4d3f2?id=G-XXXXXXXXXX"></script>
+✅ ULTRA-OBFUSCATED (no .js, no -tag suffix)
 
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  // Configure with obfuscated transport_url
+  // Configure with obfuscated transport_url (NO SUFFIX)
   gtag('config', 'G-XXXXXXXXXX', {
-    'transport_url': 'https://yourstore.com/cdn/g/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f.js'
+    'transport_url': 'https://yourstore.com/cdn/g/b7e4d3f2'
   });
 </script>
+
+<!-- Maximum obfuscation with container alias: -->
+<script async src="https://yourstore.com/cdn/g/b7e4d3f2?c=def456"></script>
+<script>
+  gtag('config', 'G-XXXXXXXXXX', {
+    'transport_url': 'https://yourstore.com/cdn/g/b7e4d3f2'
+  });
+</script>
+✅ MAXIMUM OBFUSCATION (G-XXXXXXXXXX hidden via CONTAINER_ALIASES)
 ```
 
 ---
@@ -179,24 +196,29 @@ cd /path/to/tracklay
 npm run urls https://yourstore.com
 ```
 
-This will display your obfuscated URLs:
+This will display your ultra-obfuscated URLs (no suffixes):
 
 ```
 🔵 FACEBOOK PIXEL (Meta Pixel)
 
-   Obfuscated Endpoint (recommended):
-   https://yourstore.com/cdn/f/a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e.js
+   Ultra-Obfuscated Path (v3.0.0 - no suffix):
+   https://yourstore.com/cdn/f/a8f3c2e1
 
-   Obfuscated Script (recommended):
-   https://yourstore.com/cdn/f/a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e-script.js
+   UUID: a8f3c2e1
+   - Script (GET): /cdn/f/a8f3c2e1
+   - Endpoint (POST): /cdn/f/a8f3c2e1
 
 🔴 GOOGLE ANALYTICS / TAG MANAGER
 
-   Obfuscated GTM Script (recommended):
-   https://yourstore.com/cdn/g/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f-gtm.js?id=GTM-XXXXX
+   Ultra-Obfuscated Path (v3.0.0 - no suffix):
+   https://yourstore.com/cdn/g/b7e4d3f2
 
-   Obfuscated GTag Script (recommended):
-   https://yourstore.com/cdn/g/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f-tag.js?id=G-XXXXX
+   UUID: b7e4d3f2
+   - GTM Script: /cdn/g/b7e4d3f2?id=GTM-XXXXX
+   - GTag Script: /cdn/g/b7e4d3f2?id=G-XXXXX
+   - With alias: /cdn/g/b7e4d3f2?c=abc123 (CONTAINER_ALIASES required)
+
+   Note: Same path for scripts and endpoints, differentiated by query params
 ```
 
 **Option B: Check your .env file**
@@ -311,9 +333,30 @@ GOOGLE_ENDPOINT_ID=your-uuid-here
 npm run deploy
 ```
 
-### Rotating UUIDs (Advanced Security)
+### UUID Rotation (Automatic - v3.0.0 Feature)
 
-For maximum security, rotate UUIDs every 1-3 months:
+**v3.0.0 includes AUTOMATIC UUID rotation** for maximum security:
+
+**How it works:**
+- UUIDs rotate weekly (default: 7 days)
+- Time-based deterministic generation (all workers synchronized)
+- No manual intervention required
+- Ad-blockers cannot blacklist permanently
+
+**Configuration:**
+
+```bash
+# Rotation enabled (DEFAULT - RECOMMENDED)
+ENDPOINTS_UUID_ROTATION=false  # false = rotation ON
+
+# Shopify integration via Metafields + n8n/GitHub Actions
+# Fetches current UUIDs from /endpoints?token=SECRET every 6 days
+# See: docs/SHOPIFY-INTEGRATION.md for complete guide
+```
+
+**Manual Rotation (if rotation disabled):**
+
+If you disabled automatic rotation (`ENDPOINTS_UUID_ROTATION=true`), you can manually rotate every 1-3 months:
 
 ```bash
 # 1. Generate new UUIDs
@@ -322,17 +365,13 @@ GOOGLE_UUID=$(node -e "console.log(require('crypto').randomUUID())")
 
 # 2. Update Cloudflare Workers environment
 wrangler secret put FACEBOOK_ENDPOINT_ID
-# Paste: $FB_UUID
-
 wrangler secret put GOOGLE_ENDPOINT_ID
-# Paste: $GOOGLE_UUID
 
 # 3. Update Shopify theme with new UUIDs
-# (Same as Step 2 above)
-
-# 4. Deploy
-npm run deploy
+# 4. Deploy: npm run deploy
 ```
+
+**Recommendation:** Use automatic rotation (default) with n8n/GitHub Actions integration for zero-touch security. See [SHOPIFY-INTEGRATION.md](SHOPIFY-INTEGRATION.md).
 
 ---
 
@@ -343,14 +382,14 @@ npm run deploy
 ```liquid
 <!-- theme.liquid - Before closing </head> tag -->
 
-<!-- Facebook Pixel Code -->
+<!-- Facebook Pixel Code (v3.0.0 - NO SUFFIX) -->
 <script>
   !function(f,b,e,v,n,t,s)
   {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};
   if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
   n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src='https://{{ shop.domain }}/cdn/f/{{ settings.facebook_uuid }}-script.js';
+  t.src='https://{{ shop.domain }}/cdn/f/{{ settings.facebook_uuid }}';
   s=b.getElementsByTagName(e)[0];
   s.parentNode.insertBefore(t,s)}(window, document,'script');
 
@@ -358,6 +397,8 @@ npm run deploy
   fbq('track', 'PageView');
 </script>
 <!-- End Facebook Pixel Code -->
+
+<!-- NOTE: NO -script.js suffix! Ultra-aggressive mode uses /cdn/f/{UUID} only -->
 ```
 
 **Theme Settings Schema (config/settings_schema.json):**
@@ -386,16 +427,26 @@ npm run deploy
 ```liquid
 <!-- theme.liquid - Before closing </head> tag -->
 
-<!-- Google Tag Manager -->
+<!-- Google Tag Manager (v3.0.0 - NO SUFFIX) -->
 <script>
   (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
   j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-  'https://{{ shop.domain }}/cdn/g/{{ settings.google_uuid }}-gtm.js?id='+i+dl;
+  'https://{{ shop.domain }}/cdn/g/{{ settings.google_uuid }}?id='+i+dl;
   f.parentNode.insertBefore(j,f);
   })(window,document,'script','dataLayer','{{ settings.gtm_container_id }}');
 </script>
 <!-- End Google Tag Manager -->
+
+<!-- NOTE: NO -gtm.js suffix! Ultra-aggressive mode uses /cdn/g/{UUID}?id=... -->
+
+<!-- MAXIMUM SECURITY: Use container alias to hide GTM-XXXXX -->
+<!-- Requires CONTAINER_ALIASES='{"abc123":"GTM-XXXXX"}' in worker config -->
+<!--
+<script>
+  j.src='https://{{ shop.domain }}/cdn/g/{{ settings.google_uuid }}?c=abc123';
+</script>
+-->
 ```
 
 **Theme Settings Schema:**
@@ -419,19 +470,28 @@ npm run deploy
 ```liquid
 <!-- theme.liquid - Before closing </head> tag -->
 
-<!-- Google Analytics 4 -->
-<script async src="https://{{ shop.domain }}/cdn/g/{{ settings.google_uuid }}-tag.js?id={{ settings.ga4_measurement_id }}"></script>
+<!-- Google Analytics 4 (v3.0.0 - NO SUFFIX) -->
+<script async src="https://{{ shop.domain }}/cdn/g/{{ settings.google_uuid }}?id={{ settings.ga4_measurement_id }}"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
   gtag('config', '{{ settings.ga4_measurement_id }}', {
-    'transport_url': 'https://{{ shop.domain }}/cdn/g/{{ settings.google_uuid }}.js',
+    'transport_url': 'https://{{ shop.domain }}/cdn/g/{{ settings.google_uuid }}',
     'first_party_collection': true
   });
 </script>
 <!-- End Google Analytics 4 -->
+
+<!-- NOTE: NO -tag.js suffix! Ultra-aggressive mode uses /cdn/g/{UUID}?id=... -->
+<!-- NOTE: transport_url also NO SUFFIX (.js removed) -->
+
+<!-- MAXIMUM SECURITY: Use container alias to hide G-XXXXXXXXXX -->
+<!-- Requires CONTAINER_ALIASES='{"def456":"G-XXXXXXXXXX"}' in worker config -->
+<!--
+<script async src="https://{{ shop.domain }}/cdn/g/{{ settings.google_uuid }}?c=def456"></script>
+-->
 ```
 
 **Theme Settings Schema:**
