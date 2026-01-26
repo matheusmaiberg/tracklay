@@ -9,7 +9,7 @@ main = "worker.js"
 compatibility_date = "2025-12-01"
 
 # Modern features enabled
-compatibility_flags = ["nodejs_compat", "streams_enable_constructors"]
+compatibility_flags = ["nodejs_compat"]
 
 # ============================================================
 # WORKER SETTINGS
