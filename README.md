@@ -127,21 +127,6 @@ Tracklay serves tracking scripts as **first-party requests** from your domain:
 | Cookie lifetime | 7 days | 2+ years |
 | Data accuracy | 60-70% | 90-95% |
 
-## Performance Optimizations
-
-**11 optimizations implemented** (61-123ms faster):
-- Smart Placement (50-100ms)
-- URL parsing cache (2-5ms)
-- Response clone elimination (3-5ms)
-- Map memoization (1-3ms)
-- 7 additional micro-optimizations
-
-**Auto-updating scripts:**
-- Cron runs every 12 hours
-- SHA-256 change detection
-- Automatic cache refresh
-- Zero manual maintenance
-
 ## Documentation
 
 - [Complete Setup Guide](docs/OBFUSCATION.md)
