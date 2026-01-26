@@ -31,16 +31,16 @@ compatibility_date = "2025-12-01"
 #
 # Option 2: Configure here (requires zone_id)
 # Configure with your domain:
-
-[[routes]]
+#
+# [[routes]]
 # pattern = "yourstore.com/cdn/*"
 # zone_name = "yourstore.com"
-
-[[routes]]
+#
+# [[routes]]
 # pattern = "yourstore.com/assets/*"
 # zone_name = "yourstore.com"
-
-[[routes]]
+#
+# [[routes]]
 # pattern = "yourstore.com/static/*"
 # zone_name = "yourstore.com"
 
