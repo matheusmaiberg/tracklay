@@ -121,7 +121,8 @@ DEBUG_HEADERS = "false"
 # Requires: GTM_SERVER_URL configured
 # Benefits: Zero Shopify config, 95%+ ad-blocker bypass, automatic UUID rotation
 # Default: true (enabled - plug-and-play setup)
-AUTO_INJECT_TRANSPORT_URL = "true"
+# IMPORTANT: If you manually configure transport_url in GTM, set this to "false"
+AUTO_INJECT_TRANSPORT_URL = "false"
 
 # Container aliases for query obfuscation (JSON string)
 CONTAINER_ALIASES = "{}"
