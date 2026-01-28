@@ -1166,6 +1166,13 @@ if (typeof analytics !== 'undefined' && analytics.subscribe) {
   }
 }
 
+// ============= GLOBAL BROWSER ASSIGNMENT =============
+
+if (typeof window !== 'undefined') {
+  window.EventBridge = EventBridge;
+  window.TracklayEventBridge = EventBridge;
+}
+
 // ============= ES MODULE EXPORTS =============
 
 export { EventBridge };
