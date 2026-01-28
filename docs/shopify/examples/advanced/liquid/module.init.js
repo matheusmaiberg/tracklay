@@ -391,6 +391,31 @@ var ThemeGTM = (function() {
 
   // ============= FLUXO DE INICIALIZAÇÃO =============
 
+  /**
+   * Recursively retry initialization with exponential backoff
+   * Uses a named function instead of arguments.callee() for compatibility
+   * @param {number} attemptNum - Current attempt number
+   */
+  function retryInitialization(attemptNum) {
+    if (tryInitialize()) {
+      // Success - initialization complete
+      return;
+    }
+
+    if (attemptNum >= MAX_ATTEMPTS) {
+      console.warn('[ThemeGTM] Máximo de tentativas alcançado (' + MAX_ATTEMPTS + '), abortando inicialização');
+      return;
+    }
+
+    attemptNum++;
+    const delay = RETRY_DELAY * Math.pow(2, Math.min(attemptNum - 1, 3)); // Max 2^3 = 8x
+    console.log('[ThemeGTM] Retentando em ' + delay + 'ms (tentativa ' + attemptNum + '/' + MAX_ATTEMPTS + ')');
+
+    setTimeout(() => {
+      retryInitialization(attemptNum);
+    }, delay);
+  }
+
   try {
     // 1️⃣ Aguardar DOM estar ready (se necessário)
     if (document.readyState === 'loading') {
@@ -408,17 +433,7 @@ var ThemeGTM = (function() {
 
     // 3️⃣ Se falhou, fazer retry com exponential backoff
     if (!success && attempts < MAX_ATTEMPTS) {
-      attempts++;
-      const delay = RETRY_DELAY * Math.pow(2, Math.min(attempts - 1, 3)); // Max 2^3 = 8x
-      console.log('[ThemeGTM] Retentando em ' + delay + 'ms (tentativa ' + attempts + '/' + MAX_ATTEMPTS + ')');
-
-      setTimeout(() => {
-        // Recursivo: tentar novamente
-        if (!tryInitialize() && attempts < MAX_ATTEMPTS) {
-          // Continuar retentando se falhar novamente
-          arguments.callee(); // Self-invoke para retry
-        }
-      }, delay);
+      retryInitialization(attempts);
     }
 
   } catch (error) {
