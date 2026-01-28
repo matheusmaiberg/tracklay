@@ -305,45 +305,123 @@ var ThemeGTM = (function() {
   
 })();
 
-// Bug #6 fix: Robust auto-init with retry mechanism
-(function() {
+/**
+ * 
+ * Robust auto-init using async/await pattern
+ *
+ * Padrão recomendado pelo Shopify para inicialização:
+ * - Usa async/await em vez de callbacks (mais limpo e legível)
+ * - Aguarda DOM estar ready antes de inicializar
+ * - Implementa retry com exponential backoff em caso de falha
+ * - Seguro para ambiente sandbox do Shopify
+ *
+ * Motivo para não usar addEventListener:
+ * - addEventListener('DOMContentLoaded') não é confiável em Shopify sandbox
+ * - setTimeout + retry é mais robusto e previsível
+ *
+ * @see {@link https://developer.shopify.com/docs/themes/architecture/custom-pixels}
+ */
+(async function initAutoload() {
+  // ⚠️ Valiar contexto global
   if (typeof window === 'undefined') return;
-  
+
+  // Expor ThemeGTM globalmente para uso manual se necessário
   window.ThemeGTM = ThemeGTM;
-  
-  if (!window.ThemeGTMConfig) return;
-  
-  var initAttempts = 0;
-  var MAX_ATTEMPTS = 10;
-  var RETRY_DELAY = 100; // ms
-  
-  function tryInit() {
-    initAttempts++;
-    
-    // Check if DOM is ready
-    if (document.readyState === 'loading' && initAttempts < MAX_ATTEMPTS) {
-      // DOM not ready yet, retry
-      setTimeout(tryInit, RETRY_DELAY);
-      return;
-    }
-    
-    // Try to initialize
-    var result = ThemeGTM.init(window.ThemeGTMConfig);
-    
-    // If failed and we haven't exceeded max attempts, retry
-    if (!result && initAttempts < MAX_ATTEMPTS) {
-      setTimeout(tryInit, RETRY_DELAY * 2);
+
+  // ✅ Verificar se config foi fornecida via window.ThemeGTMConfig
+  // Se não foi, o usuário pode inicializar manualmente com:
+  // ThemeGTM.init({ gtmId: 'GTM-XXXXX', debug: true });
+  if (!window.ThemeGTMConfig) {
+    console.log('[ThemeGTM] window.ThemeGTMConfig não definido. Use ThemeGTM.init() manualmente ou defina window.ThemeGTMConfig antes deste script.');
+    return;
+  }
+
+  // ============= CONFIGURAÇÃO DE RETRY =============
+  const MAX_ATTEMPTS = 10;
+  const INITIAL_DELAY = 50; // ms - primeiro retry rápido
+  const RETRY_DELAY = 100;  // ms - delay entre tentativas normais
+
+  let attempts = 0;
+
+  /**
+   * Aguarda o DOM estar ready (interativo) com timeout
+   *
+   * Em vez de usar addEventListener (não confiável no sandbox do Shopify),
+   * fazemos polling do document.readyState que é mais confiável.
+   *
+   * Estados do DOM:
+   * - 'loading': Ainda carregando
+   * - 'interactive': DOM pronto (equivalente a DOMContentLoaded)
+   * - 'complete': Tudo carregado (equivalente a window.onload)
+   *
+   * @returns {Promise<void>}
+   */
+  async function waitForDOM() {
+    while (document.readyState === 'loading' && attempts < MAX_ATTEMPTS) {
+      // Aguardar RETRY_DELAY ms antes de verificar novamente
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+      attempts++;
     }
   }
-  
-  // Start initialization
-  if (document.readyState === 'loading') {
-    // DOM not ready, use retry mechanism
-    // Note: addEventListener may not work reliably in Shopify sandboxed environments
-    // We rely on setTimeout retry mechanism which is more reliable
-    setTimeout(tryInit, 50);
-  } else {
-    // DOM already loaded, init immediately
-    tryInit();
+
+  /**
+   * Tenta inicializar ThemeGTM
+   *
+   * Se falhar, retorna false e caller pode fazer retry.
+   * Se der sucesso, retorna true e para de tentar.
+   *
+   * @returns {boolean} true se sucesso, false se falha
+   */
+  function tryInitialize() {
+    try {
+      const result = ThemeGTM.init(window.ThemeGTMConfig);
+
+      if (result) {
+        console.log('[ThemeGTM] Inicialização automática bem-sucedida (tentativa ' + attempts + ')');
+      } else {
+        console.warn('[ThemeGTM] Inicialização falhou - dependências não carregadas');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('[ThemeGTM] Erro durante inicialização automática:', error.message);
+      return false;
+    }
+  }
+
+  // ============= FLUXO DE INICIALIZAÇÃO =============
+
+  try {
+    // 1️⃣ Aguardar DOM estar ready (se necessário)
+    if (document.readyState === 'loading') {
+      // Usar delay inicial curto para primeira tentativa
+      await new Promise(resolve => setTimeout(resolve, INITIAL_DELAY));
+
+      // Se ainda tiver carregando, aguardar com retry loop
+      if (document.readyState === 'loading') {
+        await waitForDOM();
+      }
+    }
+
+    // 2️⃣ Tentar inicializar
+    const success = tryInitialize();
+
+    // 3️⃣ Se falhou, fazer retry com exponential backoff
+    if (!success && attempts < MAX_ATTEMPTS) {
+      attempts++;
+      const delay = RETRY_DELAY * Math.pow(2, Math.min(attempts - 1, 3)); // Max 2^3 = 8x
+      console.log('[ThemeGTM] Retentando em ' + delay + 'ms (tentativa ' + attempts + '/' + MAX_ATTEMPTS + ')');
+
+      setTimeout(() => {
+        // Recursivo: tentar novamente
+        if (!tryInitialize() && attempts < MAX_ATTEMPTS) {
+          // Continuar retentando se falhar novamente
+          arguments.callee(); // Self-invoke para retry
+        }
+      }, delay);
+    }
+
+  } catch (error) {
+    console.error('[ThemeGTM] Erro fatal durante inicialização automática:', error);
   }
 })();
