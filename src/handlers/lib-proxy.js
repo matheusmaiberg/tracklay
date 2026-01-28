@@ -20,8 +20,6 @@ import { errorResponse } from '../utils/response.js';
 import { HTTP_STATUS } from '../utils/constants.js';
 import { Logger } from '../core/logger.js';
 
-const logger = Logger.create('LibProxy');
-
 /**
  * Mapping of obfuscated library names to their original URLs
  * Used by browser interceptor to redirect tracking requests
@@ -64,10 +62,10 @@ export async function handleLibProxy(request) {
   const url = new URL(request.url);
   const pathParts = url.pathname.split('/').filter(Boolean); // ['lib', 'fbevents']
 
-  logger.info(`[LibProxy] Request received: ${request.method} ${request.url}`);
+  Logger.info(`[LibProxy] Request received: ${request.method} ${request.url}`);
 
   if (pathParts[0] !== 'lib' || pathParts.length < 2) {
-    logger.warn(`[LibProxy] Invalid path: ${url.pathname}`);
+    Logger.warn(`[LibProxy] Invalid path: ${url.pathname}`);
     return errorResponse('Invalid library path', HTTP_STATUS.BAD_REQUEST);
   }
 
@@ -75,7 +73,7 @@ export async function handleLibProxy(request) {
   let targetUrl = LIB_MAP[libName];
 
   if (!targetUrl) {
-    logger.warn(`[LibProxy] Unknown library: ${libName}`);
+    Logger.warn(`[LibProxy] Unknown library: ${libName}`);
     return errorResponse(`Library not found: ${libName}`, HTTP_STATUS.NOT_FOUND);
   }
 
@@ -87,7 +85,7 @@ export async function handleLibProxy(request) {
   }
 
   try {
-    logger.info(`[LibProxy] Proxying ${libName}: ${request.method} ${url.pathname} → ${targetUrl}`);
+    Logger.info(`[LibProxy] Proxying ${libName}: ${request.method} ${url.pathname} → ${targetUrl}`);
 
     // Proxy the request
     const response = await proxyRequest(targetUrl, request, {
@@ -96,7 +94,7 @@ export async function handleLibProxy(request) {
       cacheTTL: 604800 // 1 week for static libs
     });
 
-    logger.info(`[LibProxy] ✓ Response: ${response.status} (${libName})`);
+    Logger.info(`[LibProxy] ✓ Response: ${response.status} (${libName})`);
 
     // Add security headers
     const headers = new Headers(response.headers);
@@ -110,7 +108,7 @@ export async function handleLibProxy(request) {
       headers
     });
   } catch (error) {
-    logger.error(`[LibProxy] ✗ Failed to proxy ${libName}: ${error.message}`);
+    Logger.error(`[LibProxy] ✗ Failed to proxy ${libName}: ${error.message}`);
     return errorResponse(`Failed to fetch library: ${error.message}`, HTTP_STATUS.BAD_GATEWAY);
   }
 }
