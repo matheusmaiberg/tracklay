@@ -557,10 +557,10 @@ function logInfo(message) {
 /**
  * Configuration Manager - Centralized configuration management API.
  * Provides methods to get, set, merge and initialize configuration values.
- * 
+ *
  * @namespace ConfigManager
  */
-export const ConfigManager = {
+const ConfigManager = {
   /**
    * Gets a configuration value by path.
    * 
@@ -829,7 +829,7 @@ export const ConfigManager = {
  * This is a proxy that reads from the current configuration.
  * @deprecated Use ConfigManager.get() or ConfigManager.getAll() instead
  */
-export const CONFIG = new Proxy({}, {
+const CONFIG = new Proxy({}, {
   get(target, prop) {
     if (currentConfig[prop]) {
       return currentConfig[prop];
@@ -858,7 +858,10 @@ if (typeof window !== 'undefined') {
 }
 
 // ============================================
-// DEFAULT EXPORT
+// GLOBAL ASSIGNMENTS (for module.init.js and other modules)
 // ============================================
 
-export default ConfigManager;
+if (typeof window !== 'undefined') {
+  // Already assigned above in BROWSER GLOBAL section
+  // Kept for clarity: window.ConfigManager, window.PixelConfig, window.PixelConfigAPI
+}
