@@ -8,7 +8,7 @@
 
 **Tracklay** es un proxy de rastreo de primera parte sin servidor construido sobre Cloudflare Workers que sirve Google Analytics 4 (GA4), Google Tag Manager (GTM) y Meta (Facebook) Pixel desde tu propio dominio, completamente evitando el límite de cookies de 7 días de Safari, restricciones de rastreo de iOS y 90%+ de bloqueadores de anuncios.
 
-**[🇺🇸 English](README.md) | [🇧🇷 Português](README.pt-BR.md) | 🇪🇸 Español**
+**[🇺🇸 English](README.md) | [🇧🇷 Português](README.pt-BR.md) | 🇪🇸 Español | [🇫🇷 Français](README.fr.md) | [🇩🇪 Deutsch](README.de.md)**
 
 ---
 
