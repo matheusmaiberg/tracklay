@@ -1,17 +1,6 @@
 /**
- * @fileoverview Deduplicator - Fast Event Deduplication System
- * @module deduplicator
- *
- * @description
- * Lightweight event deduplication using in-memory Map cache (max 1000 events).
- * Prevents duplicate events by checking ID and fingerprint matching.
- * Automatically manages cache size with FIFO eviction.
- *
- * @example
- * import { Deduplicator } from './module.deduplicator.js';
- * if (!Deduplicator.isDuplicate(event)) {
- *   Deduplicator.markProcessed(event);
- * }
+ * @fileoverview Fast Event Deduplication System - Prevents duplicate events
+ * using in-memory Map cache with ID and fingerprint matching.
  */
 
 // ============= IMPORTS =============
@@ -29,21 +18,15 @@ const log = Logger ? Logger.create('Deduplicator') : {
 
 // ============= CONFIGURATION =============
 
-/**
- * Local config fallback - used when ConfigManager is not available
- * These values are overridden by config.js central configuration
- * @deprecated Use ConfigManager.get() instead
- */
 const LOCAL_CONFIG = {
   MAX_CACHE_SIZE: 1000,
   FINGERPRINT_FIELDS: ['name', 'data.transaction_id', 'data.value', 'data.currency']
 };
 
 /**
- * Get configuration value from ConfigManager with fallback
- * @param {string} path - Dot-notation config path
- * @param {string} localKey - Local config key for fallback
- * @returns {*} Configuration value
+ * @param {string} path
+ * @param {string} localKey
+ * @returns {*}
  */
 function getConfig(path, localKey) {
   const localVal = LOCAL_CONFIG[localKey];
@@ -55,14 +38,11 @@ function getConfig(path, localKey) {
 
 // ============= STATE =============
 
-// NOTE: These module-level caches are intentionally shared across all instances.
-// This design enables deduplication across multiple Deduplicator calls/references
-// within the same module context. Do not convert to instance properties.
+// Module-level caches are intentionally shared across all instances
 let memoryCache = new Map();
 let fingerprintCache = new Set();
 
 // WeakMap to track generated IDs for events without an ID
-// This prevents race condition between isDuplicate() and markProcessed()
 const generatedIdMap = new WeakMap();
 
 // ============= UTILITY FUNCTIONS =============
@@ -88,9 +68,8 @@ const createFingerprint = (event) => {
 // ============= PUBLIC API =============
 
 /**
- * Checks if an event is a duplicate by ID or fingerprint match
- * @param {Object} event - Event to check
- * @returns {boolean} True if event has been processed before
+ * @param {Object} event
+ * @returns {boolean}
  */
 const isDuplicate = (event) => {
   if (!event) return false;
@@ -100,7 +79,7 @@ const isDuplicate = (event) => {
   if (!eventId) {
     eventId = generatedIdMap.get(event);
     if (!eventId) {
-      eventId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      eventId = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
       generatedIdMap.set(event, eventId);
     }
   }
@@ -120,9 +99,7 @@ const isDuplicate = (event) => {
 };
 
 /**
- * Marks an event as processed and adds it to cache
- * Uses FIFO eviction when cache exceeds max size
- * @param {Object} event - Event to mark as processed
+ * @param {Object} event
  * @returns {void}
  */
 const markProcessed = (event) => {
@@ -133,7 +110,7 @@ const markProcessed = (event) => {
   if (!eventId) {
     eventId = generatedIdMap.get(event);
     if (!eventId) {
-      eventId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      eventId = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
       generatedIdMap.set(event, eventId);
     }
   }
@@ -149,9 +126,12 @@ const markProcessed = (event) => {
   memoryCache.set(eventId, record);
   fingerprintCache.add(fingerprint);
 
-  // FIFO eviction: remove oldest entries while cache exceeds max size
-  // This handles burst insertions where multiple items are added at once
-  const maxCacheSize = getConfig('DEDUPLICATOR.MAX_CACHE_SIZE', 'MAX_CACHE_SIZE') || 1000;
+  // FIFO eviction
+  let maxCacheSize = Number(getConfig('DEDUPLICATOR.MAX_CACHE_SIZE', 'MAX_CACHE_SIZE')) || 1000;
+  if (maxCacheSize <= 0) {
+    log.warn('Invalid maxCacheSize, using default 1000');
+    maxCacheSize = 1000;
+  }
   while (memoryCache.size > maxCacheSize) {
     const firstKey = memoryCache.keys().next().value;
     const removedRecord = memoryCache.get(firstKey);
@@ -163,15 +143,8 @@ const markProcessed = (event) => {
 };
 
 /**
- * Initialize Deduplicator with options
- * @param {Object} [options={}] - Configuration options to merge
- * @returns {Object} Deduplicator instance
- * 
- * @example
- * Deduplicator.init({
- *   FINGERPRINT_FIELDS: ['name', 'data.checkout.order.id', 'data.value'],
- *   DEDUPLICATOR: { MAX_CACHE_SIZE: 500 }
- * });
+ * @param {Object} [options={}]
+ * @returns {Object}
  */
 const init = (options = {}) => {
   if (typeof ConfigManager !== 'undefined' && ConfigManager.merge) {
@@ -181,8 +154,7 @@ const init = (options = {}) => {
 };
 
 /**
- * Returns debug statistics about the cache
- * @returns {Object} Stats with cache size and sample events
+ * @returns {Object}
  */
 const getStats = () => {
   return {
@@ -193,7 +165,6 @@ const getStats = () => {
 };
 
 /**
- * Clears all cached events
  * @returns {void}
  */
 const clear = () => {

@@ -47,3 +47,32 @@ export const CONTENT_TYPES = {
   TEXT: 'text/plain',
   HTML: 'text/html',
 };
+
+// ============================================================
+// ROUTING CONSTANTS
+// ============================================================
+// PATH PREFIXES for ultra-aggressive obfuscation
+// Scripts and endpoints share the same paths, differentiated by:
+// - HTTP method (Facebook: POST=endpoint, GET=script)
+// - Query parameters (Google: v=2/tid=/_p=endpoint, c=/id=script)
+export const PATH_PREFIXES = {
+  FACEBOOK: '/cdn/f/',
+  GOOGLE: '/cdn/g/',
+  GTM_FALLBACK: '/g/collect'
+};
+
+// UPSTREAM URLs (CDN sources for tracking scripts and endpoints)
+export const UPSTREAM_URLS = {
+  FACEBOOK_SCRIPT: 'https://connect.facebook.net/en_US/fbevents.js',
+  FACEBOOK_ENDPOINT: 'https://www.facebook.com/tr',
+  GOOGLE_SCRIPT: 'https://www.googletagmanager.com/gtm.js',
+  GTM_TRANSPORT_SUFFIX: '/g/transport'
+};
+
+// GOOGLE TRACKING PARAMS - Query parameters that indicate tracking event (vs script request)
+// When present: route to tracking endpoint (handleEndpointProxy)
+// When absent: route to script handler (handleScriptProxy)
+// - v=2: GA4 version parameter (indicates tracking event)
+// - tid=: Tracking ID parameter
+// - _p=: Page ID or session parameter
+export const GOOGLE_TRACKING_PARAMS = ['v=2', 'tid=', '_p='];

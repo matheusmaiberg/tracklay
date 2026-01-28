@@ -103,7 +103,7 @@ function getConfig(key, localKey) {
  */
 function checkLZString() {
   if (typeof LZString === 'undefined') {
-    console.warn('[EventBridge] LZString not available, compression disabled');
+    log.warn('LZString not available, compression disabled');
     return false;
   }
   return true;
@@ -127,7 +127,7 @@ function compress(data) {
     try {
       return 'J:' + JSON.stringify(data);
     } catch (e) {
-      console.error('[EventBridge] JSON stringify failed:', e);
+      log.error('JSON stringify failed:', e);
       return null;
     }
   }
@@ -144,12 +144,12 @@ function compress(data) {
     }
     return 'J:' + json;
   } catch (e) {
-    console.error('[EventBridge] Compression failed:', e);
+    log.error('Compression failed:', e);
     // Fallback to JSON on any error (including circular references)
     try {
       return 'J:' + JSON.stringify(data);
     } catch (e2) {
-      console.error('[EventBridge] JSON stringify fallback failed:', e2);
+      log.error('JSON stringify fallback failed:', e2);
       return null;
     }
   }
@@ -182,7 +182,7 @@ function decompress(str) {
     // Legacy fallback for unformatted strings
     return JSON.parse(str);
   } catch (e) {
-    console.error('[EventBridge] Decompression failed:', e);
+    log.error('Decompression failed:', e);
     return null;
   }
 }
@@ -198,7 +198,7 @@ function decompress(str) {
  * // Returns: '1706203200000-abc123def-xyz12'
  */
 function generateEventId() {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${Math.random().toString(36).substr(2, 5)}`;
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
 
@@ -223,7 +223,7 @@ const CookieManager = {
    */
   set(name, value, days) {
     try {
-      const expiryDays = days !== undefined ? days : getConfig('COOKIE.POLLER.EXPIRY', 'COOKIE_EXPIRY_DAYS');
+      const expiryDays = Number(days !== undefined ? days : getConfig('COOKIE.POLLER.EXPIRY', 'COOKIE_EXPIRY_DAYS'));
       const expires = new Date();
       expires.setTime(expires.getTime() + expiryDays * 24 * 60 * 60 * 1000);
       
@@ -233,14 +233,14 @@ const CookieManager = {
       
       // Check size before setting
       if (cookieStr.length > maxSize) {
-        console.warn('[CookieManager] Cookie too large, using IndexedDB fallback');
+        log.warn('Cookie too large, using IndexedDB fallback');
         return false;
       }
       
       document.cookie = cookieStr;
       return true;
     } catch (e) {
-      console.error('[CookieManager] Set failed:', e);
+      log.error('CookieManager Set failed:', e);
       return false;
     }
   },
@@ -269,7 +269,7 @@ const CookieManager = {
       }
       return null;
     } catch (e) {
-      console.error('[CookieManager] Get failed:', e);
+      log.error('CookieManager Get failed:', e);
       return null;
     }
   },
@@ -289,7 +289,7 @@ const CookieManager = {
       const prefix = getConfig('COOKIE.PREFIX', 'COOKIE_PREFIX');
       document.cookie = `${prefix}${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
     } catch (e) {
-      console.error('[CookieManager] Delete failed:', e);
+      log.error('CookieManager Delete failed:', e);
     }
   },
 
@@ -321,7 +321,7 @@ const CookieManager = {
         }
       }
     } catch (e) {
-      console.error('[CookieManager] GetAll failed:', e);
+      log.error('CookieManager GetAll failed:', e);
     }
     
     return result;
@@ -388,7 +388,7 @@ const IndexedDBManager = {
           };
           
           this.db.onerror = (event) => {
-            console.error('[IndexedDB] Database error:', event.target.error);
+            log.error('IndexedDB Database error:', event.target.error);
           };
           
           resolve(true);
@@ -402,7 +402,7 @@ const IndexedDBManager = {
           }
         };
       } catch (e) {
-        console.warn('[IndexedDB] Init failed:', e);
+        log.warn('IndexedDB Init failed:', e);
         this.initPromise = null;
         resolve(false);
       }
@@ -434,7 +434,7 @@ const IndexedDBManager = {
         request.onsuccess = () => resolve(true);
         request.onerror = () => resolve(false);
       } catch (e) {
-        console.warn('[IndexedDB] Store failed:', e);
+        log.warn('IndexedDB Store failed:', e);
         resolve(false);
       }
     });
@@ -461,7 +461,7 @@ const IndexedDBManager = {
         request.onsuccess = () => resolve(request.result || []);
         request.onerror = () => resolve([]);
       } catch (e) {
-        console.warn('[IndexedDB] GetAll failed:', e);
+        log.warn('IndexedDB GetAll failed:', e);
         resolve([]);
       }
     });
@@ -489,7 +489,7 @@ const IndexedDBManager = {
         request.onsuccess = () => resolve(true);
         request.onerror = () => resolve(false);
       } catch (e) {
-        console.warn('[IndexedDB] Clear failed:', e);
+        log.warn('IndexedDB Clear failed:', e);
         resolve(false);
       }
     });
@@ -543,19 +543,19 @@ const BroadcastChannelManager = {
           try {
             listener(event.data);
           } catch (e) {
-            console.error('[BROADCAST] Listener error:', e);
+            log.error('BroadcastChannel Listener error:', e);
           }
         });
       };
       
       // Handle channel errors
       this.channel.onmessageerror = (event) => {
-        console.error('[BROADCAST] Message error:', event);
+        log.error('BroadcastChannel Message error:', event);
       };
       
       return true;
     } catch (e) {
-      console.warn('[BROADCAST] Init failed:', e);
+      log.warn('BroadcastChannel Init failed:', e);
       return false;
     }
   },
@@ -575,7 +575,7 @@ const BroadcastChannelManager = {
       this.channel.postMessage(data);
       return true;
     } catch (e) {
-      console.error('[BROADCAST] Send failed:', e);
+      log.error('BroadcastChannel Send failed:', e);
       return false;
     }
   },
@@ -645,7 +645,7 @@ const SimplePoll = {
         try {
           listener(CookieManager.getAll());
         } catch (e) {
-          console.error('[POLL] Listener error:', e);
+          log.error('SimplePoll Listener error:', e);
         }
       });
     }, pollInterval);
@@ -845,7 +845,7 @@ const EventBridge = {
           await IndexedDBManager.clear();
         }
       } catch (e) {
-        console.error('[EventBridge] IndexedDB poll error:', e);
+        log.error('IndexedDB poll error:', e);
       }
     };
     
@@ -861,7 +861,7 @@ const EventBridge = {
     if (this.indexedDBPollIntervalId) {
       clearInterval(this.indexedDBPollIntervalId);
       this.indexedDBPollIntervalId = null;
-      if (getConfig('COOKIE.DEBUG', 'DEBUG')) console.log('[EventBridge] IndexedDB polling stopped');
+      if (getConfig('COOKIE.DEBUG', 'DEBUG')) log.info('IndexedDB polling stopped');
     }
   },
 
@@ -906,7 +906,7 @@ const EventBridge = {
     const maxSize = getConfig('COOKIE.MAX_SIZE', 'MAX_COOKIE_SIZE');
 
     if (!compressed) {
-      console.error('[EventBridge] Failed to compress event');
+      log.error('Failed to compress event');
       await this.fallbackToIndexedDB(event);
       return;
     }
@@ -995,7 +995,7 @@ const EventBridge = {
         this.eventHistory.add(entry);
       }
       if (getConfig('COOKIE.DEBUG', 'DEBUG')) {
-        console.log(`[EventBridge] Cleaned up ${evictionCount} history entries, new size: ${this.eventHistory.size}`);
+        log.debug(`Cleaned up ${evictionCount} history entries, new size: ${this.eventHistory.size}`);
       }
     }
   },
@@ -1029,7 +1029,7 @@ const EventBridge = {
           callback(event);
         }
       } catch (e) {
-        console.error('[EventBridge] Callback error:', e);
+        log.error('Callback error:', e);
       }
     });
 
@@ -1038,7 +1038,7 @@ const EventBridge = {
       try {
         onEvent(event);
       } catch (e) {
-        console.error('[EventBridge] Event handler error:', e);
+        log.error('Event handler error:', e);
       }
     }
   },
@@ -1162,7 +1162,7 @@ if (typeof analytics !== 'undefined' && analytics.subscribe) {
   try {
     EventBridge.initEmitter();
   } catch (e) {
-    console.error('[EventBridge] Auto-init failed:', e);
+    log.error('Auto-init failed:', e);
   }
 }
 

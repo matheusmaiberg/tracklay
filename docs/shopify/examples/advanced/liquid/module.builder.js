@@ -72,20 +72,25 @@ export const toFloat = (val) => {
  * // returns { a: 1, d: { f: 2 } }
  * @memberof module:ga4-event-builder
  */
-export const clean = (obj) => {
+export const clean = (obj, seen = new WeakSet()) => {
   if (!obj || typeof obj !== 'object') return obj;
+  
+  // Protect against circular references
+  if (seen.has(obj)) return undefined;
+  seen.add(obj);
 
   if (Array.isArray(obj)) {
-    return obj.map(clean).filter(v => v != null);
+    return obj.map(item => clean(item, seen)).filter(v => v != null);
   }
 
   const result = {};
   for (const [key, value] of Object.entries(obj)) {
-    const cleaned = clean(value);
+    const cleaned = clean(value, seen);
     if (cleaned != null && cleaned !== '' && !Number.isNaN(cleaned)) {
       result[key] = cleaned;
     }
   }
+  seen.delete(obj);
   return result;
 };
 
