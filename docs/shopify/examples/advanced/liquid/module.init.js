@@ -4,48 +4,56 @@
  * Orquestra a recepção de eventos do Custom Pixel e envio para GTM.
  * Usa EventBridge para gerenciar BroadcastChannel + cookie polling internamente.
  *
- * Dependências obrigatórias:
- * - EventBridge (de cookie-tracker.js) - handles BroadcastChannel + polling
- * - Deduplicator (de deduplicator.js) - deduplicação de eventos
- * - GTMLoader (de gtm-loader.js, opcional) - envio para dataLayer
- * - PixelConfigAPI (de config.js) - configuração centralizada
+ * ES6 Module - Importa dependências explicitamente:
+ * - EventBridge (de module.cookie-tracker.js) - handles BroadcastChannel + polling
+ * - Deduplicator (de module.deduplicator.js) - deduplicação de eventos
+ * - GTMLoader (de module.loader.js, opcional) - envio para dataLayer
+ * - ConfigManager (de module.config.js) - configuração centralizada
  * - Logger (de module.logger.js) - logging centralizado
  *
  * Instalação no theme.liquid:
- * <script src="config.js"></script>
- * <script src="cookie-tracker.js"></script>
- * <script src="deduplicator.js"></script>
- * <script src="gtm-loader.js"></script>
- * <script src="event-orchestrator.js"></script>
- * <script>ThemeGTM.init({ gtmId: 'GTM-XXXXX' });</script>
+ * <script type="module" src="{{ 'module.config.js' | asset_url }}"></script>
+ * <script type="module" src="{{ 'module.logger.js' | asset_url }}"></script>
+ * <script type="module" src="{{ 'module.cookie-tracker.js' | asset_url }}"></script>
+ * <script type="module" src="{{ 'module.deduplicator.js' | asset_url }}"></script>
+ * <script type="module" src="{{ 'module.loader.js' | asset_url }}"></script>
+ * <script type="module" src="{{ 'module.init.js' | asset_url }}"></script>
+ * <script>window.ThemeGTMConfig = { gtmId: 'GTM-XXXXX', debug: true };</script>
  */
 
-var ThemeGTM = (function() {
+// ============= ES6 IMPORTS =============
+import { ConfigManager } from './module.config.js';
+import { Logger } from './module.logger.js';
+import { EventBridge } from './module.cookie-tracker.js';
+import { Deduplicator } from './module.deduplicator.js';
+import { GTMLoader } from './module.loader.js';
+
+const ThemeGTM = (function() {
   'use strict';
-  
+
   // ============= LOGGER SETUP =============
-  // Try to use Logger module, fallback to local log function
-  var logInstance = null;
-  
+  // Use Logger from import with fallback to local log function
+  let logInstance = null;
+
   function initLogger() {
     if (logInstance) return logInstance;
-    
-    // Try window.Logger first (loaded via script tag)
-    if (typeof window !== 'undefined' && window.Logger) {
+
+    // Try imported Logger first
+    if (typeof Logger !== 'undefined' && Logger && typeof Logger.create === 'function') {
       try {
-        logInstance = window.Logger.create('ThemeGTM');
+        logInstance = Logger.create('ThemeGTM');
         return logInstance;
       } catch (e) {
         // Fallback below
       }
     }
-    
+
     // Fallback logger
-    var debugEnabled = false;
+    let debugEnabled = false;
     logInstance = {
       debug: function() {},
       info: function() {},
-      warn: function() { 
+      warn: function() {
         var args = Array.prototype.slice.call(arguments);
         args.unshift('[ThemeGTM]');
         console.warn.apply(console, args);
@@ -62,12 +70,17 @@ var ThemeGTM = (function() {
     };
     return logInstance;
   }
-  
+
   /**
-   * Get ConfigManager from global API or fallback to defaults
+   * Get ConfigManager from import or fallback to window.PixelConfigAPI
    * @returns {Object|null} ConfigManager or null
    */
   function getConfigManager() {
+    // Try imported ConfigManager first
+    if (typeof ConfigManager !== 'undefined' && ConfigManager) {
+      return ConfigManager;
+    }
+    // Fallback to window.* for legacy compatibility
     if (typeof window !== 'undefined' && window.PixelConfigAPI) {
       return window.PixelConfigAPI;
     }
@@ -123,7 +136,7 @@ var ThemeGTM = (function() {
    */
   function processEvent(event, source) {
     source = source || 'unknown';
-    
+
     // Verifica duplicado (único dedup no sistema)
     if (typeof Deduplicator !== 'undefined' && typeof Deduplicator.isDuplicate === 'function') {
       if (Deduplicator.isDuplicate(event)) {
@@ -135,9 +148,9 @@ var ThemeGTM = (function() {
         Deduplicator.markProcessed(event);
       }
     }
-    
+
     log('  ✅ Processando:', event.name);
-    
+
     // Envia para GTM/dataLayer
     if (typeof GTMLoader !== 'undefined' && typeof GTMLoader.push === 'function') {
       // Bug #3 fix: Add try-catch around GTMLoader.push()
@@ -185,7 +198,7 @@ var ThemeGTM = (function() {
   }
   
   /**
-   * Inicializa receivers via EventBridge
+   * Inicializa receivers via EventBridge (importado)
    * EventBridge gerencia BroadcastChannel + cookie polling internamente
    */
   function initReceivers() {
@@ -194,7 +207,7 @@ var ThemeGTM = (function() {
       log('❌ EventBridge nao disponivel ou metodo subscribe nao encontrado');
       return false;
     }
-    
+
     // Bug #7 fix: Prevent duplicate subscriptions
     if (isSubscribed) {
       log('⚠️ EventBridge ja inicializado, ignorando chamada duplicada');
@@ -205,7 +218,7 @@ var ThemeGTM = (function() {
     EventBridge.subscribe(function(event) {
       processEvent(event, 'eventbridge');
     });
-    
+
     // Mark as subscribed
     isSubscribed = true;
 
@@ -440,3 +453,25 @@ var ThemeGTM = (function() {
     console.error('[ThemeGTM] Erro fatal durante inicialização automática:', error);
   }
 })();
+
+// ============================================
+// ES6 MODULE EXPORTS
+// ============================================
+
+/**
+ * Export ThemeGTM for use in other modules or for manual initialization
+ */
+export { ThemeGTM };
+export default ThemeGTM;
+
+// ============================================
+// BROWSER GLOBAL ASSIGNMENT
+// ============================================
+
+/**
+ * Browser global fallback assignment.
+ * Makes ThemeGTM available as window.ThemeGTM in browser environments
+ */
+if (typeof window !== 'undefined') {
+  window.ThemeGTM = ThemeGTM;
+}
