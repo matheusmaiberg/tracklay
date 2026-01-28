@@ -191,18 +191,6 @@ O Worker recebe o payload JSON e extrai os dados:
 
 ---
 
-## Exemplo Completo: Purchase Tracking
-
-Veja o arquivo completo: [`purchase-tracking-example.liquid`](shopify/examples/purchase-tracking-example.liquid)
-
-**Mostra:**
-- ✅ Como capturar dados do Shopify com Liquid
-- ✅ Como estruturar o payload JSON
-- ✅ Como enviar para o Worker
-- ✅ Todos os campos disponíveis (customer, order, products)
-
----
-
 ## Comparação: Headers vs JSON Body
 
 | Dado | Via Headers | Via JSON Body |

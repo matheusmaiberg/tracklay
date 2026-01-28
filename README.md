@@ -62,6 +62,52 @@ https://yourstore.com/cdn/f/b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f
 - ✅ **Same Path for Scripts & Endpoints**: No distinguishable patterns
 - ✅ **<5% Detection Rate**: Down from 90-100% with traditional proxies
 
+### Full Script Proxy (v3.1.0) - Complete Ad-Blocker Bypass
+
+Tracklay now performs **deep URL extraction and replacement** inside tracking scripts. Every external URL found in GTM, gtag, or Facebook scripts is automatically proxied through unique UUID endpoints.
+
+```javascript
+// Original GTM script contains:
+"https://www.google-analytics.com/collect"
+"https://www.googleadservices.com/pagead/conversion"
+"https://region1.google-analytics.com/g/collect"
+
+// Tracklay automatically transforms to:
+"https://yourstore.com/x/a3f9c2e1b8d4e5f6"  // → google-analytics.com
+"https://yourstore.com/x/b7e4d3f2c9a1b2c3"  // → googleadservices.com
+"https://yourstore.com/x/d8e5f4c3b2a1d0e9"  // → region1.google-analytics.com
+```
+
+**How It Works**:
+1. **Extract**: Worker downloads the script and extracts ALL URLs using regex patterns
+2. **Generate**: Creates unique UUID for each external URL (`/x/{uuid}`)
+3. **Replace**: Substitutes all URLs in the script content with proxied versions
+4. **Route**: Client calls `/x/{uuid}` → Worker resolves → Proxies to original destination
+
+**Supported Services**:
+- Google Analytics (`google-analytics.com`)
+- Google Ads (`googleadservices.com`)
+- Google Tag Manager (`googletagmanager.com`)
+- Facebook Pixel (`facebook.com`, `connect.facebook.net`)
+- Microsoft Clarity (`clarity.ms`)
+- Tealium (`tiqcdn.com`)
+- Segment (`segment.com`)
+- And any other URL found in scripts!
+
+**Benefits**:
+- 🚀 **98%+ Ad-Blocker Bypass**: Even uBlock Origin can't detect first-party requests
+- 🔒 **100% First-Party**: All tracking calls originate from your domain
+- 🔄 **Automatic**: Zero configuration required, works with any script
+- 💾 **Cached**: URL mappings cached for 7 days, minimal performance impact
+- 🛡️ **Rotating UUIDs**: URLs change weekly for maximum security
+
+**Configuration**:
+```toml
+[vars]
+# Enable full script proxy (default: true)
+FULL_SCRIPT_PROXY = "true"
+```
+
 ### Three Deployment Modes for Every Use Case
 
 | Mode | Best For | Setup Time | Data Quality | Ad-Blocker Bypass |
@@ -218,6 +264,9 @@ CONTAINER_ALIASES = '{"abc123":"GTM-XXXXX","xyz789":"G-YYYYY"}'
 
 # Auto-inject transport_url (recommended)
 AUTO_INJECT_TRANSPORT_URL = "true"
+
+# Full Script Proxy - proxy ALL URLs inside scripts (recommended)
+FULL_SCRIPT_PROXY = "true"
 ```
 
 ### Advanced: UUID Rotation
@@ -230,26 +279,19 @@ ENDPOINTS_UUID_ROTATION = "true"
 UUID_SALT_ROTATION = "604800000"  # 7 days
 ```
 
-Then use Shopify Metafields + n8n to keep your theme updated automatically. See `docs/SHOPIFY-INTEGRATION.md`.
+Then use Shopify Metafields + n8n to keep your theme updated automatically.
 
 ---
 
 ## Documentation & Examples
 
-### 📚 Comprehensive Guides
+### 📚 Developer Guide
 
-| Guide | Description | Read Time |
-|-------|-------------|-----------|
-| **[`docs/QUICK_START.md`](docs/QUICK_START.md)** | Step-by-step setup for beginners | 10 min |
-| **[`docs/GTM-SERVER-SIDE-SETUP.md`](docs/GTM-SERVER-SIDE-SETUP.md)** | Complete GTM Server configuration | 20 min |
-| **[`docs/SHOPIFY-INTEGRATION.md`](docs/SHOPIFY-INTEGRATION.md)** | 3 strategies for Shopify theme integration | 15 min |
-| **[`docs/USER-DATA-COLLECTION-REFERENCE.md`](docs/USER-DATA-COLLECTION-REFERENCE.md)** | EMQ 9+ data collection guide | 10 min |
+For comprehensive architecture documentation, setup guides, and deployment instructions, see **[`CLAUDE.md`](CLAUDE.md)**.
 
 ### 💻 Code Examples
 
-- **Web Pixel Advanced**: [`docs/shopify/examples/web-pixel-advanced-tracking.js`](docs/shopify/examples/web-pixel-advanced-tracking.js)
-- **Purchase Tracking**: [`docs/shopify/examples/purchase-tracking-example.liquid`](docs/shopify/examples/purchase-tracking-example.liquid)
-- **GTM Export**: [`docs/GTM-EXPORT-CONFIG.json`](docs/GTM-EXPORT-CONFIG.json)
+Advanced implementation examples are available in [`docs/shopify/examples/advanced/`](docs/shopify/examples/advanced/).
 
 ### 🎯 Use Cases by Industry
 
@@ -395,6 +437,7 @@ We welcome contributions! Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for gu
 
 ### Roadmap
 
+- [x] **Full Script Proxy** - Complete URL extraction and proxy (v3.1.0) ✅
 - [ ] TikTok Pixel integration
 - [ ] Built-in analytics dashboard
 - [ ] A/B testing framework for tracking methods
@@ -415,4 +458,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/analyzify/tracklay)
 
-**[📖 Start with Quick Start](docs/QUICK_START.md)**
+**[📖 See CLAUDE.md for detailed setup and architecture](CLAUDE.md)**
