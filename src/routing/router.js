@@ -29,6 +29,7 @@ import { handleScriptProxy } from '../handlers/scripts.js';
 import { handleEndpointProxy } from '../handlers/endpoints.js';
 import { handleEndpointsInfo } from '../handlers/endpoints-info.js';
 import { handleEventProxy } from '../handlers/events.js';
+import { handleLibProxy } from '../handlers/lib-proxy.js';
 import { getScriptMap, getEndpointMap } from './mapping.js';
 import { CONFIG } from '../config/index.js';
 import { Logger } from '../core/logger.js';
@@ -115,6 +116,13 @@ export class Router {
       } else {
         return handleScriptProxy(request, rateLimit);
       }
+    }
+
+    // Third-party library proxy (for intercepted trackers)
+    // Browser interceptor redirects third-party requests to /lib/{libname}
+    // This enables transparent proxying and caching of tracking libraries
+    if (pathname.startsWith('/lib/')) {
+      return handleLibProxy(request);
     }
 
     // Legacy: Script proxy routes (for paths not in script map)
