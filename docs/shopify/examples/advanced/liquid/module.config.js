@@ -136,20 +136,27 @@ const DEFAULT_CONFIG = Object.freeze({
     ID: 'MJ7DW8H',
     /** @type {string} Default currency for monetary values */
     CURRENCY: 'EUR',
-    /** @type {Object} Data transmission settings */
+    /**
+     * Data transmission settings
+     * - ACTIVE: Enable/disable data transport
+     * - URL: Data collection endpoint URL
+     * @type {Object}
+     */
     TRANSPORT: Object.freeze({
-      /** @type {boolean} Enable/disable data transport */
       ACTIVE: true,
-      /** @type {string} Data collection endpoint URL */
       URL: 'https://data.suevich.com/'
     }),
-    /** @type {Object} CORS proxy configuration */
+
+    /**
+     * CORS proxy configuration
+     * - ACTIVE: Enable proxy routing
+     * - PATH: Unique proxy path identifier
+     * - DOMAIN: Full proxy domain URL
+     * @type {Object}
+     */
     PROXY: {
-      /** @type {boolean} Enable proxy routing */
       ACTIVE: true,
-      /** @type {string} Unique proxy path identifier */
       PATH: 'b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f',
-      /** @type {string} Full proxy domain URL */
       DOMAIN: 'https://cdn.suevich.com/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f'
     }
   }),
@@ -186,15 +193,19 @@ const DEFAULT_CONFIG = Object.freeze({
     MAX_HISTORY_SIZE: 1000,
     /** @type {number} Percentage of entries to evict when limit exceeded (0.2 = 20%) */
     HISTORY_EVICTION_PERCENT: 0.2,
-    /** @type {Object} Event polling configuration */
+
+    /**
+     * Event polling configuration
+     * - INTERVAL_MIN: Minimum polling interval in milliseconds
+     * - INTERVAL_MAX: Maximum polling interval in milliseconds
+     * - EXPIRY: Cookie expiration time in days
+     * - TTL: Cache entry TTL in minutes
+     * @type {Object}
+     */
     POLLER: Object.freeze({
-      /** @type {number} Minimum polling interval in milliseconds */
       INTERVAL_MIN: 300,
-      /** @type {number} Maximum polling interval in milliseconds */
       INTERVAL_MAX: 5000,
-      /** @type {number} Cookie expiration time in days */
       EXPIRY: 7,
-      /** @type {number} Cache entry TTL in minutes */
       TTL: 5
     })
   }),
@@ -207,7 +218,15 @@ const DEFAULT_CONFIG = Object.freeze({
   DEDUPLICATOR: Object.freeze({
     /** @type {number} Maximum number of events in deduplication cache */
     MAX_CACHE_SIZE: 1000,
-    /** @type {string[]} Field paths for event fingerprinting */
+
+    /**
+     * Field paths for event fingerprinting
+     * - 'name': Event name identifier
+     * - 'data.transaction_id': Transaction identifier
+     * - 'data.value': Transaction value
+     * - 'data.currency': Currency code
+     * @type {string[]}
+     */
     FINGERPRINT_FIELDS: Object.freeze([
       'name',
       'data.transaction_id',
@@ -244,14 +263,26 @@ const DEFAULT_CONFIG = Object.freeze({
    * @type {EventsConfig}
    */
   EVENTS: Object.freeze({
-    /** @type {string[]} Marketing conversion events to track */
+    /**
+     * Marketing conversion events to track
+     * - 'product_added_to_cart': Cart addition events
+     * - 'checkout_started': Checkout initiation
+     * - 'checkout_completed': Order completion
+     * - 'payment_info_submitted': Payment submission
+     * @type {string[]}
+     */
     MARKETING: Object.freeze([
       'product_added_to_cart',
       'checkout_started',
       'checkout_completed',
       'payment_info_submitted'
     ]),
-    /** @type {string[]} Events to filter out (empty = allow all) */
+
+    /**
+     * Events to filter out (empty = allow all)
+     * Currently allowing all events by default
+     * @type {string[]}
+     */
     IGNORE: Object.freeze([])
   }),
 
@@ -282,16 +313,20 @@ const DEFAULT_CONFIG = Object.freeze({
    * Unified from module.logger.js
    * @type {Object}
    */
+  /**
+   * Logger configuration
+   * - LEVEL: Global log level (0=silent, 1=error, 2=warn, 3=info, 4=debug)
+   * - STYLING: Enable visual styling in console output
+   * - GLOBAL_PREFIX: Global prefix for all log messages
+   * - TIMESTAMP: Include ISO timestamps in log output
+   * - SILENCED: List of silenced module names (currently empty = log all)
+   * @type {Object}
+   */
   LOGGER: Object.freeze({
-    /** @type {number} Global log level (0=silent, 1=error, 2=warn, 3=info, 4=debug) */
     LEVEL: 4,
-    /** @type {boolean} Enable visual styling in console output */
     STYLING: true,
-    /** @type {string} Global prefix for all log messages */
     GLOBAL_PREFIX: '[Tracklay]',
-    /** @type {boolean} Include ISO timestamps in log output */
     TIMESTAMP: false,
-    /** @type {Array<string>} List of silenced module names */
     SILENCED: Object.freeze([])
   })
 });
