@@ -33,7 +33,7 @@ import { CONFIG } from '../config/index.js';
 export function shouldCache(request) {
   // Never cache non-GET requests (POST/PUT/DELETE)
   // This handles Facebook tracking (POST method)
-  if (request.method !== 'GET') {
+  if (request?.method !== 'GET') {
     return false;
   }
 
@@ -52,7 +52,7 @@ export function shouldCache(request) {
   //
   // These indicate tracking events that must NEVER be cached.
   // Script loading uses: c= (container alias) or id= (container ID)
-  const search = url.search;
+  const { search } = url;
   const isTrackingHit = search.includes('v=2') ||
                         search.includes('tid=') ||
                         search.includes('_p=');
@@ -71,9 +71,7 @@ export function shouldCache(request) {
  * @param {string} targetUrl - Full target URL
  * @returns {Request} - Request object to use as cache key
  */
-export function getCacheKey(targetUrl) {
-  return new Request(targetUrl, { method: 'GET' });
-}
+export const getCacheKey = (targetUrl) => new Request(targetUrl, { method: 'GET' });
 
 /**
  * Returns cache TTL for a URL
@@ -89,7 +87,7 @@ export function getCacheTTL(request) {
   // If shouldCache returned true, use configured CACHE_TTL
   // This covers all script loading requests (GET without tracking params)
   if (shouldCache(request)) {
-    return CONFIG.CACHE_TTL;
+    return CONFIG?.CACHE_TTL ?? 3600;
   }
 
   // Default: no cache

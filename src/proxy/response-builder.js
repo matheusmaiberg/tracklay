@@ -18,17 +18,17 @@
 import { CONFIG } from '../config/index.js';
 import { buildFullHeaders } from '../factories/headers-factory.js';
 
-export function buildResponse(upstreamResponse, request, options) {
-  const response = new Response(upstreamResponse.body, upstreamResponse);
+export function buildResponse(upstreamResponse, request, { cacheStatus = 'MISS', rateLimit } = {}) {
+  const response = new Response(upstreamResponse?.body, upstreamResponse);
 
   // Apply all standard headers (CORS + Security + Rate Limit)
-  const standardHeaders = buildFullHeaders(request, { rateLimit: options.rateLimit });
+  const standardHeaders = buildFullHeaders(request, { rateLimit });
   standardHeaders.forEach((value, key) => response.headers.set(key, value));
 
   // Debug header (only in development/staging)
   // Remove in production to prevent ad-blocker fingerprinting
-  if (CONFIG.DEBUG_HEADERS) {
-    response.headers.set('X-Cache-Status', options.cacheStatus || 'MISS');
+  if (CONFIG?.DEBUG_HEADERS) {
+    response.headers.set('X-Cache-Status', cacheStatus);
   }
 
   return response;

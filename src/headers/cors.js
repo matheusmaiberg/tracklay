@@ -73,7 +73,7 @@ export function buildCORSHeaders(request) {
     'User-Agent',
     'Referer',
     'Cookie',
-    'Authorization'
+    'Authorization',
   ].join(', ');
 
   headers.set('Access-Control-Allow-Headers', allowedHeaders);

@@ -65,7 +65,7 @@ async function handleRequest(request) {
     }
 
     // Rate limiting
-    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const clientIP = request.headers.get('CF-Connecting-IP') ?? 'unknown';
     const rateLimit = await RateLimiter.check(clientIP);
 
     if (!rateLimit.allowed) {

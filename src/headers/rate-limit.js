@@ -15,10 +15,12 @@ import { timestampToISO } from '../utils/time.js';
  * @param {number} rateLimit.remaining - Remaining requests
  * @param {number} rateLimit.resetAt - Timestamp when limit resets
  */
-export function addRateLimitHeaders(headers, rateLimit) {
+export const addRateLimitHeaders = (headers, rateLimit) => {
   if (!rateLimit) return;
 
-  headers.set(HEADERS.X_RATELIMIT_LIMIT, rateLimit.limit.toString());
-  headers.set(HEADERS.X_RATELIMIT_REMAINING, rateLimit.remaining.toString());
-  headers.set(HEADERS.X_RATELIMIT_RESET, timestampToISO(rateLimit.resetAt));
-}
+  const { limit, remaining, resetAt } = rateLimit;
+
+  headers.set(HEADERS.X_RATELIMIT_LIMIT, limit?.toString() ?? '0');
+  headers.set(HEADERS.X_RATELIMIT_REMAINING, remaining?.toString() ?? '0');
+  headers.set(HEADERS.X_RATELIMIT_RESET, timestampToISO(resetAt));
+};

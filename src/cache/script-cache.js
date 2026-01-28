@@ -159,12 +159,13 @@ export async function fetchAndCompareScript(url, scriptKey) {
     });
 
     if (!response.ok) {
+      const { status, statusText } = response;
       Logger.error('Failed to fetch script', {
         scriptKey,
-        status: response.status,
-        statusText: response.statusText
+        status,
+        statusText
       });
-      return { updated: false, error: `HTTP ${response.status}` };
+      return { updated: false, error: `HTTP ${status}` };
     }
 
     // Ler conteúdo do script
@@ -176,7 +177,7 @@ export async function fetchAndCompareScript(url, scriptKey) {
     // Obter hash anterior do cache
     const hashKey = `${HASH_PREFIX}${scriptKey}`;
     const oldHashResponse = await CacheManager.get(hashKey);
-    const oldHash = oldHashResponse ? await oldHashResponse.text() : null;
+    const oldHash = (await oldHashResponse?.text()) ?? null;
 
     // Comparar hashes
     const hasChanged = oldHash !== newHash;
@@ -184,8 +185,8 @@ export async function fetchAndCompareScript(url, scriptKey) {
     if (hasChanged) {
       Logger.info('Script content changed, updating cache', {
         scriptKey,
-        oldHash: oldHash ? oldHash.substring(0, 16) + '...' : 'none',
-        newHash: newHash.substring(0, 16) + '...'
+        oldHash: oldHash ? `${oldHash.substring(0, 16)}...` : 'none',
+        newHash: `${newHash.substring(0, 16)}...`
       });
 
       await updateScriptCache(scriptContent, scriptKey, newHash, 'updated');

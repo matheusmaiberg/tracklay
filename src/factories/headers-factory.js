@@ -27,13 +27,10 @@ import { addRateLimitHeaders } from '../headers/rate-limit.js';
  * Usage:
  * const headers = buildFullHeaders(request, { rateLimit });
  */
-export function buildFullHeaders(request, options = {}) {
-  const {
-    rateLimit = null,
-    includeSecurity = true,
-    includeRateLimit = true
-  } = options;
-
+export const buildFullHeaders = (
+  request,
+  { rateLimit, includeSecurity = true, includeRateLimit = true } = {}
+) => {
   // Start with CORS headers
   const headers = buildCORSHeaders(request);
 
@@ -42,10 +39,10 @@ export function buildFullHeaders(request, options = {}) {
     addSecurityHeaders(headers);
   }
 
-  // Add rate limit headers (X-RateLimit-*)
-  if (includeRateLimit && rateLimit) {
+  // Add rate limit headers (X-RateLimit-*) - only if rateLimit object is provided
+  if (includeRateLimit && rateLimit != null) {
     addRateLimitHeaders(headers, rateLimit);
   }
 
   return headers;
-}
+};

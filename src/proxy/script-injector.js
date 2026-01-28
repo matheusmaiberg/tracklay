@@ -62,8 +62,8 @@ function injectTransportUrlGTM(scriptContent, transportUrl) {
   );
 
   Logger.debug('GTM endpoint override applied', {
-    originalSize: scriptContent.length,
-    modifiedSize: modifiedScript.length,
+    originalSize: scriptContent?.length,
+    modifiedSize: modifiedScript?.length,
     transportUrl
   });
 
@@ -121,9 +121,9 @@ function injectTransportUrlGtag(scriptContent, transportUrl) {
   const modifiedScript = scriptContent + injectionCode;
 
   Logger.debug('gtag transport_url injected successfully', {
-    originalSize: scriptContent.length,
-    modifiedSize: modifiedScript.length,
-    injectedBytes: injectionCode.length
+    originalSize: scriptContent?.length,
+    modifiedSize: modifiedScript?.length,
+    injectedBytes: injectionCode?.length
   });
 
   return modifiedScript;
@@ -156,13 +156,12 @@ export function injectTransportUrl(scriptContent, transportUrl, scriptType = 'gt
     if (scriptType === 'gtm') {
       // GTM uses dataLayer API - inject BEFORE script runs
       return injectTransportUrlGTM(scriptContent, transportUrl);
-    } else {
-      // gtag/analytics use gtag() API - inject AFTER script runs
-      return injectTransportUrlGtag(scriptContent, transportUrl);
     }
+    // gtag/analytics use gtag() API - inject AFTER script runs
+    return injectTransportUrlGtag(scriptContent, transportUrl);
   } catch (error) {
     Logger.error('Transport_url injection failed', {
-      error: error.message,
+      error: error?.message ?? 'Unknown error',
       scriptType,
       transportUrl
     });
@@ -178,7 +177,7 @@ export function injectTransportUrl(scriptContent, transportUrl, scriptType = 'gt
  * @returns {Object} Object with shouldInject (boolean) and scriptType ('gtm' | 'gtag' | 'analytics' | null)
  */
 export function shouldInjectTransportUrl(url) {
-  const urlLower = url.toLowerCase();
+  const urlLower = url?.toLowerCase() ?? '';
 
   // Detect GTM script (uses dataLayer API)
   if (urlLower.includes('googletagmanager.com/gtm.js')) {

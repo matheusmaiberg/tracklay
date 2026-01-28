@@ -17,8 +17,7 @@
 
 export class CacheManager {
   static async get(key) {
-    const response = await caches.default.match(key);
-    return response || null;
+    return await caches.default.match(key);
   }
 
   static async put(key, response, ttl) {

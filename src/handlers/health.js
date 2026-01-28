@@ -52,9 +52,9 @@ export async function handleHealthCheck(request, rateLimit) {
         }
       };
       health.cloudflare = {
-        colo: request.cf?.colo || 'unknown',
-        country: request.headers.get('CF-IPCountry') || 'unknown',
-        ray: request.headers.get('CF-Ray') || 'unknown'
+        colo: request.cf?.colo ?? 'unknown',
+        country: request.headers.get('CF-IPCountry') ?? 'unknown',
+        ray: request.headers.get('CF-Ray') ?? 'unknown'
       };
     }
 

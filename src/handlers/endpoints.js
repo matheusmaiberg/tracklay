@@ -26,7 +26,8 @@ import { HTTP_STATUS } from '../utils/constants.js';
  * @returns {Promise<Response>} Proxied response
  */
 export async function handleEndpointProxy(request, rateLimit = null) {
-  const url = request._parsedUrl || new URL(request.url);
+  const { _parsedUrl, url: requestUrl } = request;
+  const url = _parsedUrl ?? new URL(requestUrl);
 
   // Get dynamic endpoint map (includes both obfuscated and legacy endpoints)
   // GTM endpoints are only included if GTM_SERVER_URL is configured
@@ -40,7 +41,7 @@ export async function handleEndpointProxy(request, rateLimit = null) {
 
   // NEVER cache tracking endpoints
   // Preserve headers for accurate tracking data
-  return await proxyRequest(targetUrl + url.search, request, {
+  return await proxyRequest(`${targetUrl}${url.search}`, request, {
     preserveHeaders: true,
     allowCache: false,
     rateLimit

@@ -13,7 +13,12 @@
 // - addSecurityHeaders(headers) → Headers
 // - getCSPDirectives() → string (helper, opcional)
 
-export function addSecurityHeaders(headers) {
+/**
+ * Add security headers to response
+ * @param {Headers} headers - Headers object to modify
+ * @returns {Headers} The modified headers object
+ */
+export const addSecurityHeaders = (headers) => {
   // Não indexar proxy endpoints
   headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
 
@@ -30,4 +35,4 @@ export function addSecurityHeaders(headers) {
   headers.set('X-Request-Id', crypto.randomUUID());
 
   return headers;
-}
+};

@@ -28,7 +28,11 @@ import { errorResponse } from '../utils/response.js';
 import { getScriptFromCache, identifyScriptKey } from '../cache/script-cache.js';
 
 export async function proxyRequest(targetUrl, request, options = {}) {
-  const { preserveHeaders = false, allowCache = false, rateLimit = null } = options;
+  const { 
+    preserveHeaders = false, 
+    allowCache = false, 
+    rateLimit = null 
+  } = options;
 
   try {
     // OTIMIZAÇÃO: Verificar script cache inteligente primeiro
@@ -43,12 +47,10 @@ export async function proxyRequest(targetUrl, request, options = {}) {
         });
 
         // Build response com headers CORS/security
-        const response = buildResponse(cachedScript, request, {
+        return buildResponse(cachedScript, request, {
           cacheStatus: 'HIT-SCRIPT',
           rateLimit
         });
-
-        return response;
       }
     }
 
@@ -65,12 +67,10 @@ export async function proxyRequest(targetUrl, request, options = {}) {
         Logger.debug('Cache hit', { url: targetUrl });
 
         // Build response com headers CORS/security
-        const response = buildResponse(cached, request, {
+        return buildResponse(cached, request, {
           cacheStatus: 'HIT',
           rateLimit
         });
-
-        return response;
       }
     }
 
@@ -85,15 +85,15 @@ export async function proxyRequest(targetUrl, request, options = {}) {
     try {
       response = await fetchWithTimeout(targetUrl, {
         method: request.method,
-        headers: headers,
-        body: request.method !== 'GET' && request.method !== 'HEAD'
+        headers,
+        body: !['GET', 'HEAD'].includes(request?.method) 
           ? requestClone.body
           : undefined,
         redirect: 'follow'
       });
     } catch (fetchError) {
       Logger.error('Fetch failed', {
-        error: fetchError.message,
+        error: fetchError?.message ?? 'Unknown error',
         url: targetUrl
       });
 
@@ -116,11 +116,10 @@ export async function proxyRequest(targetUrl, request, options = {}) {
 
     // Adicionar Cache-Control header
     const cacheTTL = getCacheTTL(request);
-    if (canCache) {
-      modifiedResponse.headers.set('Cache-Control', `public, max-age=${cacheTTL}`);
-    } else {
-      modifiedResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-    }
+    const cacheControl = canCache
+      ? `public, max-age=${cacheTTL}`
+      : 'no-store, no-cache, must-revalidate';
+    modifiedResponse.headers.set('Cache-Control', cacheControl);
 
     // Salvar em cache se permitido
     if (canCache) {
@@ -129,7 +128,7 @@ export async function proxyRequest(targetUrl, request, options = {}) {
         await CacheManager.put(cacheKey, responseToCache, cacheTTL);
         Logger.debug('Cached response', { url: targetUrl });
       } catch (cacheError) {
-        Logger.warn('Cache put failed', { error: cacheError.message });
+        Logger.warn('Cache put failed', { error: cacheError?.message ?? 'Unknown error' });
       }
     }
 
@@ -137,8 +136,8 @@ export async function proxyRequest(targetUrl, request, options = {}) {
 
   } catch (error) {
     Logger.error('Proxy request failed', {
-      error: error.message,
-      stack: error.stack,
+      error: error?.message ?? 'Unknown error',
+      stack: error?.stack,
       url: targetUrl
     });
 

@@ -35,8 +35,10 @@ export async function getScriptMap() {
   }
 
   // Generate UUIDs (rotating or fixed based on ENDPOINTS_UUID_ROTATION config)
-  const fbUUID = await generateEndpointUUID('facebook');
-  const googleUUID = await generateEndpointUUID('google');
+  const [fbUUID, googleUUID] = await Promise.all([
+    generateEndpointUUID('facebook'),
+    generateEndpointUUID('google')
+  ]);
 
   scriptMapCache = {
     // ============= ULTRA-OBFUSCATED SCRIPTS (NO SUFFIXES) =============
@@ -85,8 +87,10 @@ export async function getEndpointMap() {
   }
 
   // Generate UUIDs (rotating or fixed based on ENDPOINTS_UUID_ROTATION config)
-  const fbUUID = await generateEndpointUUID('facebook');
-  const googleUUID = await generateEndpointUUID('google');
+  const [fbUUID, googleUUID] = await Promise.all([
+    generateEndpointUUID('facebook'),
+    generateEndpointUUID('google')
+  ]);
 
   const map = {};
 

@@ -17,12 +17,14 @@ export class Metrics {
    * @param {number} duration - Request duration in milliseconds
    */
   static record(request, response, duration) {
-    const url = new URL(request.url);
+    const { pathname } = new URL(request.url);
+    const { status, headers } = response;
+    
     Logger.info('Request completed', {
-      path: url.pathname,
-      status: response.status,
+      path: pathname,
+      status,
       duration: `${duration}ms`,
-      cached: response.headers.get('X-Cache-Status') === 'HIT'
+      cached: headers.get('X-Cache-Status') === 'HIT'
     });
   }
 
@@ -31,12 +33,14 @@ export class Metrics {
    * @param {Request} request - The incoming request
    */
   static recordRequest(request) {
-    const url = new URL(request.url);
+    const { pathname } = new URL(request.url);
+    const { method, headers } = request;
+    
     Logger.info('Request received', {
-      method: request.method,
-      path: url.pathname,
-      origin: request.headers.get('Origin'),
-      ip: request.headers.get('CF-Connecting-IP')
+      method,
+      path: pathname,
+      origin: headers.get('Origin'),
+      ip: headers.get('CF-Connecting-IP')
     });
   }
 }

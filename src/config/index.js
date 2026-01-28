@@ -20,10 +20,10 @@ import { parsePositiveInt } from '../utils/validation.js';
  * @param {string} csvString - Comma-separated values
  * @returns {string[]} Array of trimmed strings
  */
-function parseArrayConfig(csvString) {
+const parseArrayConfig = (csvString) => {
   if (!csvString) return [];
   return csvString.split(',').map(s => s.trim()).filter(s => s.length > 0);
-}
+};
 
 /**
  * Auto-detect request origin for CORS
@@ -33,35 +33,35 @@ function parseArrayConfig(csvString) {
  * @param {Request} request - Incoming request
  * @returns {string} Origin URL (protocol + hostname)
  */
-export function getOriginFromRequest(request) {
+export const getOriginFromRequest = (request) => {
   try {
-    const url = new URL(request.url);
-    return `${url.protocol}//${url.hostname}`;
-  } catch (error) {
+    const { protocol, hostname } = new URL(request.url);
+    return `${protocol}//${hostname}`;
+  } catch {
     return null;
   }
-}
+};
 
 /**
  * Generate a random UUID secret if not provided
  * Uses crypto.randomUUID() or fallback to timestamp-based
  * @returns {string} Random UUID or timestamp-based secret
  */
-function generateDefaultSecret() {
+const generateDefaultSecret = () => {
   try {
     // Try crypto.randomUUID() (available in Cloudflare Workers)
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    if (crypto?.randomUUID) {
       return crypto.randomUUID();
     }
-  } catch (error) {
+  } catch {
     // Fallback to timestamp-based secret
   }
 
   // Fallback: timestamp + random number
   const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 15);
+  const random = Math.random().toString(36).slice(2, 15);
   return `${timestamp}-${random}`;
-}
+};
 
 /**
  * Configuration object type definition for Tracklay worker
@@ -82,7 +82,7 @@ function generateDefaultSecret() {
  *
  * @property {string} UUID_SECRET - Secret key for UUID generation using SHA-256. Auto-generated if not provided. Recommended: Set via 'wrangler secret put UUID_SECRET'. Format: 32+ char random hex. Example: 'a3f9c2e1b8d4f5a6c7e8d9f0a1b2c3d4'. Set via .dev.vars (local) or wrangler secret (production). Used by: uuid.js
  *
- * @property {number} CACHE_TTL - Cache Time-To-Live for proxied static scripts in seconds. Default: 3600 (1hr). Range: 300-86400 (5min-24hr). Applies to: gtm.js, gtag.js, fbevents.js. Does NOT apply to tracking endpoints (/collect) which are never cached. Set via CACHE_TTL in wrangler.toml. Used by: cache.js, script-cache.js
+ * @property {number} CACHE_TTL - Cache Time-To-Live for proxied static scripts in seconds. Default: 3600 (1hr). Range: 300-86400 (5min-24hr). Applies to: gtm.js, gtag.js, fbevents.js. Does NOT apply to tracking endpoints (/collect) which are NEVER cached. Set via CACHE_TTL in wrangler.toml. Used by: cache.js, script-cache.js
  *
  * @property {number} MAX_REQUEST_SIZE - Maximum request body size in bytes (DoS protection). Default: 1048576 (1MB). Range: 10240-10485760 (10KB-10MB). Set via MAX_REQUEST_SIZE in wrangler.toml. Used by: validator.js (deprecated, inlined in worker.js)
  *
@@ -99,6 +99,7 @@ function generateDefaultSecret() {
  * @property {string} ENDPOINTS_SECRET - Secret token for /endpoints API authentication (query string). Auto-generated if not provided. Recommended: Set via 'wrangler secret put ENDPOINTS_SECRET'. Format: 32+ char random hex. Example: 'a3f9c2e1b8d4f5a6c7e8d9f0a1b2c3d4e5f6a7b8c9d0'. Usage: GET /endpoints?token=SECRET. Security: NEVER expose publicly, NEVER commit to git. Set via .dev.vars (local) or wrangler secret (production). Used by: endpoints-info.js
  *
  * @property {boolean} AUTO_INJECT_TRANSPORT_URL - Automatically inject transport_url into Google scripts (gtag.js/gtm.js) for 100% first-party tracking. Default: true (enabled). When enabled: Worker modifies scripts to force tracking via Worker endpoint → GTM Server → GA4. When disabled: Client sends tracking directly to Google (third-party, bloqueável). Requires: GTM_SERVER_URL configured. Benefits: Zero Shopify config, automatic UUID rotation, 95%+ ad-blocker bypass, ITP bypass. Security: Safe (only modifies Google CDN scripts). Performance: +300 bytes per script, no runtime impact. Set via AUTO_INJECT_TRANSPORT_URL in wrangler.toml. Used by: handlers/scripts.js, proxy/script-injector.js
+ * @property {boolean} FULL_SCRIPT_PROXY - Enable full script proxy mode. Default: true (enabled). When enabled: Worker extracts ALL URLs from scripts (Google, Facebook, Clarity, etc), creates unique UUIDs for each URL, and substitutes them in the script. This enables 100% first-party proxy for all tracking calls made by the script. Routes: /x/{uuid} for dynamic endpoints. Benefits: Complete ad-blocker bypass, all third-party requests become first-party. Performance: +1-5ms processing per script, cacheable results. Set via FULL_SCRIPT_PROXY in wrangler.toml. Used by: handlers/scripts.js, cache/dynamic-endpoints.js
  *
  * @property {Object<string, string>} CONTAINER_ALIASES - GTM/GA4 container ID aliases for query obfuscation. Default: {} (passthrough, no obfuscation). Format: JSON object {"alias": "real_id"}. Example: {"abc123": "GTM-XXXXX", "def456": "G-YYYYY"}. Purpose: Hide GTM-/G- patterns from ad-blockers. Client: /cdn/g/{UUID}?c=abc123 → Upstream: ?id=GTM-XXXXX. Set via CONTAINER_ALIASES (JSON string) in wrangler.toml. Used by: query-mapper.js
  *
@@ -317,7 +318,39 @@ export let CONFIG = {
   //
   // Can be set via environment variable: AUTO_INJECT_TRANSPORT_URL
   // Default: true (automatic if GTM_SERVER_URL is set)
-  AUTO_INJECT_TRANSPORT_URL: true
+  AUTO_INJECT_TRANSPORT_URL: true,
+
+  // ============= FULL SCRIPT PROXY =============
+  // Enable full script proxy mode for complete ad-blocker bypass
+  // When enabled, Worker extracts ALL URLs from scripts and creates dynamic endpoints
+  //
+  // HOW IT WORKS:
+  // 1. Worker downloads the script (gtm.js, gtag.js, fbevents.js)
+  // 2. Extracts all URLs from the script content using regex
+  // 3. Filters URLs related to tracking (Google, Facebook, etc)
+  // 4. Creates unique UUID for each URL: /x/{uuid} → original URL
+  // 5. Substitutes all URLs in the script with the proxied versions
+  // 6. Client receives modified script with all URLs pointing to Worker
+  //
+  // EXAMPLE:
+  // Original script contains: "https://www.google-analytics.com/collect"
+  // Modified script contains: "https://worker.com/x/a3f9c2e1b8d4e5f6"
+  // When client calls /x/a3f9c2e1b8d4e5f6 → Worker proxies to Google Analytics
+  //
+  // BENEFITS:
+  // - 100% first-party requests (all tracking calls)
+  // - Complete ad-blocker bypass (no third-party domains)
+  // - Works with any tracking script (Google, Facebook, Clarity, Segment, etc)
+  // - Dynamic UUIDs rotate weekly for maximum security
+  //
+  // PERFORMANCE:
+  // - +1-5ms processing time per script (one-time, on cache miss)
+  // - Scripts remain cacheable (processed once per 12h update cycle)
+  // - Minimal memory overhead (UUIDs stored in Cloudflare Cache API)
+  //
+  // Can be set via environment variable: FULL_SCRIPT_PROXY
+  // Default: true (enabled)
+  FULL_SCRIPT_PROXY: true
 };
 
 /**
@@ -326,9 +359,9 @@ export let CONFIG = {
  *
  * @param {Object} env - Environment variables from Cloudflare Workers
  */
-export function initConfig(env = {}) {
+export const initConfig = (env = {}) => {
   // Update CONFIG with environment variables if provided
-  CONFIG.GTM_SERVER_URL = env.GTM_SERVER_URL || CONFIG.GTM_SERVER_URL;
+  CONFIG.GTM_SERVER_URL = env.GTM_SERVER_URL ?? CONFIG.GTM_SERVER_URL;
 
   // Parse ALLOWED_ORIGINS from comma-separated string
   if (env.ALLOWED_ORIGINS) {
@@ -336,45 +369,39 @@ export function initConfig(env = {}) {
   }
 
   // Parse integer configs
-  const intConfigs = {
-    RATE_LIMIT_REQUESTS: 'RATE_LIMIT_REQUESTS',
-    RATE_LIMIT_WINDOW: 'RATE_LIMIT_WINDOW',
-    FETCH_TIMEOUT: 'FETCH_TIMEOUT',
-    UUID_SALT_ROTATION: 'UUID_SALT_ROTATION',
-    CACHE_TTL: 'CACHE_TTL',
-    MAX_REQUEST_SIZE: 'MAX_REQUEST_SIZE'
-  };
+  const intConfigs = [
+    'RATE_LIMIT_REQUESTS',
+    'RATE_LIMIT_WINDOW',
+    'FETCH_TIMEOUT',
+    'UUID_SALT_ROTATION',
+    'CACHE_TTL',
+    'MAX_REQUEST_SIZE'
+  ];
 
-  for (const [configKey, envKey] of Object.entries(intConfigs)) {
-    if (env[envKey]) {
-      const parsed = parsePositiveInt(env[envKey]);
+  for (const key of intConfigs) {
+    const envValue = env[key];
+    if (envValue) {
+      const parsed = parsePositiveInt(envValue);
       if (parsed !== null) {
-        CONFIG[configKey] = parsed;
+        CONFIG[key] = parsed;
       }
     }
   }
 
   // UUID secret (not parsed as int)
-  if (env.UUID_SECRET) {
-    CONFIG.UUID_SECRET = env.UUID_SECRET;
-  } else {
+  CONFIG.UUID_SECRET = env.UUID_SECRET ?? CONFIG.UUID_SECRET;
+  if (!env.UUID_SECRET) {
     // Log auto-generated UUID secret for development
     console.log('[CONFIG] UUID_SECRET auto-generated (not set in env)');
     console.log('[CONFIG] ℹ️ INFO: This is used for UUID generation (deterministic hashing)');
   }
 
   // Obfuscation IDs
-  if (env.ENDPOINTS_FACEBOOK) {
-    CONFIG.ENDPOINTS_FACEBOOK = env.ENDPOINTS_FACEBOOK;
-  }
-  if (env.ENDPOINTS_GOOGLE) {
-    CONFIG.ENDPOINTS_GOOGLE = env.ENDPOINTS_GOOGLE;
-  }
+  CONFIG.ENDPOINTS_FACEBOOK = env.ENDPOINTS_FACEBOOK ?? CONFIG.ENDPOINTS_FACEBOOK;
+  CONFIG.ENDPOINTS_GOOGLE = env.ENDPOINTS_GOOGLE ?? CONFIG.ENDPOINTS_GOOGLE;
 
   // Logging
-  if (env.LOG_LEVEL) {
-    CONFIG.LOG_LEVEL = env.LOG_LEVEL;
-  }
+  CONFIG.LOG_LEVEL = env.LOG_LEVEL ?? CONFIG.LOG_LEVEL;
 
   // Debug headers (parse boolean)
   if (env.DEBUG_HEADERS !== undefined) {
@@ -385,7 +412,7 @@ export function initConfig(env = {}) {
   if (env.CONTAINER_ALIASES) {
     try {
       CONFIG.CONTAINER_ALIASES = JSON.parse(env.CONTAINER_ALIASES);
-    } catch (error) {
+    } catch {
       // Note: Logger may not be initialized yet, so we skip logging here
       // Invalid JSON will result in empty object (safe fallback)
       CONFIG.CONTAINER_ALIASES = {};
@@ -398,9 +425,8 @@ export function initConfig(env = {}) {
   }
 
   // Authenticated endpoint secret (from Cloudflare Workers secret or env var)
-  if (env.ENDPOINTS_SECRET) {
-    CONFIG.ENDPOINTS_SECRET = env.ENDPOINTS_SECRET;
-  } else {
+  CONFIG.ENDPOINTS_SECRET = env.ENDPOINTS_SECRET ?? CONFIG.ENDPOINTS_SECRET;
+  if (!env.ENDPOINTS_SECRET) {
     // Log auto-generated secret for development/debugging
     // In production, ALWAYS set via: wrangler secret put ENDPOINTS_SECRET
     console.log('[CONFIG] ENDPOINTS_SECRET auto-generated (not set in env)');
@@ -414,18 +440,39 @@ export function initConfig(env = {}) {
     CONFIG.AUTO_INJECT_TRANSPORT_URL = env.AUTO_INJECT_TRANSPORT_URL === 'true' || env.AUTO_INJECT_TRANSPORT_URL === true;
   }
 
+  // Full script proxy (parse as boolean)
+  if (env.FULL_SCRIPT_PROXY !== undefined) {
+    CONFIG.FULL_SCRIPT_PROXY = env.FULL_SCRIPT_PROXY === 'true' || env.FULL_SCRIPT_PROXY === true;
+  }
+
+  // Destructure frequently used values for cleaner logging
+  const {
+    GTM_SERVER_URL,
+    AUTO_INJECT_TRANSPORT_URL,
+    ENDPOINTS_UUID_ROTATION,
+    ENDPOINTS_FACEBOOK,
+    ENDPOINTS_GOOGLE,
+    DEBUG_HEADERS,
+    FULL_SCRIPT_PROXY,
+    RATE_LIMIT_REQUESTS,
+    RATE_LIMIT_WINDOW,
+    CACHE_TTL,
+    LOG_LEVEL
+  } = CONFIG;
+
   // Log configuration summary (useful for debugging in Cloudflare logs)
   console.log('[CONFIG] ============================================================');
   console.log('[CONFIG] Tracklay Worker Configuration Summary');
   console.log('[CONFIG] ============================================================');
-  console.log('[CONFIG] GTM_SERVER_URL:', CONFIG.GTM_SERVER_URL || '(not set - client-side only)');
-  console.log('[CONFIG] AUTO_INJECT_TRANSPORT_URL:', CONFIG.AUTO_INJECT_TRANSPORT_URL);
-  console.log('[CONFIG] ENDPOINTS_UUID_ROTATION:', CONFIG.ENDPOINTS_UUID_ROTATION ? 'enabled (weekly rotation)' : 'disabled (fixed UUIDs)');
-  console.log('[CONFIG] ENDPOINTS_FACEBOOK:', CONFIG.ENDPOINTS_FACEBOOK);
-  console.log('[CONFIG] ENDPOINTS_GOOGLE:', CONFIG.ENDPOINTS_GOOGLE);
-  console.log('[CONFIG] DEBUG_HEADERS:', CONFIG.DEBUG_HEADERS);
-  console.log('[CONFIG] RATE_LIMIT:', CONFIG.RATE_LIMIT_REQUESTS, 'requests per', CONFIG.RATE_LIMIT_WINDOW / 1000, 'seconds');
-  console.log('[CONFIG] CACHE_TTL:', CONFIG.CACHE_TTL, 'seconds');
-  console.log('[CONFIG] LOG_LEVEL:', CONFIG.LOG_LEVEL);
+  console.log('[CONFIG] GTM_SERVER_URL:', GTM_SERVER_URL || '(not set - client-side only)');
+  console.log('[CONFIG] AUTO_INJECT_TRANSPORT_URL:', AUTO_INJECT_TRANSPORT_URL);
+  console.log('[CONFIG] ENDPOINTS_UUID_ROTATION:', ENDPOINTS_UUID_ROTATION ? 'enabled (weekly rotation)' : 'disabled (fixed UUIDs)');
+  console.log('[CONFIG] ENDPOINTS_FACEBOOK:', ENDPOINTS_FACEBOOK);
+  console.log('[CONFIG] ENDPOINTS_GOOGLE:', ENDPOINTS_GOOGLE);
+  console.log('[CONFIG] DEBUG_HEADERS:', DEBUG_HEADERS);
+  console.log('[CONFIG] FULL_SCRIPT_PROXY:', FULL_SCRIPT_PROXY ? 'enabled (full proxy)' : 'disabled (transport_url only)');
+  console.log('[CONFIG] RATE_LIMIT:', RATE_LIMIT_REQUESTS, 'requests per', RATE_LIMIT_WINDOW / 1000, 'seconds');
+  console.log('[CONFIG] CACHE_TTL:', CACHE_TTL, 'seconds');
+  console.log('[CONFIG] LOG_LEVEL:', LOG_LEVEL);
   console.log('[CONFIG] ============================================================');
-}
+};

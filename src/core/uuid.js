@@ -24,18 +24,18 @@ export async function generateSecureUUID(salt = '') {
     const weekNumber = Math.floor(now / CONFIG.UUID_SALT_ROTATION);
 
     // Criar string com date + week + secret + optional salt
-    const data = `${weekNumber}:${CONFIG.UUID_SECRET}${salt ? ':' + salt : ''}`;
+    const data = `${weekNumber}:${CONFIG.UUID_SECRET}${salt ? `:${salt}` : ''}`;
 
     // SHA-256 hash
     const hashHex = await generateSHA256(data);
 
     // Retornar primeiros 12 caracteres (UUID-like)
-    return hashHex.substring(0, 12);
+    return hashHex.slice(0, 12);
 
   } catch (error) {
-    Logger.error('UUID generation failed', { error: error.message });
+    Logger.error('UUID generation failed', { error: error?.message });
     // Fallback para UUID baseado em timestamp (menos seguro)
-    return Date.now().toString(36).substring(0, 12);
+    return Date.now().toString(36).slice(0, 12);
   }
 }
 
@@ -69,11 +69,9 @@ export async function generateSecureUUID(salt = '') {
 export async function generateEndpointUUID(provider) {
   // Check if rotation is disabled (use fixed UUIDs from env vars)
   if (CONFIG.ENDPOINTS_UUID_ROTATION === false) {
-    if (provider === 'facebook') {
-      return CONFIG.ENDPOINTS_FACEBOOK;
-    } else if (provider === 'google') {
-      return CONFIG.ENDPOINTS_GOOGLE;
-    }
+    const endpoint = CONFIG[`ENDPOINTS_${provider?.toUpperCase()}`];
+    if (endpoint) return endpoint;
+
     // Fallback to default if provider not recognized
     Logger.warn('Unknown provider for endpoint UUID', { provider });
     return CONFIG.ENDPOINTS_FACEBOOK;
@@ -82,5 +80,5 @@ export async function generateEndpointUUID(provider) {
   // Rotation enabled: use generateSecureUUID() with provider-specific salt
   // This generates UUIDs that rotate based on UUID_SALT_ROTATION interval
   // Provider salt ensures Facebook and Google have different UUIDs
-  return await generateSecureUUID(provider);
+  return generateSecureUUID(provider);
 }

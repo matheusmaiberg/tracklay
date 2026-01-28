@@ -1,27 +1,25 @@
-// ============================================================
-// ROUTER - ROUTE MATCHING E DISPATCH
-// ============================================================
-// RESPONSIBILITY:
-// - Classe Router para roteamento
-// - route(request, rateLimit) → Promise<Response>
-// - Roteamento:
-//   - OPTIONS → handleOptions
-//   - /health → handleHealthCheck (público)
-//   - /endpoints → handleEndpointsInfo (autenticado via query string)
-//   - /cdn/f/{UUID}, /cdn/g/{UUID} → differentiated routing (v3.0.0 ultra-aggressive)
-//   - /cdn/*, /assets/*, /static/* → handleScriptProxy (fallback)
-//   - default → 404
-//
-// ULTRA-AGGRESSIVE MODE (v3.0.0):
-// - Scripts and endpoints share SAME path (no suffixes)
-// - Differentiation strategy:
-//   - Facebook: HTTP method (POST = endpoint, GET = script)
-//   - Google: Query params (v=2/tid=/_p= = endpoint, c=/id= = script)
-// - UUID rotation support (time-based, deterministic)
-// - Legacy routes removed (breaking change)
-
-// FUNCTIONS:
-// - Router.route(request, rateLimit) → Promise<Response>
+/**
+ * @fileoverview Router - Route matching and dispatch
+ * @module routing/router
+ * 
+ * @description
+ * Main router class for handling all incoming requests.
+ * Routes requests to appropriate handlers based on path and method.
+ * Implements ultra-aggressive obfuscation mode where scripts and endpoints
+ * share the same path, differentiated by HTTP method or query parameters.
+ * 
+ * Routing table:
+ * - OPTIONS → handleOptions
+ * - /health → handleHealthCheck
+ * - /endpoints → handleEndpointsInfo (authenticated)
+ * - /cdn/events → handleEventProxy (POST)
+ * - /cdn/f/{UUID} → Facebook (POST=endpoint, GET=script)
+ * - /cdn/g/{UUID} → Google (query-based differentiation)
+ * - /x/{UUID} → Dynamic proxy for full script proxy
+ * - /lib/* → Third-party library proxy
+ * - /cdn/*, /assets/*, /static/* → Script proxy fallback
+ * - /g/collect → GTM fallback endpoint
+ */
 
 import { handleOptions } from '../handlers/options.js';
 import { handleHealthCheck } from '../handlers/health.js';
@@ -30,120 +28,93 @@ import { handleEndpointProxy } from '../handlers/endpoints.js';
 import { handleEndpointsInfo } from '../handlers/endpoints-info.js';
 import { handleEventProxy } from '../handlers/events.js';
 import { handleLibProxy } from '../handlers/lib-proxy.js';
+import { handleDynamicProxy, extractUuidFromPath } from '../handlers/dynamic-proxy.js';
 import { getScriptMap, getEndpointMap } from './mapping.js';
 import { CONFIG } from '../config/index.js';
 import { Logger } from '../core/logger.js';
 
+/**
+ * Main Router class for request routing and dispatch
+ */
 export class Router {
+  /**
+   * Routes an incoming request to the appropriate handler
+   * 
+   * @param {Request} request - Incoming request object
+   * @param {Object} [rateLimit=null] - Rate limit information
+   * @returns {Promise<Response>} Response from handler
+   */
   static async route(request, rateLimit = null) {
-    const url = request._parsedUrl || new URL(request.url);
-    const pathname = url.pathname;
+    const { _parsedUrl, url, method } = request;
+    const { pathname, search } = _parsedUrl ?? new URL(url);
 
-    // OPTIONS request
-    if (request.method === 'OPTIONS') {
+    if (method === 'OPTIONS') {
       return handleOptions(request, rateLimit);
     }
 
-    // Health check
     if (pathname === '/health') {
       return handleHealthCheck(request, rateLimit);
     }
 
-    // Endpoints info (authenticated, returns current UUIDs)
-    // CRITICAL: Never expose this publicly or to clients
-    // Only for server-side Shopify theme/n8n integration
-    // Authentication via query string: ?token=SECRET
     if (pathname === '/endpoints') {
       return handleEndpointsInfo(request);
     }
 
-    // Server-side event forwarding (v3.1.0)
-    // Receives events from browser and forwards to GTM Server-Side
-    // This enables 95%+ ad-blocker bypass by removing client-side tracking code
-    // IMPORTANT: Only accepts POST requests
-    if (pathname === '/cdn/events' && request.method === 'POST') {
+    if (pathname === '/cdn/events' && method === 'POST') {
       return handleEventProxy(request, rateLimit);
     }
 
-    // Get both maps (they share same paths in ultra-aggressive mode)
-    const endpointMap = await getEndpointMap();
-    const scriptMap = await getScriptMap();
+    const [endpointMap, scriptMap] = await Promise.all([getEndpointMap(), getScriptMap()]);
 
-    // Check if path exists in either map
-    const pathExists = endpointMap[pathname] || scriptMap[pathname];
+    const pathExists = endpointMap[pathname] ?? scriptMap[pathname];
 
     if (pathExists) {
-      // ULTRA-AGGRESSIVE MODE: Same path for scripts and endpoints
-      // Differentiation strategy:
-      // - Facebook: HTTP method (POST = tracking, GET = script)
-      // - Google: Query params (v=2/tid=/_p= = tracking, c=/id= = script)
-
-      // FACEBOOK: Differentiate by HTTP method
       if (pathname.startsWith('/cdn/f/')) {
-        if (request.method === 'POST') {
-          // Facebook tracking endpoint (POST)
-          return handleEndpointProxy(request, rateLimit);
-        } else {
-          // Facebook script (GET)
-          return handleScriptProxy(request, rateLimit);
-        }
+        return method === 'POST'
+          ? handleEndpointProxy(request, rateLimit)
+          : handleScriptProxy(request, rateLimit);
       }
 
-      // GOOGLE: Differentiate by query parameters
       if (pathname.startsWith('/cdn/g/')) {
-        const search = url.search;
+        const isTrackingHit = ['v=2', 'tid=', '_p='].some(param => search.includes(param));
 
-        // Detect GA4/GTM tracking hits by query parameters
-        // Tracking events include: v=2, tid=, _p=
-        // Script loading uses: c= (container alias) or id= (container ID)
-        const isTrackingHit = search.includes('v=2') ||
-                              search.includes('tid=') ||
-                              search.includes('_p=');
-
-        if (isTrackingHit) {
-          // Google tracking endpoint
-          return handleEndpointProxy(request, rateLimit);
-        } else {
-          // Google script loading
-          return handleScriptProxy(request, rateLimit);
-        }
+        return isTrackingHit
+          ? handleEndpointProxy(request, rateLimit)
+          : handleScriptProxy(request, rateLimit);
       }
 
-      // Fallback: If path exists but doesn't match known patterns
-      // This handles legacy routes or edge cases
-      if (endpointMap[pathname]) {
-        return handleEndpointProxy(request, rateLimit);
-      } else {
-        return handleScriptProxy(request, rateLimit);
-      }
+      return endpointMap[pathname]
+        ? handleEndpointProxy(request, rateLimit)
+        : handleScriptProxy(request, rateLimit);
     }
 
-    // Third-party library proxy (for intercepted trackers)
-    // Browser interceptor redirects third-party requests to /lib/{libname}
-    // This enables transparent proxying and caching of tracking libraries
+    if (pathname.startsWith('/x/')) {
+      const uuid = extractUuidFromPath(pathname);
+      return uuid
+        ? handleDynamicProxy(request, uuid, rateLimit)
+        : new Response('Invalid UUID format', { status: 400 });
+    }
+
     if (pathname.startsWith('/lib/')) {
       return handleLibProxy(request);
     }
 
-    // Legacy: Script proxy routes (for paths not in script map)
-    // This catches any custom paths under /cdn/, /assets/, /static/
-    if (pathname.startsWith('/cdn/') || pathname.startsWith('/assets/') || pathname.startsWith('/static/')) {
+    if (['/cdn/', '/assets/', '/static/'].some(prefix => pathname.startsWith(prefix))) {
       return handleScriptProxy(request, rateLimit);
     }
 
-    // Fallback: Handle direct /g/collect requests (GTM default endpoint)
-    // This catches requests when transport_url injection fails or is disabled
-    // IMPORTANT: This should be avoided in production - transport_url should be configured
     if (pathname === '/g/collect' && CONFIG.GTM_SERVER_URL) {
+      const origin = request.headers.get('Origin');
+      const referrer = request.headers.get('Referer');
+      
       Logger.warn('GTM hit to fallback /g/collect endpoint - transport_url may be misconfigured', {
-        origin: request.headers.get('Origin'),
-        referrer: request.headers.get('Referer'),
-        search: url.search
+        origin,
+        referrer,
+        search
       });
       return handleEndpointProxy(request, rateLimit);
     }
 
-    // Default 404
     return new Response('Not found', { status: 404 });
   }
 }

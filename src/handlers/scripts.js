@@ -33,7 +33,7 @@ import { injectTransportUrl, shouldInjectTransportUrl } from '../proxy/script-in
  * @returns {Promise<Response>} Proxied script or 404
  */
 export async function handleScriptProxy(request, rateLimit = null) {
-  const url = request._parsedUrl || new URL(request.url);
+  const url = request._parsedUrl ?? new URL(request.url);
 
   try {
     // Get target URL using the script mapping helper
@@ -99,11 +99,10 @@ export async function handleScriptProxy(request, rateLimit = null) {
           headers: {
             ...Object.fromEntries(response.headers.entries()),
             'Content-Type': 'application/javascript; charset=utf-8',
-            'Content-Length': modifiedScript.length.toString(),
+            'Content-Length': modifiedScript.length.toString()
             // Keep Cache-Control from original response (allows caching)
           }
         });
-
       } catch (injectionError) {
         // If injection fails, return original response (graceful degradation)
         Logger.warn('Transport_url injection failed, returning original script', {
@@ -117,7 +116,6 @@ export async function handleScriptProxy(request, rateLimit = null) {
 
     // Return original response (no injection needed)
     return response;
-
   } catch (error) {
     Logger.error('Script proxy failed', {
       path: url.pathname,

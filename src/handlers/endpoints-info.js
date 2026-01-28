@@ -63,7 +63,7 @@ export async function handleEndpointsInfo(request) {
 
   if (!token) {
     Logger.warn('Missing token in query string', {
-      ip: request.headers.get('CF-Connecting-IP')
+      ip: request.headers.get('CF-Connecting-IP') ?? 'unknown'
     });
     return errorResponse('Unauthorized - token query parameter required', 401);
   }
@@ -72,7 +72,7 @@ export async function handleEndpointsInfo(request) {
   // Compare token with ENDPOINTS_SECRET
   if (token !== CONFIG.ENDPOINTS_SECRET) {
     Logger.warn('Invalid ENDPOINTS_SECRET', {
-      ip: request.headers.get('CF-Connecting-IP')
+      ip: request.headers.get('CF-Connecting-IP') ?? 'unknown'
     });
     return errorResponse('Unauthorized - Invalid token', 401);
   }
@@ -82,10 +82,9 @@ export async function handleEndpointsInfo(request) {
   const googleUUID = await generateEndpointUUID('google');
 
   // Calculate expiration (only relevant if rotation enabled)
-  let expiresAt = null;
-  if (CONFIG.ENDPOINTS_UUID_ROTATION === true) {
-    expiresAt = getNextRotationISO(Date.now(), CONFIG.UUID_SALT_ROTATION);
-  }
+  const expiresAt = CONFIG.ENDPOINTS_UUID_ROTATION 
+    ? getNextRotationISO(Date.now(), CONFIG.UUID_SALT_ROTATION)
+    : null;
 
   // Build response payload
   const payload = {
@@ -108,7 +107,7 @@ export async function handleEndpointsInfo(request) {
   };
 
   Logger.info('Endpoints fetched successfully', {
-    ip: request.headers.get('CF-Connecting-IP'),
+    ip: request.headers.get('CF-Connecting-IP') ?? 'unknown',
     rotation: payload.rotation.enabled
   });
 

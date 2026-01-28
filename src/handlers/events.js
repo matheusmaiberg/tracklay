@@ -78,21 +78,18 @@ export async function handleEventProxy(request, rateLimit = null) {
     }
 
     // Extract client information
-    const clientIP = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
-    const userAgent = request.headers.get('User-Agent') || '';
-    const referer = request.headers.get('Referer') || '';
+    const { headers } = request;
+    const clientIP = headers.get('CF-Connecting-IP') ?? headers.get('X-Forwarded-For') ?? 'unknown';
+    const userAgent = headers.get('User-Agent') ?? '';
+    const referer = headers.get('Referer') ?? '';
 
     // Build GA4 Measurement Protocol payload
-    const ga4Payload = buildGA4Payload(eventData, {
-      clientIP,
-      userAgent,
-      referer
-    });
+    const ga4Payload = buildGA4Payload(eventData, { clientIP, userAgent, referer });
 
     // Log event for debugging
     Logger.info('Server-side event received', {
       event_name: eventData.event_name,
-      client_id: eventData.client_id?.substring(0, 20) + '...',
+      client_id: `${eventData.client_id?.substring(0, 20)}...`,
       measurement_id: eventData.measurement_id,
       clientIP,
       duration: Date.now() - startTime
@@ -112,7 +109,7 @@ export async function handleEventProxy(request, rateLimit = null) {
       },
       body: JSON.stringify(ga4Payload),
       // Add timeout to prevent hanging requests
-      signal: AbortSignal.timeout(CONFIG.FETCH_TIMEOUT || 10000)
+      signal: AbortSignal.timeout(CONFIG.FETCH_TIMEOUT ?? 10000)
     });
 
     const forwardDuration = Date.now() - forwardStartTime;
@@ -138,16 +135,10 @@ export async function handleEventProxy(request, rateLimit = null) {
     return buildResponse(
       new Response(JSON.stringify({ success: true }), {
         status: HTTP_STATUS.OK,
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' }
       }),
       request,
-      {
-        preserveHeaders: false,
-        allowCache: false,
-        rateLimit
-      }
+      { preserveHeaders: false, allowCache: false, rateLimit }
     );
 
   } catch (error) {
@@ -161,11 +152,7 @@ export async function handleEventProxy(request, rateLimit = null) {
     return buildResponse(
       errorResponse('Internal server error', HTTP_STATUS.INTERNAL_SERVER_ERROR),
       request,
-      {
-        preserveHeaders: false,
-        allowCache: false,
-        rateLimit
-      }
+      { preserveHeaders: false, allowCache: false, rateLimit }
     );
   }
 }
@@ -181,29 +168,26 @@ function validateEventData(eventData) {
   const errors = [];
 
   // Required fields
-  if (!eventData.event_name || typeof eventData.event_name !== 'string') {
+  if (!eventData?.event_name || typeof eventData.event_name !== 'string') {
     errors.push('event_name is required and must be a string');
   }
 
-  if (!eventData.client_id || typeof eventData.client_id !== 'string') {
+  if (!eventData?.client_id || typeof eventData.client_id !== 'string') {
     errors.push('client_id is required and must be a string');
   }
 
   // Measurement ID is optional (can use default from GTM Server)
   // But if provided, must be valid format
-  if (eventData.measurement_id && !/^G-[A-Z0-9]+$/.test(eventData.measurement_id)) {
+  if (eventData?.measurement_id && !/^G-[A-Z0-9]+$/.test(eventData.measurement_id)) {
     errors.push('measurement_id must be in format G-XXXXXXXXXX');
   }
 
   // Event name validation (alphanumeric and underscore only)
-  if (eventData.event_name && !/^[a-zA-Z0-9_]+$/.test(eventData.event_name)) {
+  if (eventData?.event_name && !/^[a-zA-Z0-9_]+$/.test(eventData.event_name)) {
     errors.push('event_name must contain only alphanumeric characters and underscores');
   }
 
-  return {
-    valid: errors.length === 0,
-    errors
-  };
+  return { valid: errors.length === 0, errors };
 }
 
 /**
@@ -217,36 +201,36 @@ function validateEventData(eventData) {
  * @see https://developers.google.com/analytics/devguides/collection/protocol/ga4
  */
 function buildGA4Payload(eventData, clientInfo) {
+  const { clientIP, userAgent, referer } = clientInfo;
+  
   // Base payload structure
   const payload = {
     // Client identification
     client_id: eventData.client_id,
 
     // Timestamp (use server time if not provided)
-    timestamp_micros: eventData.timestamp_micros || (Date.now() * 1000).toString(),
+    timestamp_micros: eventData.timestamp_micros ?? (Date.now() * 1000).toString(),
 
     // User properties (optional)
-    user_properties: eventData.user_properties || {},
+    user_properties: eventData.user_properties ?? {},
 
     // Events array (GA4 supports batch events, we send single event)
-    events: [
-      {
-        name: eventData.event_name,
-        params: {
-          // Page information
-          page_location: eventData.page_location || clientInfo.referer || '',
-          page_title: eventData.page_title || '',
-          page_referrer: eventData.page_referrer || '',
+    events: [{
+      name: eventData.event_name,
+      params: {
+        // Page information
+        page_location: eventData.page_location ?? referer ?? '',
+        page_title: eventData.page_title ?? '',
+        page_referrer: eventData.page_referrer ?? '',
 
-          // Session information
-          session_id: eventData.session_id || '',
-          engagement_time_msec: eventData.engagement_time_msec || '100',
+        // Session information
+        session_id: eventData.session_id ?? '',
+        engagement_time_msec: eventData.engagement_time_msec ?? '100',
 
-          // Custom parameters (all other fields from eventData)
-          ...extractCustomParams(eventData)
-        }
+        // Custom parameters (all other fields from eventData)
+        ...extractCustomParams(eventData)
       }
-    ]
+    }]
   };
 
   // Add measurement_id if provided
@@ -285,13 +269,7 @@ function extractCustomParams(eventData) {
     'engagement_time_msec'
   ]);
 
-  const customParams = {};
-
-  for (const [key, value] of Object.entries(eventData)) {
-    if (!standardFields.has(key)) {
-      customParams[key] = value;
-    }
-  }
-
-  return customParams;
+  return Object.fromEntries(
+    Object.entries(eventData).filter(([key]) => !standardFields.has(key))
+  );
 }

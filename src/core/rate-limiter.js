@@ -62,7 +62,7 @@ export class RateLimiter {
       };
 
     } catch (error) {
-      Logger.error('Rate limit check failed', { error: error.message });
+      Logger.error('Rate limit check failed', { error: error?.message });
       // Em caso de erro, permitir (fail open)
       return {
         allowed: true,

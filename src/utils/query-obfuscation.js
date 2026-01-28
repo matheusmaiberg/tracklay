@@ -42,7 +42,7 @@ export function deobfuscateQuery(search, aliases = {}) {
       return search;
     }
 
-    const hasAliases = aliases && Object.keys(aliases).length > 0;
+    const hasAliases = Object.keys(aliases ?? {}).length > 0;
 
     if (hasAliases) {
       // MODE 1: Use alias mapping
@@ -55,7 +55,7 @@ export function deobfuscateQuery(search, aliases = {}) {
 
         Logger.debug('Query string deobfuscated via alias', {
           alias: containerParam,
-          realId: realId.substring(0, 8) + '...' // Log partial ID only for security
+          realId: realId.substring(0, 8) + '...', // Log partial ID only for security
         });
 
         return '?' + params.toString();
@@ -63,7 +63,7 @@ export function deobfuscateQuery(search, aliases = {}) {
         // Alias not found in configuration
         Logger.warn('Container alias not found', {
           alias: containerParam,
-          availableAliases: Object.keys(aliases)
+          availableAliases: Object.keys(aliases),
         });
 
         // Return original search (passthrough on missing alias)
@@ -82,21 +82,21 @@ export function deobfuscateQuery(search, aliases = {}) {
 
         Logger.debug('Query string auto-converted', {
           shortId: containerParam,
-          fullId: gtmId.substring(0, 12) + '...'
+          fullId: gtmId.substring(0, 12) + '...',
         });
 
         return '?' + params.toString();
       } else {
         // Not uppercase, passthrough
         Logger.debug('Query string passthrough (no aliases, not uppercase)', {
-          param: containerParam
+          param: containerParam,
         });
         return search;
       }
     }
 
   } catch (error) {
-    Logger.error('Query deobfuscation failed', { error: error.message });
+    Logger.error('Query deobfuscation failed', { error: error?.message });
     // Fallback to original on error
     return search;
   }

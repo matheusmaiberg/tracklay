@@ -24,9 +24,7 @@ import { getCurrentDateISO } from '../utils/time.js';
  * @param {boolean} [options.isStale=false] - Whether this is stale cache
  * @returns {Response} Script Response object
  */
-export function createScriptResponse(content, scriptKey, hash, options) {
-  const { ttl, updateType, isStale = false } = options;
-
+export function createScriptResponse(content, scriptKey, hash, { ttl, updateType, isStale = false }) {
   const headers = {
     'Content-Type': 'application/javascript; charset=utf-8',
     'Cache-Control': `public, max-age=${ttl}`

@@ -35,10 +35,12 @@ export async function updateScripts() {
       const result = await fetchAndCompareScript(url, scriptKey);
       results[scriptKey] = result;
 
-      if (result.updated) {
+      const { updated, error } = result;
+
+      if (updated) {
         Logger.info('Script updated in cache', { scriptKey });
-      } else if (result.error) {
-        Logger.warn('Script update failed', { scriptKey, error: result.error });
+      } else if (error) {
+        Logger.warn('Script update failed', { scriptKey, error });
       } else {
         Logger.info('Script unchanged, cache TTL refreshed', { scriptKey });
       }
@@ -47,11 +49,13 @@ export async function updateScripts() {
     } catch (error) {
       Logger.error('Unexpected error updating script', {
         scriptKey,
-        error: error.message,
-        stack: error.stack
+        error: error?.message,
+        stack: error?.stack
       });
-      results[scriptKey] = { updated: false, error: error.message };
-      return { scriptKey, updated: false, error: error.message };
+
+      const errorMessage = error?.message ?? 'Unknown error';
+      results[scriptKey] = { updated: false, error: errorMessage };
+      return { scriptKey, updated: false, error: errorMessage };
     }
   });
 

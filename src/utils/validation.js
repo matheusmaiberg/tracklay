@@ -11,5 +11,5 @@
  */
 export function parsePositiveInt(value) {
   const parsed = parseInt(value, 10);
-  return !isNaN(parsed) && parsed > 0 ? parsed : null;
+  return Number.isNaN(parsed) || parsed <= 0 ? null : parsed;
 }

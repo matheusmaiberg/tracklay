@@ -21,8 +21,5 @@ import { buildFullHeaders } from '../factories/headers-factory.js';
 export function handleOptions(request, rateLimit = null) {
   const headers = buildFullHeaders(request, { rateLimit });
 
-  return new Response(null, {
-    status: 204,
-    headers
-  });
+  return new Response(null, { status: 204, headers });
 }

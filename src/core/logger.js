@@ -21,7 +21,7 @@ const LEVELS = ['debug', 'info', 'warn', 'error'];
 
 export class Logger {
   static _shouldLog(level) {
-    const configLevel = CONFIG.LOG_LEVEL || 'info';
+    const configLevel = CONFIG.LOG_LEVEL ?? 'info';
     return LEVELS.indexOf(level) >= LEVELS.indexOf(configLevel);
   }
 

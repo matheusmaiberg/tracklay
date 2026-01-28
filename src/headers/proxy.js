@@ -22,13 +22,14 @@
  */
 export function buildProxyHeaders(request, preserveHeaders = false) {
   const headers = new Headers();
+  const { headers: requestHeaders } = request;
 
   if (!preserveHeaders) {
     // Apenas headers básicos para scripts
-    const userAgent = request.headers.get('User-Agent');
+    const userAgent = requestHeaders.get('User-Agent');
     if (userAgent) headers.set('User-Agent', userAgent);
 
-    const acceptEncoding = request.headers.get('Accept-Encoding');
+    const acceptEncoding = requestHeaders.get('Accept-Encoding');
     if (acceptEncoding) headers.set('Accept-Encoding', acceptEncoding);
 
     return headers;
@@ -56,24 +57,24 @@ export function buildProxyHeaders(request, preserveHeaders = false) {
     'sec-ch-ua-arch',
     'sec-ch-ua-model',
     'sec-ch-ua-bitness',
-    'sec-ch-ua-full-version-list'
+    'sec-ch-ua-full-version-list',
   ]);
 
   // Copiar headers críticos usando for...of
   for (const header of criticalHeaders) {
-    const value = request.headers.get(header);
+    const value = requestHeaders.get(header);
     if (value) headers.set(header, value);
   }
 
   // Preservar IP do cliente (CRÍTICO para Event Match Quality)
-  const clientIP = request.headers.get('CF-Connecting-IP');
+  const clientIP = requestHeaders.get('CF-Connecting-IP');
   if (clientIP) {
     headers.set('X-Forwarded-For', clientIP);
     headers.set('X-Real-IP', clientIP);
   }
 
   // País (para geo-targeting)
-  const country = request.headers.get('CF-IPCountry');
+  const country = requestHeaders.get('CF-IPCountry');
   if (country) {
     headers.set('X-Country', country);
   }

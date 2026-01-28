@@ -16,7 +16,7 @@
  */
 export function copyHeaderIfExists(source, target, headerName) {
   const value = source.get(headerName);
-  if (value) {
+  if (value != null) {
     target.set(headerName, value);
   }
 }

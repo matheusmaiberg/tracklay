@@ -28,7 +28,7 @@ export function timestamp() {
  * timestampToISO() → current time as ISO
  */
 export function timestampToISO(ms) {
-  return new Date(ms || Date.now()).toISOString();
+  return new Date(ms ?? Date.now()).toISOString();
 }
 
 /**

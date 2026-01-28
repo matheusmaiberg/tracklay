@@ -80,8 +80,9 @@ export async function handleLibProxy(request) {
   }
 
   // Handle dynamic query parameters (e.g., Clarity tag ID)
-  if (libName === 'clarity' && url.searchParams.has('tag')) {
-    const tagId = url.searchParams.get('tag');
+  const { searchParams } = url;
+  if (libName === 'clarity' && searchParams.has('tag')) {
+    const tagId = searchParams.get('tag');
     targetUrl = targetUrl.replace('{tagId}', tagId);
   }
 
@@ -92,7 +93,7 @@ export async function handleLibProxy(request) {
     const response = await proxyRequest(targetUrl, request, {
       preserveHeaders: false,
       allowCache: true,
-      cacheTTL: 604800, // 1 week for static libs
+      cacheTTL: 604800 // 1 week for static libs
     });
 
     logger.info(`[LibProxy] ✓ Response: ${response.status} (${libName})`);
@@ -106,7 +107,7 @@ export async function handleLibProxy(request) {
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
-      headers: headers,
+      headers
     });
   } catch (error) {
     logger.error(`[LibProxy] ✗ Failed to proxy ${libName}: ${error.message}`);
