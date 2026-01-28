@@ -5,8 +5,7 @@
  * @description
  * Loads and initializes Google Tag Manager (GTM) in the theme.
  * Provides a clean API for GTM initialization and dataLayer event pushing.
- * Automatically creates the dataLayer array, injects the GTM script,
- * and adds the noscript iframe fallback for users without JavaScript.
+ * Automatically creates the dataLayer array and injects the GTM script.
  *
  * Supports advanced features:
  * - Configurable GTM ID via options or ConfigManager
@@ -83,25 +82,6 @@ function buildGtmScriptUrl(gtmId) {
   }
   
   return `https://www.googletagmanager.com/gtm.js?id=${gtmId}`;
-}
-
-/**
- * Build the GTM noscript iframe URL based on proxy configuration
- * @param {string} gtmId - GTM container ID
- * @returns {string} Full URL for noscript iframe
- * @private
- */
-function buildGtmIframeUrl(gtmId) {
-  const proxyActive = getConfig('GTM.PROXY.ACTIVE', false);
-  
-  if (proxyActive) {
-    const proxyDomain = getConfig('GTM.PROXY.DOMAIN');
-    if (proxyDomain) {
-      return `${proxyDomain}/ns.html?id=${gtmId}`;
-    }
-  }
-  
-  return `https://www.googletagmanager.com/ns.html?id=${gtmId}`;
 }
 
 /**
@@ -218,7 +198,6 @@ let currentGtmId = undefined;
  * 3. Pushing the GTM start event with default currency
  * 4. Injecting transport_url if server-side GTM is enabled
  * 5. Injecting the GTM script tag (via proxy if configured)
- * 6. Adding the noscript iframe fallback (if body exists)
  *
  * The script is loaded asynchronously to prevent blocking page rendering.
  * Supports server-side GTM via transport_url configuration.
@@ -329,23 +308,6 @@ const init = (options = {}) => {
     }
   } else {
     console.warn('[GTMLoader] document.head not available');
-  }
-
-  // Add noscript fallback for users without JavaScript
-  if (document.body) {
-    try {
-      const noscript = document.createElement('noscript');
-      const iframe = document.createElement('iframe');
-      iframe.src = buildGtmIframeUrl(gtmId);
-      iframe.height = '0';
-      iframe.width = '0';
-      iframe.style.display = 'none';
-      iframe.style.visibility = 'hidden';
-      noscript.appendChild(iframe);
-      document.body.insertBefore(noscript, document.body.firstChild);
-    } catch (err) {
-      console.error('[GTMLoader] Failed to insert noscript iframe:', err);
-    }
   }
 
   isInitialized = true;
