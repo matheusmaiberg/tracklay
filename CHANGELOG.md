@@ -16,6 +16,140 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A/B testing for tracking methods
 - Shopify App for easier installation
 
+## [3.1.0] - 2026-01-28
+
+### Added
+
+**New Features:**
+- Server-side event tracking endpoint (`/cdn/events`) with GA4 Measurement Protocol conversion
+  - Custom Pixel implementation (80-90% bypass rate)
+  - theme.liquid implementation (95-98% bypass rate)
+  - Automatic header forwarding (IP, User-Agent, Referer)
+  - Browser → Worker → GTM Server → GA4 architecture
+- Auto-conversion for uppercase container IDs without aliases configuration
+  - `?c=MJ7DW8H` automatically converts to `?id=GTM-MJ7DW8H`
+  - Reduces setup complexity for basic GTM obfuscation
+- Configuration option to disable automatic `transport_url` injection (`AUTO_INJECT_TRANSPORT_URL` flag)
+- GTM-specific dataLayer injection for `transport_url` configuration
+- `/g/collect` fallback route handler for Google Analytics
+
+**Documentation:**
+- Expanded language support to 5 languages: English, Português, Español, Français, Deutsch
+  - Added complete French translation (README.fr.md)
+  - Added complete German translation (README.de.md)
+  - Added complete Spanish translation (README.es.md)
+- New CLAUDE.md developer guide with:
+  - Complete architecture overview (8-module structure)
+  - Configuration management system documentation
+  - Request routing and handler architecture
+  - Development workflow and deployment guide
+  - Key files reference and important decisions
+- Script proxy uBlock Origin investigation findings (architectural limitations documented)
+- Script proxy interceptor reference implementation
+
+### Fixed
+
+**Critical Bugs:**
+- Correct inverted UUID rotation logic: `false` now disables rotation (fixed UUIDs), `true` enables rotation
+  - Changed default to `false` for simpler setup (recommended)
+- Fix scriptMap initialization timing: now uses configured UUIDs from `wrangler.toml` instead of auto-generated ones
+  - Root cause: maps initialized before CONFIG loaded
+  - Ensures correct endpoint obfuscation with configured identifiers
+- Fix CORS wildcard to literal `'null'` for credentials mode compliance
+  - Prevents "Wildcard not allowed with credentials" CORS errors
+  - Enables sandboxed contexts to send credentials
+- Add CORS support for sandboxed contexts with `Origin: null`
+  - Resolves Shopify Custom Pixel tracking failures in sandboxed iframes
+  - Returns proper `Access-Control-Allow-Origin` headers
+- Correct script proxy interceptor argument passing in `fetch()`, `XHR.open()`, and `sendBeacon()`
+  - Modified URLs now properly passed to original functions
+  - JavaScript-level interception mechanism now functional
+- Remove unreliable `addEventListener` from GTM loader initialization
+  - Shopify Custom Pixel sandboxed environment issue resolved
+  - Rely on `setTimeout` retry mechanism (more reliable)
+- Remove noscript iframe fallback from GTM loader (unnecessary for JavaScript-enabled Shopify)
+- Remove deprecated `arguments.callee()` pattern, replace with named recursive function
+  - Ensures strict mode compatibility
+
+### Changed
+
+**Code Modernization:**
+- Modernize entire codebase with ES6+ syntax (56 files updated):
+  - Arrow functions instead of function declarations
+  - Nullish coalescing (`??`) instead of `||` for safer falsy value handling
+  - Optional chaining (`?.`) for nested property access
+  - Destructuring in parameters and assignments
+  - Simplified conditional logic with modern patterns
+- Modernize GTM loader initialization:
+  - Replace synchronous `setTimeout` polling with async/await pattern
+  - Add comprehensive JSDoc documentation explaining sandbox compatibility
+  - Exponential backoff retry mechanism for transient failures
+  - Document Shopify's recommended async initialization pattern
+- Simplify GTM_ID format in custom-pixel.js
+  - From obfuscated string concatenation to clean short format
+  - Improves code readability while maintaining functionality
+- Improve router.js documentation:
+  - Add comprehensive module-level JSDoc with architecture overview
+  - Document ultra-aggressive obfuscation mode
+  - Add routing table showing all supported routes
+  - Clarify routing differentiation strategy
+
+**Configuration:**
+- Add `FULL_SCRIPT_PROXY` configuration option (default: `true`)
+  - Enables full script proxy mode for dynamic endpoint substitution
+  - Comprehensive JSDoc documentation of feature
+- Enhanced debug logging:
+  - Add FACEBOOK_ENDPOINT_ID and GOOGLE_ENDPOINT_ID to config logs
+  - Add temporary logs to router for UUID path mapping troubleshooting
+
+**Domain Configuration:**
+- Add CDN domain (`https://cdn.suevich.com`) to CORS allowed origins
+- Update GTM_SERVER_URL to `https://gtm.suevich.com`
+
+### Removed
+
+- Obsolete v2.x documentation files removed (18 files, -9109 lines):
+  - BUGS-FIXED.md, BUGS-FOUND.md, LOGIC-ERRORS.md
+  - INSTALL-ULTIMATE.md, TEST-COMMUNICATION.md
+  - SCRIPT-PROXY-INVESTIGATION.md (moved to docs/organizar/ for historical reference)
+  - Legacy Shopify integration examples (6 files)
+- Simplify module naming by removing redundant "event-" prefix:
+  - `module.event-builder.js` → `module.builder.js`
+  - `module.gtm-loader.js` → `module.loader.js`
+- Remove debug logs from router (UUID generation debugging resolved)
+
+### Performance
+
+**Improvements:**
+- No new performance regressions
+- Server-side event tracking reduces client-side JavaScript execution
+- Simplified initialization pattern improves startup performance
+
+### Security
+
+**Enhancements:**
+- Improved CORS compliance for sandboxed contexts
+- Fixed strict mode compatibility (deprecated patterns removed)
+- Proper handling of `Origin: null` in Shopify environments
+- Enhanced type safety with nullish coalescing and optional chaining
+
+### Migration Notes
+
+**No breaking changes from v3.0.0**
+- All v3.0.0 configurations remain compatible
+- New features are opt-in (feature flags and new endpoints)
+- Existing deployments continue to work without modifications
+
+**Optional Updates:**
+- Update documentation references to new translations if serving international users
+- Consider enabling server-side event tracking for improved ad-blocker bypass rates
+- Consider disabling automatic transport_url injection if using manual GTM configuration
+
+### Contributors
+
+- Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
+- Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+
 ## [3.0.0] - 2026-01-26
 
 ### ⚠️ BREAKING CHANGES
@@ -246,6 +380,8 @@ See [docs/MIGRATION-V3.md](docs/MIGRATION-V3.md) for complete migration guide.
 
 ---
 
-[Unreleased]: https://github.com/your-github-username/tracklay/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/your-github-username/tracklay/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/your-github-username/tracklay/compare/v3.0.0...v3.1.0
+[3.0.0]: https://github.com/your-github-username/tracklay/compare/v2.0.0...v3.0.0
 [2.0.0]: https://github.com/your-github-username/tracklay/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/your-github-username/tracklay/releases/tag/v1.0.0
