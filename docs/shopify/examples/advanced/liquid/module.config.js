@@ -141,23 +141,17 @@ const DEFAULT_CONFIG = Object.freeze({
       /** @type {boolean} Enable/disable data transport */
       ACTIVE: true,
       /** @type {string} Data collection endpoint URL */
-      URL: 'https://data.suevich.com/'.concat(this.PROXY.PATH)
+      URL: 'https://data.suevich.com/'
     }),
     /** @type {Object} CORS proxy configuration */
-    PROXY: Object.freeze({
+    PROXY: {
       /** @type {boolean} Enable proxy routing */
       ACTIVE: true,
       /** @type {string} Unique proxy path identifier */
       PATH: 'b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f',
-      /**
-       * Computed proxy domain URL.
-       * @type {string}
-       * @returns {string} Full proxy domain URL
-       */
-      get DOMAIN() {
-        return `https://cdn.suevich.com/${this.PATH}`;
-      }
-    })
+      /** @type {string} Full proxy domain URL */
+      DOMAIN: 'https://cdn.suevich.com/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f'
+    }
   }),
 
   /**
