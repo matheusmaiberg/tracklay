@@ -71,7 +71,7 @@ async function updateScriptCache(content, scriptKey, hash, updateType) {
  * @returns {Promise<{content: string, urlsProcessed: number}>}
  */
 async function processScriptForFullProxy(scriptContent, scriptKey) {
-  if (!CONFIG.FULL_SCRIPT_PROXY) {
+  if (!CONFIG.FULL_SCRIPT_PROXY_ENABLED) {
     return { content: scriptContent, urlsProcessed: 0 };
   }
 

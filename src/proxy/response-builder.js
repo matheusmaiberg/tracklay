@@ -11,7 +11,7 @@ export function buildResponse(upstreamResponse, request, { cacheStatus = 'MISS',
   const standardHeaders = buildFullHeaders(request, { rateLimit });
   standardHeaders.forEach((value, key) => response.headers.set(key, value));
 
-  if (CONFIG?.DEBUG_HEADERS) {
+  if (CONFIG?.DEBUG_HEADERS_ENABLED) {
     response.headers.set('X-Cache-Status', cacheStatus);
   }
 

@@ -14,10 +14,10 @@ import { getCurrentDateISO, getNextRotationISO } from '../utils/time.js';
  * @returns {Promise<Response>} JSON with endpoint UUIDs or error
  */
 export async function handleEndpointsInfo(request) {
-  if (!CONFIG.ENDPOINTS_SECRET) {
-    Logger.error('ENDPOINTS_SECRET not configured');
+  if (!CONFIG.ENDPOINTS_API_TOKEN) {
+    Logger.error('ENDPOINTS_API_TOKEN not configured');
     return errorResponse(
-      'Endpoint not available - ENDPOINTS_SECRET not configured',
+      'Endpoint not available - ENDPOINTS_API_TOKEN not configured',
       503
     );
   }
@@ -32,8 +32,8 @@ export async function handleEndpointsInfo(request) {
     return errorResponse('Unauthorized - token query parameter required', 401);
   }
 
-  if (token !== CONFIG.ENDPOINTS_SECRET) {
-    Logger.warn('Invalid ENDPOINTS_SECRET', {
+  if (token !== CONFIG.ENDPOINTS_API_TOKEN) {
+    Logger.warn('Invalid ENDPOINTS_API_TOKEN', {
       ip: request.headers.get('CF-Connecting-IP') ?? 'unknown'
     });
     return errorResponse('Unauthorized - Invalid token', 401);
@@ -42,8 +42,8 @@ export async function handleEndpointsInfo(request) {
   const fbUUID = await generateEndpointUUID('facebook');
   const googleUUID = await generateEndpointUUID('google');
 
-  const expiresAt = CONFIG.ENDPOINTS_UUID_ROTATION 
-    ? getNextRotationISO(Date.now(), CONFIG.UUID_SALT_ROTATION)
+  const expiresAt = CONFIG.UUID_ROTATION_ENABLED
+    ? getNextRotationISO(Date.now(), CONFIG.UUID_ROTATION_INTERVAL_MS)
     : null;
 
   const payload = {
@@ -58,8 +58,8 @@ export async function handleEndpointsInfo(request) {
       endpoint: `/cdn/g/${googleUUID}`
     },
     rotation: {
-      enabled: CONFIG.ENDPOINTS_UUID_ROTATION === true,
-      interval: CONFIG.UUID_SALT_ROTATION
+      enabled: CONFIG.UUID_ROTATION_ENABLED === true,
+      interval: CONFIG.UUID_ROTATION_INTERVAL_MS
     },
     expiresAt,
     generatedAt: getCurrentDateISO()

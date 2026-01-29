@@ -21,7 +21,7 @@ export async function handleHealthCheck(request, rateLimit) {
       version: '2.0.0-factory'
     };
 
-    if (CONFIG.DEBUG_HEADERS) {
+    if (CONFIG.DEBUG_HEADERS_ENABLED) {
       health.uuid = uuid;
       health.metrics = {
         rateLimit: {

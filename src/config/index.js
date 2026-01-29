@@ -50,18 +50,18 @@ export let CONFIG = {
   RATE_LIMIT_REQUESTS: 100,
   RATE_LIMIT_WINDOW: 60000,
   FETCH_TIMEOUT: 10000,
-  UUID_SALT_ROTATION: 604800000,
-  UUID_SECRET: generateDefaultSecret(),
+  UUID_ROTATION_INTERVAL_MS: 604800000,
+  OBFUSCATION_SECRET: generateDefaultSecret(),
   CACHE_TTL: 3600,
   MAX_REQUEST_SIZE: 1048576,
-  ENDPOINTS_FACEBOOK: generateDefaultSecret(),
-  ENDPOINTS_GOOGLE: generateDefaultSecret(),
+  OBFUSCATION_FB_UUID: generateDefaultSecret(),
+  OBFUSCATION_GA_UUID: generateDefaultSecret(),
   LOG_LEVEL: 'info',
-  DEBUG_HEADERS: false,
-  CONTAINER_ALIASES: {},
-  ENDPOINTS_UUID_ROTATION: false,
-  ENDPOINTS_SECRET: generateDefaultSecret(),
-  FULL_SCRIPT_PROXY: true
+  DEBUG_HEADERS_ENABLED: false,
+  GTM_CONTAINER_ALIASES: {},
+  UUID_ROTATION_ENABLED: false,
+  ENDPOINTS_API_TOKEN: generateDefaultSecret(),
+  FULL_SCRIPT_PROXY_ENABLED: true
 };
 
 /**
@@ -78,7 +78,7 @@ export const initConfig = (env = {}) => {
     'RATE_LIMIT_REQUESTS',
     'RATE_LIMIT_WINDOW',
     'FETCH_TIMEOUT',
-    'UUID_SALT_ROTATION',
+    'UUID_ROTATION_INTERVAL_MS',
     'CACHE_TTL',
     'MAX_REQUEST_SIZE'
   ];
@@ -93,52 +93,52 @@ export const initConfig = (env = {}) => {
     }
   }
 
-  CONFIG.UUID_SECRET = env.UUID_SECRET ?? CONFIG.UUID_SECRET;
-  if (!env.UUID_SECRET) {
-    console.log('[CONFIG] UUID_SECRET auto-generated (not set in env)');
+  CONFIG.OBFUSCATION_SECRET = env.OBFUSCATION_SECRET ?? CONFIG.OBFUSCATION_SECRET;
+  if (!env.OBFUSCATION_SECRET) {
+    console.log('[CONFIG] OBFUSCATION_SECRET auto-generated (not set in env)');
     console.log('[CONFIG] ℹ️ INFO: This is used for UUID generation (deterministic hashing)');
   }
 
-  CONFIG.ENDPOINTS_FACEBOOK = env.ENDPOINTS_FACEBOOK ?? CONFIG.ENDPOINTS_FACEBOOK;
-  CONFIG.ENDPOINTS_GOOGLE = env.ENDPOINTS_GOOGLE ?? CONFIG.ENDPOINTS_GOOGLE;
+  CONFIG.OBFUSCATION_FB_UUID = env.OBFUSCATION_FB_UUID ?? CONFIG.OBFUSCATION_FB_UUID;
+  CONFIG.OBFUSCATION_GA_UUID = env.OBFUSCATION_GA_UUID ?? CONFIG.OBFUSCATION_GA_UUID;
 
   CONFIG.LOG_LEVEL = env.LOG_LEVEL ?? CONFIG.LOG_LEVEL;
 
-  if (env.DEBUG_HEADERS !== undefined) {
-    CONFIG.DEBUG_HEADERS = env.DEBUG_HEADERS === 'true' || env.DEBUG_HEADERS === true;
+  if (env.DEBUG_HEADERS_ENABLED !== undefined) {
+    CONFIG.DEBUG_HEADERS_ENABLED = env.DEBUG_HEADERS_ENABLED === 'true' || env.DEBUG_HEADERS_ENABLED === true;
   }
 
-  if (env.CONTAINER_ALIASES) {
+  if (env.GTM_CONTAINER_ALIASES) {
     try {
-      CONFIG.CONTAINER_ALIASES = JSON.parse(env.CONTAINER_ALIASES);
+      CONFIG.GTM_CONTAINER_ALIASES = JSON.parse(env.GTM_CONTAINER_ALIASES);
     } catch {
-      CONFIG.CONTAINER_ALIASES = {};
+      CONFIG.GTM_CONTAINER_ALIASES = {};
     }
   }
 
-  if (env.ENDPOINTS_UUID_ROTATION !== undefined) {
-    CONFIG.ENDPOINTS_UUID_ROTATION = env.ENDPOINTS_UUID_ROTATION === 'true' || env.ENDPOINTS_UUID_ROTATION === true;
+  if (env.UUID_ROTATION_ENABLED !== undefined) {
+    CONFIG.UUID_ROTATION_ENABLED = env.UUID_ROTATION_ENABLED === 'true' || env.UUID_ROTATION_ENABLED === true;
   }
 
-  CONFIG.ENDPOINTS_SECRET = env.ENDPOINTS_SECRET ?? CONFIG.ENDPOINTS_SECRET;
-  if (!env.ENDPOINTS_SECRET) {
-    console.log('[CONFIG] ENDPOINTS_SECRET auto-generated (not set in env)');
-    console.log('[CONFIG] Auto-generated token:', CONFIG.ENDPOINTS_SECRET);
+  CONFIG.ENDPOINTS_API_TOKEN = env.ENDPOINTS_API_TOKEN ?? CONFIG.ENDPOINTS_API_TOKEN;
+  if (!env.ENDPOINTS_API_TOKEN) {
+    console.log('[CONFIG] ENDPOINTS_API_TOKEN auto-generated (not set in env)');
+    console.log('[CONFIG] Auto-generated token:', CONFIG.ENDPOINTS_API_TOKEN);
     console.log('[CONFIG] ⚠️ WARNING: Use this token for /endpoints API access');
-    console.log('[CONFIG] ⚠️ PRODUCTION: Set via "wrangler secret put ENDPOINTS_SECRET"');
+    console.log('[CONFIG] ⚠️ PRODUCTION: Set via "wrangler secret put ENDPOINTS_API_TOKEN"');
   }
 
-  if (env.FULL_SCRIPT_PROXY !== undefined) {
-    CONFIG.FULL_SCRIPT_PROXY = env.FULL_SCRIPT_PROXY === 'true' || env.FULL_SCRIPT_PROXY === true;
+  if (env.FULL_SCRIPT_PROXY_ENABLED !== undefined) {
+    CONFIG.FULL_SCRIPT_PROXY_ENABLED = env.FULL_SCRIPT_PROXY_ENABLED === 'true' || env.FULL_SCRIPT_PROXY_ENABLED === true;
   }
 
   const {
     GTM_SERVER_URL,
-    ENDPOINTS_UUID_ROTATION,
-    ENDPOINTS_FACEBOOK,
-    ENDPOINTS_GOOGLE,
-    DEBUG_HEADERS,
-    FULL_SCRIPT_PROXY,
+    UUID_ROTATION_ENABLED,
+    OBFUSCATION_FB_UUID,
+    OBFUSCATION_GA_UUID,
+    DEBUG_HEADERS_ENABLED,
+    FULL_SCRIPT_PROXY_ENABLED,
     RATE_LIMIT_REQUESTS,
     RATE_LIMIT_WINDOW,
     CACHE_TTL,
@@ -149,11 +149,11 @@ export const initConfig = (env = {}) => {
   console.log('[CONFIG] Tracklay Worker Configuration Summary');
   console.log('[CONFIG] ============================================================');
   console.log('[CONFIG] GTM_SERVER_URL:', GTM_SERVER_URL || '(not set - client-side only)');
-  console.log('[CONFIG] ENDPOINTS_UUID_ROTATION:', ENDPOINTS_UUID_ROTATION ? 'enabled (weekly rotation)' : 'disabled (fixed UUIDs)');
-  console.log('[CONFIG] ENDPOINTS_FACEBOOK:', ENDPOINTS_FACEBOOK);
-  console.log('[CONFIG] ENDPOINTS_GOOGLE:', ENDPOINTS_GOOGLE);
-  console.log('[CONFIG] DEBUG_HEADERS:', DEBUG_HEADERS);
-  console.log('[CONFIG] FULL_SCRIPT_PROXY:', FULL_SCRIPT_PROXY ? 'enabled (full proxy)' : 'disabled (transport_url only)');
+  console.log('[CONFIG] UUID_ROTATION_ENABLED:', UUID_ROTATION_ENABLED ? 'enabled (weekly rotation)' : 'disabled (fixed UUIDs)');
+  console.log('[CONFIG] OBFUSCATION_FB_UUID:', OBFUSCATION_FB_UUID);
+  console.log('[CONFIG] OBFUSCATION_GA_UUID:', OBFUSCATION_GA_UUID);
+  console.log('[CONFIG] DEBUG_HEADERS_ENABLED:', DEBUG_HEADERS_ENABLED);
+  console.log('[CONFIG] FULL_SCRIPT_PROXY_ENABLED:', FULL_SCRIPT_PROXY_ENABLED ? 'enabled (full proxy)' : 'disabled (transport_url only)');
   console.log('[CONFIG] RATE_LIMIT:', RATE_LIMIT_REQUESTS, 'requests per', RATE_LIMIT_WINDOW / 1000, 'seconds');
   console.log('[CONFIG] CACHE_TTL:', CACHE_TTL, 'seconds');
   console.log('[CONFIG] LOG_LEVEL:', LOG_LEVEL);

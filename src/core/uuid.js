@@ -14,9 +14,9 @@ import { generateSHA256 } from '../utils/crypto.js';
 export async function generateSecureUUID(salt = '') {
   try {
     const now = Date.now();
-    const weekNumber = Math.floor(now / CONFIG.UUID_SALT_ROTATION);
+    const weekNumber = Math.floor(now / CONFIG.UUID_ROTATION_INTERVAL_MS);
 
-    const data = `${weekNumber}:${CONFIG.UUID_SECRET}${salt ? `:${salt}` : ''}`;
+    const data = `${weekNumber}:${CONFIG.OBFUSCATION_SECRET}${salt ? `:${salt}` : ''}`;
 
     const hashHex = await generateSHA256(data);
 
@@ -33,12 +33,13 @@ export async function generateSecureUUID(salt = '') {
  * @returns {Promise<string>} UUID for endpoint
  */
 export async function generateEndpointUUID(provider) {
-  if (CONFIG.ENDPOINTS_UUID_ROTATION === false) {
-    const endpoint = CONFIG[`ENDPOINTS_${provider?.toUpperCase()}`];
+  if (CONFIG.UUID_ROTATION_ENABLED === false) {
+    const providerKey = provider?.toUpperCase() === 'FACEBOOK' ? 'FB' : 'GA';
+    const endpoint = CONFIG[`OBFUSCATION_${providerKey}_UUID`];
     if (endpoint) return endpoint;
 
     Logger.warn('Unknown provider for endpoint UUID', { provider });
-    return CONFIG.ENDPOINTS_FACEBOOK;
+    return CONFIG.OBFUSCATION_FB_UUID;
   }
 
   return generateSecureUUID(provider);

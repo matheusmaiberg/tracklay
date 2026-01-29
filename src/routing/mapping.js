@@ -69,7 +69,7 @@ export async function getScriptTarget(path, search = '') {
       return null;
     }
 
-    const deobfuscatedSearch = deobfuscateQuery(search, CONFIG.CONTAINER_ALIASES);
+    const deobfuscatedSearch = deobfuscateQuery(search, CONFIG.GTM_CONTAINER_ALIASES);
     return `${baseUrl}${deobfuscatedSearch}`;
   }
 

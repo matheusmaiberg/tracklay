@@ -22,7 +22,7 @@ export function createScriptResponse(content, scriptKey, hash, { ttl, updateType
     'Cache-Control': `public, max-age=${ttl}`
   };
 
-  if (CONFIG.DEBUG_HEADERS) {
+  if (CONFIG.DEBUG_HEADERS_ENABLED) {
     headers['X-Script-Key'] = scriptKey;
     headers['X-Script-Hash'] = hash;
     headers[`X-Cache-${updateType === 'updated' ? 'Updated' : 'Refreshed'}`] = getCurrentDateISO();
