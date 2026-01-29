@@ -1,81 +1,48 @@
 /**
  * @fileoverview Dynamic Endpoints Manager - UUID generation and caching for URLs
  * @module cache/dynamic-endpoints
- * 
- * @description
- * Manages dynamic endpoint creation for URLs found in scripts.
- * Generates unique UUIDs for each URL and stores mappings in cache.
- * Supports batch creation and URL resolution.
- * 
- * Cache Keys:
- * - dyn-endpoint:{uuid} → targetUrl (JSON Response)
- * - dyn-url-index:{normalizedUrl} → uuid (for UUID reuse)
- * 
- * @example
- * import { createDynamicEndpoint, batchCreateEndpoints, getTargetUrl } from './dynamic-endpoints.js';
- * 
- * const { uuid, proxiedUrl } = await createDynamicEndpoint(
- *   'https://google-analytics.com/collect',
- *   'https://worker.com'
- * );
  */
 
 import { generateSHA256 } from '../utils/crypto.js';
 import { Logger } from '../core/logger.js';
 import { CacheManager } from '../core/cache.js';
 
-/** @constant {string} */
-const CACHE_PREFIX = 'dyn-endpoint:';
-
-/** @constant {string} */
-const URL_INDEX_PREFIX = 'dyn-url-index:';
-
-/** @constant {number} Cache TTL in seconds (7 days) */
+const CACHE_BASE = 'https://cache.internal/';
+const CACHE_PREFIX = `${CACHE_BASE}dyn-endpoint/`;
+const URL_INDEX_PREFIX = `${CACHE_BASE}dyn-url-index/`;
 const CACHE_TTL = 604800;
 
 /**
- * Creates a dynamic endpoint for a target URL
- * Reuses existing UUID if URL was previously registered
- * 
  * @param {string} targetUrl - Original URL to proxy
- * @param {string} workerOrigin - Worker origin (e.g., https://store.com)
- * @returns {Promise<{uuid: string, proxiedUrl: string}>} UUID and proxied URL
- * @throws {Error} If endpoint creation fails
- * 
- * @example
- * const result = await createDynamicEndpoint(
- *   'https://google-analytics.com/collect',
- *   'https://myshop.com'
- * );
- * console.log(result); // { uuid: 'a3f9c2e1b8d4e5f6', proxiedUrl: 'https://myshop.com/x/a3f9c2e1b8d4e5f6' }
+ * @returns {Promise<{uuid: string, proxyPath: string}>} UUID and proxy path
  */
-export async function createDynamicEndpoint(targetUrl, workerOrigin) {
+export async function createDynamicEndpoint(targetUrl) {
   try {
     const normalizedUrl = normalizeForIndexing(targetUrl);
-    
+
     const existingUuid = await getUuidForUrl(normalizedUrl);
     if (existingUuid) {
-      const proxiedUrl = `${workerOrigin}/x/${existingUuid}`;
+      const proxyPath = `/x/${existingUuid}`;
       Logger.debug('Reusing existing dynamic endpoint', {
         url: targetUrl.substring(0, 50),
         uuid: existingUuid
       });
-      return { uuid: existingUuid, proxiedUrl };
+      return { uuid: existingUuid, proxyPath };
     }
 
     const uuid = await generateEndpointUuid(targetUrl);
-    
+
     await storeEndpointMapping(uuid, targetUrl, normalizedUrl);
-    
-    const proxiedUrl = `${workerOrigin}/x/${uuid}`;
-    
+
+    const proxyPath = `/x/${uuid}`;
+
     Logger.info('Dynamic endpoint created', {
       uuid,
       targetUrl: targetUrl.substring(0, 50),
-      proxiedUrl
+      proxyPath
     });
 
-    return { uuid, proxiedUrl };
+    return { uuid, proxyPath };
   } catch (error) {
     Logger.error('Failed to create dynamic endpoint', {
       error: error.message,
@@ -86,21 +53,12 @@ export async function createDynamicEndpoint(targetUrl, workerOrigin) {
 }
 
 /**
- * Creates multiple dynamic endpoints in batch
- * Processes URLs in parallel with concurrency limiting
- * 
  * @param {string[]} urls - Array of URLs to create endpoints for
- * @param {string} workerOrigin - Worker origin
- * @returns {Promise<Map<string, {uuid: string, proxiedUrl: string}>>} Map of URL to endpoint info
- * 
- * @example
- * const urls = ['https://example1.com', 'https://example2.com'];
- * const mapping = await batchCreateEndpoints(urls, 'https://shop.com');
- * console.log(mapping.get('https://example1.com')); // { uuid: '...', proxiedUrl: '...' }
+ * @returns {Promise<Map<string, {uuid: string, proxyPath: string}>>} Map of URL to endpoint info
  */
-export async function batchCreateEndpoints(urls, workerOrigin) {
+export async function batchCreateEndpoints(urls) {
   const results = new Map();
-  
+
   if (!urls?.length) {
     return results;
   }
@@ -114,7 +72,7 @@ export async function batchCreateEndpoints(urls, workerOrigin) {
     const batch = urls.slice(i, i + batchSize);
     const promises = batch.map(async (url) => {
       try {
-        const result = await createDynamicEndpoint(url, workerOrigin);
+        const result = await createDynamicEndpoint(url);
         results.set(url, result);
       } catch (error) {
         Logger.warn('Failed to create endpoint for URL', {
@@ -123,7 +81,7 @@ export async function batchCreateEndpoints(urls, workerOrigin) {
         });
       }
     });
-    
+
     await Promise.all(promises);
   }
 
@@ -136,14 +94,8 @@ export async function batchCreateEndpoints(urls, workerOrigin) {
 }
 
 /**
- * Retrieves the original target URL from a UUID
- * 
  * @param {string} uuid - The UUID to look up
  * @returns {Promise<string|null>} Original URL or null if not found
- * 
- * @example
- * const targetUrl = await getTargetUrl('a3f9c2e1b8d4e5f6');
- * console.log(targetUrl); // 'https://google-analytics.com/collect'
  */
 export async function getTargetUrl(uuid) {
   try {
@@ -167,14 +119,8 @@ export async function getTargetUrl(uuid) {
 }
 
 /**
- * Checks if a UUID endpoint exists in cache
- * 
  * @param {string} uuid - UUID to check
  * @returns {Promise<boolean>} True if endpoint exists
- * 
- * @example
- * const exists = await hasEndpoint('a3f9c2e1b8d4e5f6');
- * console.log(exists); // true
  */
 export async function hasEndpoint(uuid) {
   const cacheKey = `${CACHE_PREFIX}${uuid}`;
@@ -183,12 +129,8 @@ export async function hasEndpoint(uuid) {
 }
 
 /**
- * Generates a deterministic UUID based on URL and current week
- * Same URL generates same UUID within the same week
- * 
  * @param {string} url - URL to generate UUID for
  * @returns {Promise<string>} 16-character hexadecimal UUID
- * @private
  */
 async function generateEndpointUuid(url) {
   const weekNumber = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
@@ -200,32 +142,30 @@ async function generateEndpointUuid(url) {
 }
 
 /**
- * Stores UUID to URL mapping in cache
- * Also stores reverse index for UUID reuse
- * 
  * @param {string} uuid - Generated UUID
  * @param {string} targetUrl - Original target URL
  * @param {string} normalizedUrl - Normalized URL for indexing
  * @returns {Promise<void>}
- * @private
  */
 async function storeEndpointMapping(uuid, targetUrl, normalizedUrl) {
   const cacheKey = `${CACHE_PREFIX}${uuid}`;
-  const indexKey = `${URL_INDEX_PREFIX}${normalizedUrl}`;
-  
+  // Use hash of normalized URL as index key to avoid special characters
+  const urlHash = await generateSHA256(normalizedUrl);
+  const indexKey = `${URL_INDEX_PREFIX}${urlHash}`;
+
   const endpointData = {
     uuid,
     targetUrl,
     normalizedUrl,
     createdAt: Date.now()
   };
-  
+
   const response = new Response(JSON.stringify(endpointData), {
     headers: {
       'Content-Type': 'application/json'
     }
   });
-  
+
   await Promise.all([
     CacheManager.put(cacheKey, response, CACHE_TTL),
     CacheManager.put(indexKey, new Response(uuid), CACHE_TTL)
@@ -233,21 +173,20 @@ async function storeEndpointMapping(uuid, targetUrl, normalizedUrl) {
 }
 
 /**
- * Retrieves existing UUID for a normalized URL
- * 
  * @param {string} normalizedUrl - Normalized URL
  * @returns {Promise<string|null>} UUID or null if not found
- * @private
  */
 async function getUuidForUrl(normalizedUrl) {
   try {
-    const indexKey = `${URL_INDEX_PREFIX}${normalizedUrl}`;
+    // Use hash of normalized URL as index key to avoid special characters
+    const urlHash = await generateSHA256(normalizedUrl);
+    const indexKey = `${URL_INDEX_PREFIX}${urlHash}`;
     const response = await CacheManager.get(indexKey);
-    
+
     if (!response) {
       return null;
     }
-    
+
     return await response.text();
   } catch (error) {
     Logger.warn('Error looking up UUID in index', {
@@ -258,11 +197,8 @@ async function getUuidForUrl(normalizedUrl) {
 }
 
 /**
- * Normalizes URL for indexing by removing query params
- * 
  * @param {string} url - Original URL
  * @returns {string} Normalized URL (protocol + hostname + pathname)
- * @private
  */
 function normalizeForIndexing(url) {
   if (!url) return '';
