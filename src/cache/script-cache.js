@@ -1,55 +1,37 @@
-// ============================================================
-// SCRIPT CACHE - INTELLIGENT CACHING FOR THIRD-PARTY SCRIPTS
-// ============================================================
-// RESPONSIBILITY:
-// - Cache inteligente de scripts de terceiros (fbevents, gtm, gtag)
-// - Atualização automática a cada 12 horas via Cloudflare Cron
-// - Detecção de mudanças via SHA-256 hash comparison
-// - Fallback para fetch normal se cache falhar
-//
-// FUNCTIONS:
-// - getScriptFromCache(scriptKey) - Retorna script do cache ou null
-// - fetchAndCompareScript(url, scriptKey) - Busca, compara hash, atualiza se necessário
-//
-// CACHE KEYS:
-// - script:fbevents - Conteúdo do script Facebook Pixel (fresh, 24h)
-// - script:gtm - Conteúdo do Google Tag Manager (fresh, 24h)
-// - script:gtag - Conteúdo do Google Analytics/Gtag (fresh, 24h)
-// - script:stale:fbevents - Fallback stale (7 dias)
-// - script:stale:gtm - Fallback stale (7 dias)
-// - script:stale:gtag - Fallback stale (7 dias)
-// - script:hash:fbevents - SHA-256 hash do script
-// - script:hash:gtm - SHA-256 hash do script
-// - script:hash:gtag - SHA-256 hash do script
-//
-// TTL:
-// - Fresh cache: 24 horas (renovado a cada 12h se não mudou)
-// - Stale cache: 7 dias (fallback para alta disponibilidade)
+/**
+ * @fileoverview Script Cache - Intelligent caching for third-party scripts
+ * @module cache/script-cache
+ */
 
 import { generateSHA256 } from '../utils/crypto.js';
 import { Logger } from '../core/logger.js';
 import { CacheManager } from '../core/cache.js';
 import { fetchWithTimeout } from '../core/fetch.js';
 import { createScriptResponse, createHashResponse } from './response-factory.js';
-
-// ============= CONFIGURAÇÃO DE SCRIPTS =============
+import { extractUrls, filterTrackableUrls, rewriteScriptUrls } from '../proxy/url-extractor.js';
+import { batchCreateEndpoints } from './dynamic-endpoints.js';
+import { CONFIG } from '../config/index.js';
 
 export const SCRIPT_URLS = {
   fbevents: 'https://connect.facebook.net/en_US/fbevents.js',
-  gtm: 'https://www.googletagmanager.com/gtm.js',
+  // gtm removed - now on-demand per container (requires ?id=GTM-XXX)
   gtag: 'https://www.googletagmanager.com/gtag/js'
 };
 
-const CACHE_PREFIX = 'script:';
-const STALE_PREFIX = 'script:stale:';
-const HASH_PREFIX = 'script:hash:';
-const CACHE_TTL = 86400; // 24 horas em segundos
-const STALE_TTL = 604800; // 7 dias em segundos (fallback para alta disponibilidade)
+// Valid container ID patterns for DoS protection
+const VALID_CONTAINER_PATTERN = /^(GTM|G|GT|AW|DC)-[A-Z0-9]{6,12}$/i;
 
-// ============= FUNÇÕES PRIVADAS =============
+// Shorter TTL for on-demand cached scripts (12h vs 24h for scheduled)
+const ON_DEMAND_TTL = 43200;
+
+const CACHE_BASE = 'https://cache.internal/';
+const CACHE_PREFIX = `${CACHE_BASE}script/`;
+const STALE_PREFIX = `${CACHE_BASE}script-stale/`;
+const HASH_PREFIX = `${CACHE_BASE}script-hash/`;
+const CACHE_TTL = 86400;
+const STALE_TTL = 604800;
 
 /**
- * Updates all cache layers (fresh, stale, hash) for a script
  * @param {string} content - Script content
  * @param {string} scriptKey - Script identifier
  * @param {string} hash - Script hash
@@ -57,12 +39,10 @@ const STALE_TTL = 604800; // 7 dias em segundos (fallback para alta disponibilid
  * @returns {Promise<void>}
  */
 async function updateScriptCache(content, scriptKey, hash, updateType) {
-  // Create cache keys
   const cacheKey = `${CACHE_PREFIX}${scriptKey}`;
   const staleKey = `${STALE_PREFIX}${scriptKey}`;
   const hashKey = `${HASH_PREFIX}${scriptKey}`;
 
-  // Create responses using factory
   const scriptResponse = createScriptResponse(content, scriptKey, hash, {
     ttl: CACHE_TTL,
     updateType,
@@ -77,7 +57,6 @@ async function updateScriptCache(content, scriptKey, hash, updateType) {
 
   const hashResponse = createHashResponse(hash, CACHE_TTL);
 
-  // Store all caches in parallel
   await Promise.all([
     CacheManager.put(cacheKey, scriptResponse, CACHE_TTL),
     CacheManager.put(staleKey, staleResponse, STALE_TTL),
@@ -85,21 +64,56 @@ async function updateScriptCache(content, scriptKey, hash, updateType) {
   ]);
 }
 
-// ============= FUNÇÕES PÚBLICAS =============
+/**
+ * Processes script for Full Script Proxy mode
+ * @param {string} scriptContent - Original script
+ * @param {string} scriptKey - Script identifier
+ * @returns {Promise<{content: string, urlsProcessed: number}>}
+ */
+async function processScriptForFullProxy(scriptContent, scriptKey) {
+  if (!CONFIG.FULL_SCRIPT_PROXY) {
+    return { content: scriptContent, urlsProcessed: 0 };
+  }
+
+  try {
+    const allUrls = extractUrls(scriptContent);
+    const trackableUrls = filterTrackableUrls(allUrls);
+
+    Logger.info('Full Script Proxy: URLs extracted', {
+      scriptKey,
+      total: allUrls.length,
+      trackable: trackableUrls.length
+    });
+
+    if (trackableUrls.length === 0) {
+      return { content: scriptContent, urlsProcessed: 0 };
+    }
+
+    const urlMappings = await batchCreateEndpoints(trackableUrls);
+    const processedContent = rewriteScriptUrls(scriptContent, urlMappings);
+
+    Logger.info('Full Script Proxy: Script rewritten', {
+      scriptKey,
+      urlsReplaced: urlMappings.size
+    });
+
+    return { content: processedContent, urlsProcessed: urlMappings.size };
+
+  } catch (error) {
+    Logger.error('Full Script Proxy processing failed', {
+      scriptKey,
+      error: error.message
+    });
+    return { content: scriptContent, urlsProcessed: 0 };
+  }
+}
 
 /**
- * Obtém um script do cache
- * Implementa Stale-While-Revalidate Pattern:
- * 1. Tenta cache fresco (24h TTL)
- * 2. Se expirado, tenta cache stale (7d TTL)
- * 3. Melhora uptime: 99.9% → 99.99%+
- *
  * @param {string} scriptKey - Nome do script (fbevents, gtm, gtag)
  * @returns {Promise<Response|null>} - Response do cache ou null
  */
 export async function getScriptFromCache(scriptKey) {
   try {
-    // Tentar cache fresco primeiro (24h)
     const cacheKey = `${CACHE_PREFIX}${scriptKey}`;
     const cached = await CacheManager.get(cacheKey);
 
@@ -108,7 +122,6 @@ export async function getScriptFromCache(scriptKey) {
       return cached;
     }
 
-    // Se cache fresco expirou, tentar cache stale (7d)
     const staleKey = `${STALE_PREFIX}${scriptKey}`;
     const staleCached = await CacheManager.get(staleKey);
 
@@ -118,7 +131,6 @@ export async function getScriptFromCache(scriptKey) {
         message: 'Fresh cache expired, serving stale content'
       });
 
-      // Adicionar header indicando que é stale
       const staleResponse = new Response(staleCached.body, {
         status: staleCached.status,
         headers: staleCached.headers
@@ -140,16 +152,14 @@ export async function getScriptFromCache(scriptKey) {
 }
 
 /**
- * Busca um script, compara o hash e atualiza o cache se necessário
  * @param {string} url - URL do script
  * @param {string} scriptKey - Nome do script (fbevents, gtm, gtag)
- * @returns {Promise<{updated: boolean, error?: string}>}
+ * @returns {Promise<{updated: boolean, urlsProcessed?: number, error?: string}>}
  */
 export async function fetchAndCompareScript(url, scriptKey) {
   try {
     Logger.info('Fetching script for cache update', { scriptKey, url });
 
-    // Buscar script da origem
     const response = await fetchWithTimeout(url, {
       method: 'GET',
       headers: {
@@ -168,38 +178,39 @@ export async function fetchAndCompareScript(url, scriptKey) {
       return { updated: false, error: `HTTP ${status}` };
     }
 
-    // Ler conteúdo do script
     const scriptContent = await response.text();
 
-    // Calcular hash SHA-256
-    const newHash = await generateSHA256(scriptContent);
+    // Process for Full Script Proxy (extract URLs, create endpoints, rewrite)
+    const { content: processedContent, urlsProcessed } =
+      await processScriptForFullProxy(scriptContent, scriptKey);
 
-    // Obter hash anterior do cache
+    const newHash = await generateSHA256(processedContent);
+
     const hashKey = `${HASH_PREFIX}${scriptKey}`;
     const oldHashResponse = await CacheManager.get(hashKey);
     const oldHash = (await oldHashResponse?.text()) ?? null;
 
-    // Comparar hashes
     const hasChanged = oldHash !== newHash;
 
     if (hasChanged) {
       Logger.info('Script content changed, updating cache', {
         scriptKey,
         oldHash: oldHash ? `${oldHash.substring(0, 16)}...` : 'none',
-        newHash: `${newHash.substring(0, 16)}...`
+        newHash: `${newHash.substring(0, 16)}...`,
+        urlsProxied: urlsProcessed
       });
 
-      await updateScriptCache(scriptContent, scriptKey, newHash, 'updated');
+      await updateScriptCache(processedContent, scriptKey, newHash, 'updated');
 
-      Logger.info('Script cache updated successfully (fresh + stale)', { scriptKey });
-      return { updated: true };
+      Logger.info('Script cache updated (fresh + stale)', { scriptKey });
+      return { updated: true, urlsProcessed };
 
     } else {
-      Logger.info('Script unchanged, refreshing cache TTL', { scriptKey });
+      Logger.info('Script unchanged, refreshing TTL', { scriptKey, urlsProxied: urlsProcessed });
 
-      await updateScriptCache(scriptContent, scriptKey, newHash, 'refreshed');
+      await updateScriptCache(processedContent, scriptKey, newHash, 'refreshed');
 
-      return { updated: false };
+      return { updated: false, urlsProcessed };
     }
 
   } catch (error) {
@@ -212,16 +223,116 @@ export async function fetchAndCompareScript(url, scriptKey) {
   }
 }
 
-// ============= FUNÇÕES AUXILIARES =============
-
 /**
- * Identifica o script key a partir da URL
+ * Identifies script type and extracts container ID for per-container caching
  * @param {string} url - URL do script
- * @returns {string|null} - Script key ou null
+ * @returns {string|null} - Script key (e.g., 'fbevents', 'gtm:GTM-XXX', 'gtag:G-XXX') ou null
  */
 export function identifyScriptKey(url) {
   if (url.includes('fbevents.js')) return 'fbevents';
-  if (url.includes('gtm.js')) return 'gtm';
-  if (url.includes('gtag/js')) return 'gtag';
+
+  // GTM/gtag: extract container ID for per-container caching
+  if (url.includes('gtm.js') || url.includes('gtag/js')) {
+    const type = url.includes('gtm.js') ? 'gtm' : 'gtag';
+
+    try {
+      const parsedUrl = new URL(url);
+      const containerId = parsedUrl.searchParams.get('id');
+
+      // Validate container ID format to prevent DoS via fake IDs
+      if (containerId && VALID_CONTAINER_PATTERN.test(containerId)) {
+        return `${type}:${containerId}`;
+      }
+    } catch {
+      // Invalid URL, fall through to generic type
+    }
+
+    return type;
+  }
+
   return null;
+}
+
+/**
+ * Checks if a script key is container-specific (requires on-demand fetch)
+ * @param {string} scriptKey - Script key
+ * @returns {boolean}
+ */
+export function isContainerSpecificKey(scriptKey) {
+  return scriptKey?.includes(':') ?? false;
+}
+
+/**
+ * Fetches script on-demand, processes through Full Script Proxy, and caches
+ * Used for container-specific scripts (GTM/gtag with ?id= parameter)
+ * @param {string} targetUrl - Full URL with container ID
+ * @param {string} scriptKey - Composite key (e.g., 'gtm:GTM-XXX')
+ * @returns {Promise<Response|null>}
+ */
+export async function fetchAndCacheOnDemand(targetUrl, scriptKey) {
+  try {
+    Logger.info('On-demand script fetch', { scriptKey, url: targetUrl });
+
+    const response = await fetchWithTimeout(targetUrl, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/javascript, */*',
+      }
+    });
+
+    if (!response.ok) {
+      Logger.error('On-demand fetch failed', {
+        scriptKey,
+        status: response.status,
+        statusText: response.statusText
+      });
+      return null;
+    }
+
+    const scriptContent = await response.text();
+
+    // Process through Full Script Proxy pipeline
+    const { content: processedContent, urlsProcessed } =
+      await processScriptForFullProxy(scriptContent, scriptKey);
+
+    const hash = await generateSHA256(processedContent);
+
+    // Cache with shorter TTL for on-demand scripts
+    const cacheKey = `${CACHE_PREFIX}${scriptKey}`;
+    const staleKey = `${STALE_PREFIX}${scriptKey}`;
+
+    const scriptResponse = createScriptResponse(processedContent, scriptKey, hash, {
+      ttl: ON_DEMAND_TTL,
+      updateType: 'on-demand',
+      isStale: false
+    });
+
+    const staleResponse = createScriptResponse(processedContent, scriptKey, hash, {
+      ttl: STALE_TTL,
+      updateType: 'on-demand',
+      isStale: true
+    });
+
+    await Promise.all([
+      CacheManager.put(cacheKey, scriptResponse, ON_DEMAND_TTL),
+      CacheManager.put(staleKey, staleResponse, STALE_TTL)
+    ]);
+
+    Logger.info('On-demand script cached', { scriptKey, urlsProcessed });
+
+    // Return fresh response for immediate use
+    return createScriptResponse(processedContent, scriptKey, hash, {
+      ttl: ON_DEMAND_TTL,
+      updateType: 'on-demand',
+      isStale: false
+    });
+
+  } catch (error) {
+    Logger.error('On-demand fetch error', {
+      scriptKey,
+      error: error.message
+    });
+    return null;
+  }
 }

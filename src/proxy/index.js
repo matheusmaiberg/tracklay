@@ -1,20 +1,6 @@
-// ============================================================
-// PROXY - FUNÇÃO PRINCIPAL DE PROXY
-// ============================================================
-// RESPONSIBILITY:
-// - proxyRequest(targetUrl, request, options) → Promise<Response>
-// - options: { preserveHeaders, allowCache }
-// - Verificar cache (se allowCache=true)
-// - Clonar request antes de usar body
-// - Fazer fetch com timeout
-// - Error handling completo (try/catch)
-// - Adicionar CORS headers
-// - Adicionar security headers
-// - Salvar em cache (se allowCache=true e .js)
-// - Retornar response modificada
-
-// FUNCTIONS:
-// - proxyRequest(targetUrl, request, options) → Promise<Response>
+/**
+ * @fileoverview Main proxy request handler
+ */
 
 import { Logger } from '../core/logger.js';
 import { fetchWithTimeout } from '../core/fetch.js';
@@ -25,7 +11,12 @@ import { shouldCache, getCacheKey, getCacheTTL } from './cache-strategy.js';
 import { CONFIG } from '../config/index.js';
 import { HTTP_STATUS } from '../utils/constants.js';
 import { errorResponse } from '../utils/response.js';
-import { getScriptFromCache, identifyScriptKey } from '../cache/script-cache.js';
+import {
+  getScriptFromCache,
+  identifyScriptKey,
+  isContainerSpecificKey,
+  fetchAndCacheOnDemand
+} from '../cache/script-cache.js';
 
 export async function proxyRequest(targetUrl, request, options = {}) {
   const { 
@@ -35,30 +26,29 @@ export async function proxyRequest(targetUrl, request, options = {}) {
   } = options;
 
   try {
-    // OTIMIZAÇÃO: Verificar script cache inteligente primeiro
-    // Economiza ~300ms por não fazer fetch para scripts conhecidos
     const scriptKey = identifyScriptKey(targetUrl);
     if (scriptKey) {
-      const cachedScript = await getScriptFromCache(scriptKey);
-      if (cachedScript) {
-        Logger.debug('Script cache hit (intelligent cache)', {
-          scriptKey,
-          url: targetUrl
-        });
+      // Try cached version first
+      let cachedScript = await getScriptFromCache(scriptKey);
 
-        // Build response com headers CORS/security
+      // On-demand fetch if not cached (container-specific scripts like gtm:GTM-XXX)
+      if (!cachedScript && isContainerSpecificKey(scriptKey)) {
+        Logger.info('On-demand fetch triggered', { scriptKey, url: targetUrl });
+        cachedScript = await fetchAndCacheOnDemand(targetUrl, scriptKey);
+      }
+
+      if (cachedScript) {
+        const cacheStatus = cachedScript.headers?.get('X-Cache-Status') || 'HIT-SCRIPT';
+        Logger.debug('Script served', { scriptKey, cacheStatus, url: targetUrl });
+
         return buildResponse(cachedScript, request, {
-          cacheStatus: 'HIT-SCRIPT',
+          cacheStatus,
           rateLimit
         });
       }
     }
 
-    // Obter cache key
     const cacheKey = getCacheKey(targetUrl);
-
-    // Verificar cache se permitido
-    // OTIMIZAÇÃO: calcular shouldCache uma vez e reusar
     const canCache = allowCache && shouldCache(request);
 
     if (canCache) {
@@ -66,7 +56,6 @@ export async function proxyRequest(targetUrl, request, options = {}) {
       if (cached) {
         Logger.debug('Cache hit', { url: targetUrl });
 
-        // Build response com headers CORS/security
         return buildResponse(cached, request, {
           cacheStatus: 'HIT',
           rateLimit
@@ -74,13 +63,9 @@ export async function proxyRequest(targetUrl, request, options = {}) {
       }
     }
 
-    // Clonar request ANTES de usar body
     const requestClone = request.clone();
-
-    // Build headers
     const headers = buildProxyHeaders(request, preserveHeaders);
 
-    // Fetch com timeout
     let response;
     try {
       response = await fetchWithTimeout(targetUrl, {
@@ -100,7 +85,6 @@ export async function proxyRequest(targetUrl, request, options = {}) {
       return errorResponse('Bad Gateway', HTTP_STATUS.BAD_GATEWAY);
     }
 
-    // Verificar se resposta é válida
     if (!response.ok) {
       Logger.warn('Upstream error', {
         status: response.status,
@@ -108,20 +92,17 @@ export async function proxyRequest(targetUrl, request, options = {}) {
       });
     }
 
-    // Build response com CORS/security headers
     const modifiedResponse = buildResponse(response, request, {
       cacheStatus: 'MISS',
       rateLimit
     });
 
-    // Adicionar Cache-Control header
     const cacheTTL = getCacheTTL(request);
     const cacheControl = canCache
       ? `public, max-age=${cacheTTL}`
       : 'no-store, no-cache, must-revalidate';
     modifiedResponse.headers.set('Cache-Control', cacheControl);
 
-    // Salvar em cache se permitido
     if (canCache) {
       try {
         const responseToCache = modifiedResponse.clone();
