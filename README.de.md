@@ -256,17 +256,17 @@ RATE_LIMIT_WINDOW = "60000"
 CACHE_TTL = "3600"
 
 # UUID Obfuskations-IDs
-ENDPOINTS_FACEBOOK = "a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e"
-ENDPOINTS_GOOGLE = "b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f"
+OBFUSCATION_FB_UUID = "a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e"
+OBFUSCATION_GA_UUID = "b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f"
 
-# Container-Aliase für Anfrage-Obfuskation
-CONTAINER_ALIASES = '{"abc123":"GTM-XXXXX","xyz789":"G-YYYYY"}'
-
-# Transport_url automatisch injizieren (empfohlen)
-AUTO_INJECT_TRANSPORT_URL = "true"
+# GTM Container-Aliase für Anfrage-Obfuskation
+GTM_CONTAINER_ALIASES = '{"abc123":"GTM-XXXXX","xyz789":"G-YYYYY"}'
 
 # Vollständiger Script-Proxy (empfohlen)
-FULL_SCRIPT_PROXY = "true"
+FULL_SCRIPT_PROXY_ENABLED = "true"
+
+# Debug-Header (in Produktion deaktivieren)
+DEBUG_HEADERS_ENABLED = "false"
 ```
 
 ### Fortgeschritten: UUID-Rotation
@@ -275,8 +275,8 @@ Für maximale Sicherheit aktivieren Sie automatische UUID-Rotation:
 
 ```toml
 [vars]
-ENDPOINTS_UUID_ROTATION = "true"
-UUID_SALT_ROTATION = "604800000"  # 7 Tage
+UUID_ROTATION_ENABLED = "true"
+UUID_ROTATION_INTERVAL_MS = "604800000"  # 7 Tage
 ```
 
 Verwenden Sie dann Shopify Metafields + n8n, um Ihr Theme automatisch aktualisiert zu halten.

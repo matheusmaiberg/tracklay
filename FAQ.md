@@ -290,7 +290,7 @@ Protection against abuse:
 - Timeout protection (10s)
 - Input validation
 
-### How do I protect my UUID_SECRET?
+### How do I protect my OBFUSCATION_SECRET?
 
 1. Generate random secret (setup script does this)
 2. Set in Cloudflare (not in code)
@@ -301,7 +301,7 @@ Protection against abuse:
 openssl rand -base64 32 | tr -d "=+/" | cut -c1-32
 
 # Set in Cloudflare
-wrangler secret put UUID_SECRET
+wrangler secret put OBFUSCATION_SECRET
 ```
 
 ### Does this comply with GDPR?

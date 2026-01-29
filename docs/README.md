@@ -75,10 +75,13 @@ Security best practices
 ## 📊 Project Status & Planning
 
 ### [Implementation Status](IMPLEMENTATION_STATUS.md)
-Current project status (v3.0.0)
-- ✅ Completed features (all files)
+Current project status (v3.2.0)
+- ✅ Full Script Proxy - Deep URL extraction and replacement
+- ✅ Container-specific caching (GTM/gtag per-container)
+- ✅ Dynamic endpoints (`/x/{uuid}` paths)
 - ✅ UUID rotation implemented
 - ✅ Ultra-aggressive obfuscation (no suffixes)
+- ✅ 30+ trackable domains supported
 - 📦 Architecture overview
 - 🧪 Testing checklist
 - 🚀 Deployment steps
@@ -104,6 +107,8 @@ Current project status (v3.0.0)
 
 ### [Changelog](CHANGELOG.md)
 Version history and release notes
+- v3.2.0 (Full Script Proxy + Container-specific caching)
+- v3.1.0 (Server-side events + transport_url)
 - v3.0.0 (Ultra-aggressive obfuscation + UUID rotation) - **BREAKING**
 - v2.0.0-factory (Factory architecture)
 - v1.x.x (Legacy versions)
@@ -249,7 +254,7 @@ Location: `/home/matheus/Documentos/CAPI-v2/`
 - **Lines**: ~9,000+ lines
 - **Coverage**: Getting started, Shopify integration, security, implementation, planning, gap analysis
 - **Languages**: English (with some Portuguese context in CAPI-v2 references)
-- **Last Updated**: January 25, 2026
+- **Last Updated**: January 29, 2026
 
 ---
 

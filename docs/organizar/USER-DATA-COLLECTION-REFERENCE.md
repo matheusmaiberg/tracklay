@@ -374,7 +374,7 @@ Users can request:
 In `wrangler.toml`:
 ```toml
 [vars]
-DEBUG_HEADERS = "true"
+DEBUG_HEADERS_ENABLED = "true"
 ```
 
 ### 6.2 View Sent Data

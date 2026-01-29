@@ -16,6 +16,153 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A/B testing for tracking methods
 - Shopify App for easier installation
 
+## [3.3.0] - 2026-01-29
+
+### Changed
+
+**BREAKING: Environment Variable Renaming**
+
+All environment variables have been renamed for clarity and consistency:
+
+| Old Name | New Name |
+|----------|----------|
+| `ENDPOINTS_FACEBOOK` | `OBFUSCATION_FB_UUID` |
+| `ENDPOINTS_GOOGLE` | `OBFUSCATION_GA_UUID` |
+| `UUID_SECRET` | `OBFUSCATION_SECRET` |
+| `ENDPOINTS_UUID_ROTATION` | `UUID_ROTATION_ENABLED` |
+| `UUID_SALT_ROTATION` | `UUID_ROTATION_INTERVAL_MS` |
+| `CONTAINER_ALIASES` | `GTM_CONTAINER_ALIASES` |
+| `ENDPOINTS_SECRET` | `ENDPOINTS_API_TOKEN` |
+| `FULL_SCRIPT_PROXY` | `FULL_SCRIPT_PROXY_ENABLED` |
+| `DEBUG_HEADERS` | `DEBUG_HEADERS_ENABLED` |
+
+**Migration Guide:**
+
+1. Update your `.env` file with new variable names
+2. Update Cloudflare Workers secrets:
+   ```bash
+   wrangler secret put OBFUSCATION_SECRET
+   wrangler secret put ENDPOINTS_API_TOKEN
+   ```
+3. Update `wrangler.toml` vars section with new names
+4. Deploy: `npm run deploy`
+
+### Removed
+
+- `ENVIRONMENT` variable (was defined but never used)
+- `CDN_PATHS` variable (was defined but never used)
+
+## [3.2.0] - 2026-01-29
+
+### Added
+
+**Full Script Proxy - Complete Implementation:**
+- Deep URL extraction and replacement in tracking scripts
+- Automatic proxy of ALL external URLs found in GTM, gtag, and Facebook scripts
+- Dynamic endpoint generation with unique UUIDs (`/x/{uuid}` paths)
+- Container-specific cache keys for GTM/gtag (`gtm:GTM-XXX`, `gtag:G-XXX` format)
+- On-demand fetch and cache for container-specific scripts
+- DoS protection with container ID validation (`/^(GTM|G|GT|AW|DC)-[A-Z0-9]{6,12}$/i`)
+- SHA-256 indexed URL-to-UUID mapping for deduplication
+- 7-day TTL for dynamic endpoint mappings
+
+**Expanded Trackable Domains (30+):**
+- Google Analytics: `google-analytics.com`, `analytics.google.com`
+- Google Ads: `googleadservices.com`, `googlesyndication.com`, `doubleclick.net`
+- Google Tag Manager: `googletagmanager.com`
+- Facebook/Meta: `facebook.com`, `connect.facebook.net`, `graph.facebook.com`
+- Microsoft: `clarity.ms`, `bing.com`
+- LinkedIn: `ads.linkedin.com`, `px.ads.linkedin.com`
+- Snapchat: `tr.snapchat.com`, `sc-static.net`
+- TikTok: `analytics.tiktok.com`, `tiktok.com`
+- Pinterest: `ct.pinterest.com`, `pinimg.com`
+- Twitter/X: `analytics.twitter.com`, `ads-twitter.com`
+- Analytics platforms: `segment.com`, `tiqcdn.com`, `cdn.mxpnl.com`
+
+**New Script Cache Features:**
+- `identifyScriptKey()` - Extracts container ID for per-container caching
+- `isContainerSpecificKey()` - Detects container-specific cache keys
+- `fetchAndCacheOnDemand()` - On-demand fetch with Full Script Proxy processing
+- Shorter TTL for on-demand scripts (12h vs 24h for scheduled)
+- Stale fallback (7 days) for resilience
+
+### Changed
+
+**Cache Key Format:**
+- Dynamic endpoints now use valid URL format: `https://cache.internal/dyn-endpoint/{uuid}`
+- URL index uses SHA-256 hash to avoid special characters in cache keys
+- Container-specific scripts use composite keys: `gtm:GTM-MJ7DW8H`
+
+**URL Extraction:**
+- `rewriteScriptUrls()` function added for URL replacement in scripts
+- Sort URLs by length descending to prevent partial match issues
+- Normalize URLs by removing query strings and fragments for deduplication
+
+**JSDoc Documentation:**
+- Converted all block comments to JSDoc format across codebase
+- Added comprehensive parameter and return type documentation
+- Improved code navigation with @fileoverview annotations
+
+### Removed
+
+**Transport URL Injection:**
+- Removed automatic `server_container_url` injection logic
+- `injectTransportUrl()` function removed from `script-cache.js`
+- Users must configure transport_url manually in GTM if needed
+
+**Deprecated Documentation:**
+- Removed `docs/shopify/examples/advanced/liquid/` module files
+- Consolidated into simpler example structure
+
+### Fixed
+
+**Cache API Compatibility:**
+- Fixed "Invalid URL" errors with Cache API by using fully-qualified URLs
+- URL index now uses SHA-256 hash instead of raw URL as key
+- Proper error handling for cache operations
+
+**Google Script Validation:**
+- GTM/gtag scripts without `?id=` parameter now return 404 instead of 400
+- Validation moved to routing layer for cleaner error handling
+
+### Security
+
+**DoS Protection:**
+- Container ID validation prevents cache pollution via fake IDs
+- Only allows valid patterns: `GTM-`, `G-`, `GT-`, `AW-`, `DC-` prefixes
+- 6-12 alphanumeric characters after prefix
+
+### Performance
+
+**On-Demand Caching:**
+- First request: ~500ms-1s (fetch + process + cache)
+- Subsequent requests: ~5ms (cache hit)
+- 12h TTL for on-demand, 7d stale fallback
+
+**URL Extraction:**
+- Efficient regex patterns for URL detection
+- Batch processing for multiple URLs
+- Deduplication prevents redundant endpoint creation
+
+### Migration Notes
+
+**From v3.1.0:**
+- No breaking changes for basic usage
+- `FULL_SCRIPT_PROXY_ENABLED` now controls the complete pipeline
+- If using manual transport_url injection, no changes needed
+- Container-specific scripts (GTM/gtag with `?id=`) now cached separately
+
+**Configuration:**
+```toml
+[vars]
+# Enable Full Script Proxy (default: true)
+FULL_SCRIPT_PROXY_ENABLED = "true"
+```
+
+### Contributors
+
+- Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+
 ## [3.1.0] - 2026-01-28
 
 ### Added
@@ -380,7 +527,8 @@ See [docs/MIGRATION-V3.md](docs/MIGRATION-V3.md) for complete migration guide.
 
 ---
 
-[Unreleased]: https://github.com/your-github-username/tracklay/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/your-github-username/tracklay/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/your-github-username/tracklay/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/your-github-username/tracklay/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/your-github-username/tracklay/compare/v2.0.0...v3.0.0
 [2.0.0]: https://github.com/your-github-username/tracklay/compare/v1.0.0...v2.0.0

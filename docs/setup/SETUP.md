@@ -22,7 +22,7 @@ Complete guide to integrate Tracklay with your Shopify store using Custom Pixels
 │  │  Google Tag Manager (Browser)                      │     │
 │  │  - Reads from window.dataLayer                     │     │
 │  │  - Fires tags (Meta Pixel, GA4, etc)               │     │
-│  │  - Uses proxy URLs for all scripts                 │     │
+│  │  - ALL URLs rewritten to /x/{uuid} (first-party)   │     │
 │  └────────────────┬───────────────────────────────────┘     │
 └────────────────────┼────────────────────────────────────────┘
                      │
@@ -30,17 +30,27 @@ Complete guide to integrate Tracklay with your Shopify store using Custom Pixels
         ┌────────────────────────────┐
         │  Cloudflare Worker Proxy   │
         │  (cdn.yourdomain.com)      │
-        │  - Proxies GTM script      │
-        │  - Proxies Meta Pixel      │
-        │  - Proxies tracking calls  │
+        │                            │
+        │  Full Script Proxy:        │
+        │  - Downloads GTM script    │
+        │  - Extracts all URLs       │
+        │  - Creates /x/{uuid} maps  │
+        │  - Rewrites script URLs    │
+        │  - Caches per-container    │
+        │                            │
+        │  Dynamic Endpoints:        │
+        │  - /x/{uuid} → original    │
+        │  - 7-day TTL cache         │
+        │  - DoS protection          │
         └────────────┬───────────────┘
                      │
                      ▼
         ┌────────────────────────────┐
         │  Tracking Providers        │
         │  - Google Analytics        │
+        │  - Google Ads              │
         │  - Meta Pixel              │
-        │  - etc.                    │
+        │  - 30+ supported domains   │
         └────────────────────────────┘
 ```
 
@@ -59,12 +69,15 @@ Create `.env` file:
 ALLOWED_ORIGINS=https://yourstore.myshopify.com,https://www.yourstore.com
 
 # Generate UUIDs for obfuscation (run: node -e "console.log(crypto.randomUUID())")
-ENDPOINTS_FACEBOOK=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-ENDPOINTS_GOOGLE=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-UUID_SECRET=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+OBFUSCATION_FB_UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+OBFUSCATION_GA_UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+OBFUSCATION_SECRET=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+# Full Script Proxy (default: true)
+FULL_SCRIPT_PROXY_ENABLED=true
 
 # Rate limiting
-RATE_LIMIT=100
+RATE_LIMIT_REQUESTS=100
 ```
 
 ### 1.2 Deploy Worker
@@ -85,8 +98,8 @@ In Cloudflare dashboard:
 Test the worker:
 
 ```bash
-curl https://cdn.yourstore.com/cdn/health
-# Should return: {"status":"ok","version":"2.0.0"}
+curl https://cdn.yourstore.com/health
+# Should return: {"status":"ok","version":"3.2.0"}
 ```
 
 ---
@@ -348,7 +361,7 @@ In Cloudflare:
 **Solutions**:
 
 1. Check proxy URLs in Meta Pixel tag settings
-2. Verify UUID is correct (`ENDPOINTS_FACEBOOK`)
+2. Verify UUID is correct (`OBFUSCATION_FB_UUID`)
 3. Check Network tab: requests should go to `cdn.yourstore.com/tr/...`
 4. Check Cloudflare logs for errors
 

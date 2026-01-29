@@ -255,18 +255,18 @@ RATE_LIMIT_WINDOW = "60000"
 # TTL du Cache (les scripts se mettent à jour automatiquement)
 CACHE_TTL = "3600"
 
-# IDs d'Offuscation UUID
-ENDPOINTS_FACEBOOK = "a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e"
-ENDPOINTS_GOOGLE = "b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f"
+# UUIDs d'Offuscation
+OBFUSCATION_FB_UUID = "a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e"
+OBFUSCATION_GA_UUID = "b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f"
 
-# Alias de Conteneur pour offuscation de requête
-CONTAINER_ALIASES = '{"abc123":"GTM-XXXXX","xyz789":"G-YYYYY"}'
-
-# Injecter automatiquement transport_url (recommandé)
-AUTO_INJECT_TRANSPORT_URL = "true"
+# Alias de Conteneur GTM pour offuscation de requête
+GTM_CONTAINER_ALIASES = '{"abc123":"GTM-XXXXX","xyz789":"G-YYYYY"}'
 
 # Proxy de Script Complet - proxifier TOUTES les URLs dans les scripts (recommandé)
-FULL_SCRIPT_PROXY = "true"
+FULL_SCRIPT_PROXY_ENABLED = "true"
+
+# En-têtes de debug (désactiver en production)
+DEBUG_HEADERS_ENABLED = "false"
 ```
 
 ### Avancé : Rotation d'UUID
@@ -275,8 +275,8 @@ Pour une sécurité maximale, activez la rotation automatique d'UUID :
 
 ```toml
 [vars]
-ENDPOINTS_UUID_ROTATION = "true"
-UUID_SALT_ROTATION = "604800000"  # 7 jours
+UUID_ROTATION_ENABLED = "true"
+UUID_ROTATION_INTERVAL_MS = "604800000"  # 7 jours
 ```
 
 Puis utilisez les Métafields Shopify + n8n pour maintenir votre thème à jour automatiquement.

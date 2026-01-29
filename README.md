@@ -2,7 +2,7 @@
 
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/analyzify/tracklay/releases)
+[![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)](https://github.com/analyzify/tracklay/releases)
 
 > **Bypass Safari ITP, Ad-Blockers (uBlock, AdBlock), and Browser Privacy Protections. Recover 40%+ Lost Conversion Data with First-Party Tracking.**
 
@@ -62,9 +62,9 @@ https://yourstore.com/cdn/f/b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f
 - ✅ **Same Path for Scripts & Endpoints**: No distinguishable patterns
 - ✅ **<5% Detection Rate**: Down from 90-100% with traditional proxies
 
-### Full Script Proxy (v3.1.0) - Complete Ad-Blocker Bypass
+### Full Script Proxy (v3.2.0) - Complete Ad-Blocker Bypass
 
-Tracklay now performs **deep URL extraction and replacement** inside tracking scripts. Every external URL found in GTM, gtag, or Facebook scripts is automatically proxied through unique UUID endpoints.
+Tracklay performs **deep URL extraction and replacement** inside tracking scripts. Every external URL found in GTM, gtag, or Facebook scripts is automatically proxied through unique UUID endpoints.
 
 ```javascript
 // Original GTM script contains:
@@ -82,17 +82,21 @@ Tracklay now performs **deep URL extraction and replacement** inside tracking sc
 1. **Extract**: Worker downloads the script and extracts ALL URLs using regex patterns
 2. **Generate**: Creates unique UUID for each external URL (`/x/{uuid}`)
 3. **Replace**: Substitutes all URLs in the script content with proxied versions
-4. **Route**: Client calls `/x/{uuid}` → Worker resolves → Proxies to original destination
+4. **Cache**: Processed scripts cached with SHA-256 change detection
+5. **Route**: Client calls `/x/{uuid}` → Worker resolves → Proxies to original destination
 
-**Supported Services**:
-- Google Analytics (`google-analytics.com`)
-- Google Ads (`googleadservices.com`)
-- Google Tag Manager (`googletagmanager.com`)
-- Facebook Pixel (`facebook.com`, `connect.facebook.net`)
-- Microsoft Clarity (`clarity.ms`)
-- Tealium (`tiqcdn.com`)
-- Segment (`segment.com`)
+**Supported Services (30+ domains)**:
+- **Google**: Analytics, Ads, Tag Manager, DoubleClick, Syndication
+- **Facebook/Meta**: Pixel, Connect, Graph API
+- **Microsoft**: Clarity, Bing Ads
+- **Social**: LinkedIn, Snapchat, TikTok, Pinterest, Twitter/X
+- **Analytics**: Segment, Tealium, Mixpanel, Hotjar, Heap
 - And any other URL found in scripts!
+
+**Container-Specific Caching (NEW)**:
+- GTM/gtag scripts cached per-container (`gtm:GTM-MJ7DW8H`)
+- On-demand fetch: First request fetches and caches, subsequent requests instant
+- DoS protection: Container IDs validated before cache creation
 
 **Benefits**:
 - 🚀 **98%+ Ad-Blocker Bypass**: Even uBlock Origin can't detect first-party requests
@@ -100,12 +104,13 @@ Tracklay now performs **deep URL extraction and replacement** inside tracking sc
 - 🔄 **Automatic**: Zero configuration required, works with any script
 - 💾 **Cached**: URL mappings cached for 7 days, minimal performance impact
 - 🛡️ **Rotating UUIDs**: URLs change weekly for maximum security
+- 📦 **Multi-Container**: Support multiple GTM containers with separate caches
 
 **Configuration**:
 ```toml
 [vars]
 # Enable full script proxy (default: true)
-FULL_SCRIPT_PROXY = "true"
+FULL_SCRIPT_PROXY_ENABLED = "true"
 ```
 
 ### Three Deployment Modes for Every Use Case
@@ -256,17 +261,17 @@ RATE_LIMIT_WINDOW = "60000"
 CACHE_TTL = "3600"
 
 # UUID Obfuscation IDs
-ENDPOINTS_FACEBOOK = "a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e"
-ENDPOINTS_GOOGLE = "b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f"
+OBFUSCATION_FB_UUID = "a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e"
+OBFUSCATION_GA_UUID = "b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f"
 
-# Container Aliases for query obfuscation
-CONTAINER_ALIASES = '{"abc123":"GTM-XXXXX","xyz789":"G-YYYYY"}'
-
-# Auto-inject transport_url (recommended)
-AUTO_INJECT_TRANSPORT_URL = "true"
+# GTM Container Aliases for query obfuscation
+GTM_CONTAINER_ALIASES = '{"abc123":"GTM-XXXXX","xyz789":"G-YYYYY"}'
 
 # Full Script Proxy - proxy ALL URLs inside scripts (recommended)
-FULL_SCRIPT_PROXY = "true"
+FULL_SCRIPT_PROXY_ENABLED = "true"
+
+# Debug headers (disable in production)
+DEBUG_HEADERS_ENABLED = "false"
 ```
 
 ### Advanced: UUID Rotation
@@ -275,8 +280,8 @@ For maximum security, enable automatic UUID rotation:
 
 ```toml
 [vars]
-ENDPOINTS_UUID_ROTATION = "true"
-UUID_SALT_ROTATION = "604800000"  # 7 days
+UUID_ROTATION_ENABLED = "true"
+UUID_ROTATION_INTERVAL_MS = "604800000"  # 7 days
 ```
 
 Then use Shopify Metafields + n8n to keep your theme updated automatically.
@@ -437,7 +442,9 @@ We welcome contributions! Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for gu
 
 ### Roadmap
 
-- [x] **Full Script Proxy** - Complete URL extraction and proxy (v3.1.0) ✅
+- [x] **Full Script Proxy** - Complete URL extraction and proxy (v3.2.0)
+- [x] **Container-Specific Caching** - Per-container GTM/gtag caching (v3.2.0)
+- [x] **On-Demand Fetch** - Fetch and cache on first request (v3.2.0)
 - [ ] TikTok Pixel integration
 - [ ] Built-in analytics dashboard
 - [ ] A/B testing framework for tracking methods

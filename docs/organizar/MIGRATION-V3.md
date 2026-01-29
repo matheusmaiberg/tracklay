@@ -149,7 +149,7 @@ This is a **BREAKING CHANGE** that requires updating your Shopify theme before u
 
 <!-- Or with container alias for query obfuscation (maximum security): -->
 <script async src="https://yourstore.com/cdn/g/b7e4d3f2?c=abc123"></script>
-✅ MAXIMUM OBFUSCATION (GTM-XXXXX hidden via CONTAINER_ALIASES)
+✅ MAXIMUM OBFUSCATION (GTM-XXXXX hidden via GTM_CONTAINER_ALIASES)
 
 <!-- GTM Iframe (noscript fallback) - not needed, GTM handles endpoint internally -->
 ```
@@ -200,7 +200,7 @@ This is a **BREAKING CHANGE** that requires updating your Shopify theme before u
     transport_url: 'https://yourstore.com/cdn/g/b7e4d3f2',
   });
 </script>
-✅ MAXIMUM OBFUSCATION (G-XXXXXXXXXX hidden via CONTAINER_ALIASES)
+✅ MAXIMUM OBFUSCATION (G-XXXXXXXXXX hidden via GTM_CONTAINER_ALIASES)
 ```
 
 ---
@@ -238,7 +238,7 @@ This will display your ultra-obfuscated URLs (no suffixes):
    UUID: b7e4d3f2
    - GTM Script: /cdn/g/b7e4d3f2?id=GTM-XXXXX
    - GTag Script: /cdn/g/b7e4d3f2?id=G-XXXXX
-   - With alias: /cdn/g/b7e4d3f2?c=abc123 (CONTAINER_ALIASES required)
+   - With alias: /cdn/g/b7e4d3f2?c=abc123 (GTM_CONTAINER_ALIASES required)
 
    Note: Same path for scripts and endpoints, differentiated by query params
 ```
@@ -252,8 +252,8 @@ cat .env | grep ENDPOINT_ID
 You'll see:
 
 ```
-ENDPOINTS_FACEBOOK=a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e
-ENDPOINTS_GOOGLE=b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f
+OBFUSCATION_FB_UUID=a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e
+OBFUSCATION_GA_UUID=b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f
 ```
 
 **Option C: Generate new UUIDs (recommended for fresh start)**
@@ -353,8 +353,8 @@ a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e
 node -e "console.log(require('crypto').randomUUID())"
 
 # Set in .env
-ENDPOINTS_FACEBOOK=your-uuid-here
-ENDPOINTS_GOOGLE=your-uuid-here
+OBFUSCATION_FB_UUID=your-uuid-here
+OBFUSCATION_GA_UUID=your-uuid-here
 
 # Deploy
 npm run deploy
@@ -375,7 +375,7 @@ npm run deploy
 
 ```bash
 # Rotation enabled (DEFAULT - RECOMMENDED)
-ENDPOINTS_UUID_ROTATION=false  # false = rotation ON
+UUID_ROTATION_ENABLED=false  # false = rotation ON
 
 # Shopify integration via Metafields + n8n/GitHub Actions
 # Fetches current UUIDs from /endpoints?token=SECRET every 6 days
@@ -384,7 +384,7 @@ ENDPOINTS_UUID_ROTATION=false  # false = rotation ON
 
 **Manual Rotation (if rotation disabled):**
 
-If you disabled automatic rotation (`ENDPOINTS_UUID_ROTATION=true`), you can manually rotate every 1-3 months:
+If you disabled automatic rotation (`UUID_ROTATION_ENABLED=true`), you can manually rotate every 1-3 months:
 
 ```bash
 # 1. Generate new UUIDs
@@ -392,8 +392,8 @@ FB_UUID=$(node -e "console.log(require('crypto').randomUUID())")
 GOOGLE_UUID=$(node -e "console.log(require('crypto').randomUUID())")
 
 # 2. Update Cloudflare Workers environment
-wrangler secret put ENDPOINTS_FACEBOOK
-wrangler secret put ENDPOINTS_GOOGLE
+wrangler secret put OBFUSCATION_FB_UUID
+wrangler secret put OBFUSCATION_GA_UUID
 
 # 3. Update Shopify theme with new UUIDs
 # 4. Deploy: npm run deploy
@@ -470,7 +470,7 @@ wrangler secret put ENDPOINTS_GOOGLE
 <!-- NOTE: NO -gtm.js suffix! Ultra-aggressive mode uses /cdn/g/{UUID}?id=... -->
 
 <!-- MAXIMUM SECURITY: Use container alias to hide GTM-XXXXX -->
-<!-- Requires CONTAINER_ALIASES='{"abc123":"GTM-XXXXX"}' in worker config -->
+<!-- Requires GTM_CONTAINER_ALIASES='{"abc123":"GTM-XXXXX"}' in worker config -->
 <!--
 <script>
   j.src='https://{{ shop.domain }}/cdn/g/{{ settings.google_uuid }}?c=abc123';
@@ -518,7 +518,7 @@ wrangler secret put ENDPOINTS_GOOGLE
 <!-- NOTE: transport_url also NO SUFFIX (.js removed) -->
 
 <!-- MAXIMUM SECURITY: Use container alias to hide G-XXXXXXXXXX -->
-<!-- Requires CONTAINER_ALIASES='{"def456":"G-XXXXXXXXXX"}' in worker config -->
+<!-- Requires GTM_CONTAINER_ALIASES='{"def456":"G-XXXXXXXXXX"}' in worker config -->
 <!--
 <script async src="https://{{ shop.domain }}/cdn/g/{{ settings.google_uuid }}?c=def456"></script>
 -->
@@ -585,8 +585,8 @@ wrangler secret put ENDPOINTS_GOOGLE
 **Solution:** Set UUIDs explicitly in Cloudflare Dashboard or .env:
 
 ```bash
-wrangler secret put ENDPOINTS_FACEBOOK
-wrangler secret put ENDPOINTS_GOOGLE
+wrangler secret put OBFUSCATION_FB_UUID
+wrangler secret put OBFUSCATION_GA_UUID
 ```
 
 ### Ad-blockers still blocking

@@ -60,7 +60,7 @@ chmod +x scripts/setup.sh
 
 The setup script will:
 
-- Generate UUID_SECRET automatically
+- Generate OBFUSCATION_SECRET automatically
 - Get your Cloudflare Account ID
 - Configure wrangler.toml
 - Prompt for GTM Server URL (optional)

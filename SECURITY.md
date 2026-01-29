@@ -53,14 +53,14 @@ When deploying this worker, follow these best practices:
 
 - **NEVER** commit `.env` files to git
 - **ALWAYS** use Cloudflare Worker secrets for sensitive data
-- **ROTATE** `UUID_SECRET` regularly (every 90 days recommended)
+- **ROTATE** `OBFUSCATION_SECRET` regularly (every 90 days recommended)
 
 ```bash
 # Generate strong secret
 openssl rand -base64 32 | tr -d "=+/" | cut -c1-32
 
 # Set in Cloudflare
-wrangler secret put UUID_SECRET
+wrangler secret put OBFUSCATION_SECRET
 ```
 
 ### 2. CORS Configuration

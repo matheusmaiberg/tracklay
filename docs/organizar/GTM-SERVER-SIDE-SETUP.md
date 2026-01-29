@@ -358,7 +358,7 @@ npm run deploy
 # theme.liquid → Update with new UUIDs
 
 # 3. Enable container aliases
-# wrangler.toml → CONTAINER_ALIASES="{\"abc\":\"GTM-XXX\"}"
+# wrangler.toml → GTM_CONTAINER_ALIASES="{\"abc\":\"GTM-XXX\"}"
 ```
 
 ---
@@ -434,9 +434,8 @@ window.addEventListener('beforeunload', flushQueue);
 ```toml
 [vars]
 GTM_SERVER_URL = "https://gtm.yourstore.com"
-AUTO_INJECT_TRANSPORT_URL = "true"
-ENDPOINTS_UUID_ROTATION = "false"  # Set true for rotation
-CONTAINER_ALIASES = '{"abc": "GTM-XXXXX", "xyz": "G-YYYYY"}'
+UUID_ROTATION_ENABLED = "false"  # Set true for rotation
+GTM_CONTAINER_ALIASES = '{"abc": "GTM-XXXXX", "xyz": "G-YYYYY"}'
 
 # Advanced settings
 RATE_LIMIT_REQUESTS = "200"

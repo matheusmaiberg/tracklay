@@ -169,7 +169,7 @@ document.head.appendChild(gtagScript);
 
 1. Create credential: `endpoints_secret`
 2. Type: Generic credential
-3. Value: Your `ENDPOINTS_SECRET` from Cloudflare Workers
+3. Value: Your `ENDPOINTS_API_TOKEN` from Cloudflare Workers
 4. Use in HTTP Request node: `{{ $credentials.endpoints_secret }}`
 
 ---
@@ -184,9 +184,9 @@ document.head.appendChild(gtagScript);
 
 ```bash
 # .env or Cloudflare Dashboard
-ENDPOINTS_UUID_ROTATION=true
-ENDPOINTS_FACEBOOK=a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e
-ENDPOINTS_GOOGLE=b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f
+UUID_ROTATION_ENABLED=false
+OBFUSCATION_FB_UUID=a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e
+OBFUSCATION_GA_UUID=b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f
 ```
 
 **Step 2: Hardcode in Theme**
@@ -208,10 +208,10 @@ node -e "console.log(require('crypto').randomUUID())"
 # Output: a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e
 
 # Update worker env vars
-wrangler secret put ENDPOINTS_FACEBOOK
+wrangler secret put OBFUSCATION_FB_UUID
 # Paste new UUID
 
-wrangler secret put ENDPOINTS_GOOGLE
+wrangler secret put OBFUSCATION_GA_UUID
 # Paste new UUID
 
 # Update theme code with new UUIDs
@@ -252,7 +252,7 @@ fetch('https://cdn.yourstore.com/endpoints?token=abc123...')
 **Ad-blockers can:**
 
 1. Inspect page source (View Source or DevTools)
-2. Extract `ENDPOINTS_SECRET` from fetch URL
+2. Extract `ENDPOINTS_API_TOKEN` from fetch URL
 3. Scrape `/endpoints?token=SECRET` themselves
 4. Blacklist all current and future UUIDs
 5. Monitor for new UUIDs and blacklist automatically
@@ -277,13 +277,13 @@ fetch('https://cdn.yourstore.com/endpoints?token=abc123...')
 
 ## 🔐 Security Best Practices
 
-1. ✅ **NEVER** commit `ENDPOINTS_SECRET` to git
+1. ✅ **NEVER** commit `ENDPOINTS_API_TOKEN` to git
 2. ✅ Use `wrangler secret put` for production secrets
 3. ✅ Rotate UUIDs regularly (automatic with Strategy 1)
 4. ✅ Monitor ad-blocker detection rates via analytics
 5. ✅ Use HTTPS only (Cloudflare provides free SSL)
 6. ✅ Limit `/endpoints` access to known IPs (optional Cloudflare WAF rule)
-7. ❌ **NEVER** expose `ENDPOINTS_SECRET` in theme Liquid code
+7. ❌ **NEVER** expose `ENDPOINTS_API_TOKEN` in theme Liquid code
 8. ❌ **NEVER** use Strategy 3 (client-side fetch) in production
 
 **Additional Security Layers:**
@@ -315,7 +315,7 @@ jobs:
       - name: Fetch Current UUIDs
         id: fetch
         run: |
-          RESPONSE=$(curl -s "https://cdn.yourstore.com/endpoints?token=${{ secrets.ENDPOINTS_SECRET }}")
+          RESPONSE=$(curl -s "https://cdn.yourstore.com/endpoints?token=${{ secrets.ENDPOINTS_API_TOKEN }}")
 
           FB_UUID=$(echo $RESPONSE | jq -r '.facebook.uuid')
           GOOGLE_UUID=$(echo $RESPONSE | jq -r '.google.uuid')
@@ -335,7 +335,7 @@ jobs:
 
 **Required GitHub Secrets:**
 
-1. `ENDPOINTS_SECRET` - Your Cloudflare Workers secret
+1. `ENDPOINTS_API_TOKEN` - Your Cloudflare Workers secret
 2. `SHOPIFY_STORE` - Your store handle (e.g., `yourstore`)
 3. `SHOPIFY_ADMIN_TOKEN` - Shopify Admin API token
 4. `SHOPIFY_SHOP_ID` - Your Shopify shop ID (numeric)
@@ -375,7 +375,7 @@ Result: `gid://shopify/Shop/12345678` → Use `12345678`
 
 **Solutions:**
 
-1. Verify `ENDPOINTS_SECRET` matches worker secret:
+1. Verify `ENDPOINTS_API_TOKEN` matches worker secret:
    ```bash
    wrangler secret list
    ```
@@ -391,7 +391,7 @@ Result: `gid://shopify/Shop/12345678` → Use `12345678`
 
 3. Ensure secret is set in Cloudflare:
    ```bash
-   wrangler secret put ENDPOINTS_SECRET
+   wrangler secret put ENDPOINTS_API_TOKEN
    ```
 
 ### UUIDs not rotating
@@ -400,14 +400,14 @@ Result: `gid://shopify/Shop/12345678` → Use `12345678`
 
 **Solutions:**
 
-1. Confirm `ENDPOINTS_UUID_ROTATION=false` (not `true`):
+1. Confirm `UUID_ROTATION_ENABLED=true` for rotation:
    ```bash
    # In Cloudflare Dashboard or .env
-   ENDPOINTS_UUID_ROTATION=false
+   UUID_ROTATION_ENABLED=true
    ```
-2. Check `UUID_SALT_ROTATION` interval (default: 604800000ms = 7 days):
+2. Check `UUID_ROTATION_INTERVAL_MS` interval (default: 604800000ms = 7 days):
    ```bash
-   # Verify in worker logs or /health endpoint (if DEBUG_HEADERS=true)
+   # Verify in worker logs or /health endpoint (if DEBUG_HEADERS_ENABLED=true)
    ```
 3. Clear Cloudflare cache:
    ```bash
@@ -427,10 +427,10 @@ Result: `gid://shopify/Shop/12345678` → Use `12345678`
    curl https://cdn.yourstore.com/cdn/fbevents.js
    curl https://cdn.yourstore.com/tr
    ```
-3. Check `DEBUG_HEADERS=false` in production:
+3. Check `DEBUG_HEADERS_ENABLED=false` in production:
    ```bash
    # In Cloudflare Dashboard → Workers → Settings → Variables
-   DEBUG_HEADERS=false
+   DEBUG_HEADERS_ENABLED=false
    ```
 4. Test with multiple ad-blockers:
    - uBlock Origin
