@@ -1,43 +1,40 @@
 /**
  * @fileoverview URL Extractor - Extracts URLs from JavaScript scripts
- * @module proxy/url-extractor
- * 
- * @description
- * Extracts all URLs from JavaScript script content using regex patterns.
- * Supports HTTPS, HTTP, and protocol-relative URLs.
- * Filters URLs to identify trackable/analytics domains.
- * 
- * @example
- * import { extractUrls, filterTrackableUrls, isTrackableUrl } from './url-extractor.js';
- * 
- * const scriptContent = await fetch('https://example.com/script.js').then(r => r.text());
- * const allUrls = extractUrls(scriptContent);
- * const trackableUrls = filterTrackableUrls(allUrls);
  */
 
 import { Logger } from '../core/logger.js';
 
-/**
- * List of known tracking/analytics domains
- * @constant {string[]}
- * @private
- */
 const TRACKABLE_DOMAINS = [
+  // Google Analytics & Tag Manager
   'google-analytics.com',
   'googletagmanager.com',
-  'googleadservices.com',
-  'facebook.com',
-  'connect.facebook.net',
-  'clarity.ms',
-  'tiqcdn.com',
-  'segment.com',
   'analytics.google.com',
   'ssl.google-analytics.com',
-  'www.google.com',
-  'google.com',
   'region1.google-analytics.com',
   'region2.google-analytics.com',
+
+  // Google Ads & Conversion
+  'googleadservices.com',
+  'googlesyndication.com',
+  'pagead2.googlesyndication.com',
+  'adservice.google.com',
+  'www.google.com',
+  'google.com',
+  'cct.google',
+
+  // Facebook/Meta
+  'facebook.com',
+  'connect.facebook.net',
+  'graph.facebook.com',
+
+  // Microsoft
+  'clarity.ms',
   'bat.bing.com',
+
+  // Other tracking platforms
+  'tiqcdn.com',
+  'segment.com',
+  'cdn.segment.com',
   's.yimg.com',
   'ct.pinterest.com',
   'snap.licdn.com',
@@ -46,28 +43,19 @@ const TRACKABLE_DOMAINS = [
   'cdn.heapanalytics.com',
   'cdn.mxpnl.com',
   'cdn.amplitude.com',
-  'cdn.segment.com',
-  'cdn.jsdelivr.net',
-  'unpkg.com',
-  'cdnjs.cloudflare.com'
+  'doubleclick.net',
+  'ads.linkedin.com',
+  'px.ads.linkedin.com',
+  'tr.snapchat.com',
+  'sc-static.net'
 ];
 
-/**
- * Regex patterns for URL extraction
- * @constant {RegExp[]}
- * @private
- */
 const URL_PATTERNS = [
   /https?:\/\/[^\s\'"\`\)]+/g,
   /\/\/[a-zA-Z0-9][-a-zA-Z0-9]*\.[^\s\'"\`\)]+/g,
   /\$\{[^}]*\}/g,
 ];
 
-/**
- * Patterns to ignore (false positives)
- * @constant {RegExp[]}
- * @private
- */
 const IGNORE_PATTERNS = [
   /^data:/i,
   /^blob:/i,
@@ -87,15 +75,8 @@ const IGNORE_PATTERNS = [
 ];
 
 /**
- * Extracts all URLs from JavaScript script content
- * 
- * @param {string} scriptContent - The JavaScript content to parse
- * @returns {string[]} Array of unique URLs found in the script
- * 
- * @example
- * const content = 'fetch("https://example.com/api")';
- * const urls = extractUrls(content);
- * console.log(urls); // ['https://example.com/api']
+ * @param {string} scriptContent
+ * @returns {string[]}
  */
 export function extractUrls(scriptContent) {
   if (!scriptContent || typeof scriptContent !== 'string') {
@@ -134,27 +115,14 @@ export function extractUrls(scriptContent) {
 }
 
 /**
- * Filters URLs to return only trackable/analytics domains
- * 
- * @param {string[]} urls - Array of URLs to filter
- * @returns {string[]} Filtered array containing only trackable URLs
- * 
- * @example
- * const urls = ['https://google-analytics.com/collect', 'https://example.com/image.png'];
- * const trackable = filterTrackableUrls(urls);
- * console.log(trackable); // ['https://google-analytics.com/collect']
+ * @param {string[]} urls
+ * @returns {string[]}
  */
 export const filterTrackableUrls = (urls) => urls?.filter(isTrackableUrl) ?? [];
 
 /**
- * Checks if a URL belongs to a known tracking/analytics domain
- * 
- * @param {string} url - The URL to check
- * @returns {boolean} True if the URL is from a trackable domain
- * 
- * @example
- * const isTrackable = isTrackableUrl('https://google-analytics.com/collect');
- * console.log(isTrackable); // true
+ * @param {string} url
+ * @returns {boolean}
  */
 export function isTrackableUrl(url) {
   if (!url || typeof url !== 'string') {
@@ -166,13 +134,6 @@ export function isTrackableUrl(url) {
   return TRACKABLE_DOMAINS.some(domain => lowerUrl.includes(domain.toLowerCase()));
 }
 
-/**
- * Cleans extracted URL by removing quotes, parentheses, and normalizing protocol
- * 
- * @param {string} url - Raw extracted URL string
- * @returns {string|null} Cleaned URL or null if invalid
- * @private
- */
 function cleanUrl(url) {
   if (!url) return null;
 
@@ -189,13 +150,6 @@ function cleanUrl(url) {
   return cleaned;
 }
 
-/**
- * Validates if a string is a valid URL for processing
- * 
- * @param {string} url - URL string to validate
- * @returns {boolean} True if URL is valid
- * @private
- */
 function isValidUrl(url) {
   if (!url || url.length < 10) {
     return false;
@@ -221,13 +175,6 @@ function isValidUrl(url) {
   return true;
 }
 
-/**
- * Extracts URLs from common concatenation patterns in tracking scripts
- * 
- * @param {string} content - Script content to analyze
- * @returns {string[]} Array of URLs found in concatenation patterns
- * @private
- */
 function extractConcatenationUrls(content) {
   const urls = [];
   
@@ -252,22 +199,51 @@ function extractConcatenationUrls(content) {
 }
 
 /**
- * Normalizes a URL for comparison by removing query params and hash
- * 
- * @param {string} url - Original URL
- * @returns {string} Normalized URL (protocol + hostname + pathname)
- * 
- * @example
- * const normalized = normalizeUrl('https://example.com/path?query=1#hash');
- * console.log(normalized); // 'https://example.com/path'
+ * @param {string} url
+ * @returns {string}
  */
 export function normalizeUrl(url) {
   if (!url) return '';
-  
+
   try {
     const { protocol, hostname, pathname } = new URL(url);
     return `${protocol}//${hostname}${pathname}`;
   } catch {
     return url.split('?')[0].split('#')[0];
   }
+}
+
+/**
+ * Rewrites URLs in script content with proxied paths
+ * @param {string} scriptContent - Original script content
+ * @param {Map<string, {uuid: string, proxyPath: string}>} urlMappings - URL to proxy info
+ * @returns {string} Script with URLs replaced
+ */
+export function rewriteScriptUrls(scriptContent, urlMappings) {
+  if (!scriptContent || !urlMappings || urlMappings.size === 0) {
+    return scriptContent;
+  }
+
+  let rewrittenContent = scriptContent;
+
+  // Sort by length descending (replace longer URLs first to avoid partial matches)
+  const sortedUrls = Array.from(urlMappings.keys())
+    .sort((a, b) => b.length - a.length);
+
+  for (const originalUrl of sortedUrls) {
+    const mapping = urlMappings.get(originalUrl);
+    if (!mapping?.proxyPath) continue;
+
+    const escapedUrl = originalUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = new RegExp(escapedUrl, 'g');
+    rewrittenContent = rewrittenContent.replace(pattern, mapping.proxyPath);
+  }
+
+  Logger.debug('Script URLs rewritten', {
+    urlsReplaced: urlMappings.size,
+    lengthBefore: scriptContent.length,
+    lengthAfter: rewrittenContent.length
+  });
+
+  return rewrittenContent;
 }
