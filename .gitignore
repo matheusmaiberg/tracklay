@@ -59,5 +59,7 @@ temp/
 # Old reference files (to be deleted)
 _OLD_REFERENCE/
 shopify-theme/
-
+_bmad*
+/_bmad*
 .github/*
+*claude*
