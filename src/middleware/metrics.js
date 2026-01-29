@@ -1,20 +1,14 @@
-// ============================================================
-// METRICS - METRICS COLLECTION
-// ============================================================
-// RESPONSIBILITY:
-// - Classe Metrics para coletar métricas
-// - record(request, response, duration) → void
-// - recordRequest(request) → void
-// - Pode ser expandido para Analytics Engine no futuro
+/**
+ * @fileoverview Metrics collection
+ */
 
 import { Logger } from '../core/logger.js';
 
 export class Metrics {
   /**
-   * Record request completion metrics
-   * @param {Request} request - The incoming request
-   * @param {Response} response - The outgoing response
-   * @param {number} duration - Request duration in milliseconds
+   * @param {Request} request
+   * @param {Response} response
+   * @param {number} duration
    */
   static record(request, response, duration) {
     const { pathname } = new URL(request.url);
@@ -29,8 +23,7 @@ export class Metrics {
   }
 
   /**
-   * Record incoming request
-   * @param {Request} request - The incoming request
+   * @param {Request} request
    */
   static recordRequest(request) {
     const { pathname } = new URL(request.url);

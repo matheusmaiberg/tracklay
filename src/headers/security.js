@@ -1,37 +1,16 @@
-// ============================================================
-// SECURITY HEADERS - ADD SECURITY HEADERS
-// ============================================================
-// RESPONSIBILITY:
-// - addSecurityHeaders(headers) → Headers (mutates)
-// - X-Robots-Tag: noindex, nofollow, noarchive
-// - Permissions-Policy: interest-cohort=()
-// - Content-Security-Policy: default-src 'self'
-// - X-Content-Type-Options: nosniff
-// - X-Request-Id: crypto.randomUUID()
-
-// FUNCTIONS:
-// - addSecurityHeaders(headers) → Headers
-// - getCSPDirectives() → string (helper, opcional)
+/**
+ * @fileoverview Security headers utility
+ */
 
 /**
- * Add security headers to response
- * @param {Headers} headers - Headers object to modify
- * @returns {Headers} The modified headers object
+ * @param {Headers} headers
+ * @returns {Headers}
  */
 export const addSecurityHeaders = (headers) => {
-  // Não indexar proxy endpoints
   headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
-
-  // Política de permissões restritiva
-  headers.set('Permissions-Policy', 'interest-cohort=()'); // Desabilitar FLoC
-
-  // CSP para scripts
+  headers.set('Permissions-Policy', 'interest-cohort=()');
   headers.set('Content-Security-Policy', "default-src 'self'");
-
-  // Prevenir MIME sniffing
   headers.set('X-Content-Type-Options', 'nosniff');
-
-  // Request ID para debugging
   headers.set('X-Request-Id', crypto.randomUUID());
 
   return headers;

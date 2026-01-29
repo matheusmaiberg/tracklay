@@ -1,23 +1,12 @@
-// ============================================================
-// SCHEDULED SCRIPT UPDATES - CLOUDFLARE CRON HANDLER
-// ============================================================
-// RESPONSIBILITY:
-// - Handler para Cloudflare Cron Triggers (scheduled events)
-// - Atualizar scripts de terceiros a cada 12 horas
-// - Verificar mudanças via SHA-256 hash
-// - Logar quando scripts são atualizados
-//
-// EXECUÇÃO: A cada 12 horas (00:00 e 12:00 UTC)
-// SCRIPTS: fbevents.js, gtm.js, gtag.js
-//
-// NOTA: Este handler é chamado pelo worker.js via scheduled() export
+/**
+ * @fileoverview Scheduled script updates - Cloudflare Cron handler
+ */
 
 import { Logger } from '../core/logger.js';
 import { fetchAndCompareScript, SCRIPT_URLS } from '../cache/script-cache.js';
 
 /**
- * Atualiza todos os scripts em cache
- * Chamado pelo Cloudflare Cron Trigger a cada 12 horas
+ * @returns {Promise<Object>}
  */
 export async function updateScripts() {
   Logger.info('Starting scheduled script cache update');
@@ -29,7 +18,6 @@ export async function updateScripts() {
     gtag: null
   };
 
-  // Atualizar cada script em paralelo
   const updatePromises = Object.entries(SCRIPT_URLS).map(async ([scriptKey, url]) => {
     try {
       const result = await fetchAndCompareScript(url, scriptKey);
@@ -59,7 +47,6 @@ export async function updateScripts() {
     }
   });
 
-  // Aguardar todas as atualizações
   const allResults = await Promise.all(updatePromises);
 
   const duration = Date.now() - startTime;

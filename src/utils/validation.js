@@ -1,13 +1,10 @@
-// ============================================================
-// VALIDATION - VALIDATION UTILITIES
-// ============================================================
-// RESPONSIBILITY:
-// - parsePositiveInt(value) → number|null - Parses a string to a positive integer
+/**
+ * @fileoverview Validation utilities - Input validation helpers
+ */
 
 /**
- * Parses a string to a positive integer
- * @param {string} value - Value to parse
- * @returns {number|null} Parsed positive integer or null if invalid
+ * @param {string} value
+ * @returns {number|null}
  */
 export function parsePositiveInt(value) {
   const parsed = parseInt(value, 10);

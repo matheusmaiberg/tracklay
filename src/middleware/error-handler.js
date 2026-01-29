@@ -1,15 +1,6 @@
-// ============================================================
-// ERROR HANDLER - GLOBAL ERROR HANDLING
-// ============================================================
-// RESPONSIBILITY:
-// - handleError(error, request) → Response
-// - Logar erro com contexto (stack, path, method)
-// - Retornar response apropriada (500, 502, etc)
-// - createErrorResponse(error, status) → Response
-
-// FUNCTIONS:
-// - handleError(error, request) → Response
-// - createErrorResponse(message, status) → Response
+/**
+ * @fileoverview Global error handling
+ */
 
 import { Logger } from '../core/logger.js';
 import { errorResponse } from '../utils/response.js';

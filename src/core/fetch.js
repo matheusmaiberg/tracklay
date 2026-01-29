@@ -1,19 +1,15 @@
-// ============================================================
-// FETCH - FETCH COM TIMEOUT E RETRY
-// ============================================================
-// RESPONSIBILITY:
-// - fetchWithTimeout(url, options) → Promise<Response>
-// - Usar AbortController para timeout
-// - Timeout configurável (default: 10s)
-// - Throw Error('Request timeout') se abortar
-// - Retry opcional (fetchWithRetry)
-
-// FUNCTIONS:
-// - fetchWithTimeout(url, options) → Promise<Response>
-// - fetchWithRetry(url, options, maxRetries) → Promise<Response> (opcional)
+/**
+ * @fileoverview Fetch - Fetch with timeout and retry
+ * @module core/fetch
+ */
 
 import { CONFIG } from '../config/index.js';
 
+/**
+ * @param {string} url - URL to fetch
+ * @param {Object} options - Fetch options
+ * @returns {Promise<Response>} Fetch response
+ */
 export async function fetchWithTimeout(url, options = {}) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);

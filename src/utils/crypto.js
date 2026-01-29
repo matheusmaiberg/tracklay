@@ -1,13 +1,10 @@
-// ============================================================
-// CRYPTO - CRYPTOGRAPHIC UTILITIES
-// ============================================================
-// RESPONSIBILITY:
-// - generateSHA256(text) → Promise<string> - Generates SHA-256 hash of a string
+/**
+ * @fileoverview Cryptographic utilities - SHA-256 hash generation
+ */
 
 /**
- * Generates SHA-256 hash of a string
- * @param {string} text - Text to hash
- * @returns {Promise<string>} Hex hash string
+ * @param {string} text
+ * @returns {Promise<string>}
  */
 export async function generateSHA256(text) {
   const encoder = new TextEncoder();

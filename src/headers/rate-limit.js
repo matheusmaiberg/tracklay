@@ -1,19 +1,16 @@
-// ============================================================
-// RATE LIMIT HEADERS - RATE LIMIT HEADERS UTILITY
-// ============================================================
-// RESPONSIBILITY:
-// - addRateLimitHeaders(headers, rateLimit) - Adds rate limit headers to a Headers object
+/**
+ * @fileoverview Rate limit headers utility
+ */
 
 import { HEADERS } from '../utils/constants.js';
 import { timestampToISO } from '../utils/time.js';
 
 /**
- * Adds rate limit headers to a Headers object
- * @param {Headers} headers - Headers object to modify
- * @param {Object} rateLimit - Rate limit info
- * @param {number} rateLimit.limit - Max requests allowed
- * @param {number} rateLimit.remaining - Remaining requests
- * @param {number} rateLimit.resetAt - Timestamp when limit resets
+ * @param {Headers} headers
+ * @param {Object} rateLimit
+ * @param {number} rateLimit.limit
+ * @param {number} rateLimit.remaining
+ * @param {number} rateLimit.resetAt
  */
 export const addRateLimitHeaders = (headers, rateLimit) => {
   if (!rateLimit) return;

@@ -1,20 +1,12 @@
-// ============================================================
-// RESPONSE FACTORY - SCRIPT CACHE RESPONSE BUILDERS
-// ============================================================
-// RESPONSIBILITY:
-// - Creates standardized Response objects for script cache
-// - Factory functions for script and hash responses
-// - Consistent headers and cache control
-//
-// FUNCTIONS:
-// - createScriptResponse() - Creates script Response with cache headers
-// - createHashResponse() - Creates hash Response
+/**
+ * @fileoverview Response factory - Creates standardized Response objects for script cache
+ * @module cache/response-factory
+ */
 
 import { CONFIG } from '../config/index.js';
 import { getCurrentDateISO } from '../utils/time.js';
 
 /**
- * Creates a script Response object with proper cache headers
  * @param {string} content - Script content
  * @param {string} scriptKey - Script identifier (fbevents, gtm, gtag)
  * @param {string} hash - SHA-256 hash of script
@@ -30,9 +22,6 @@ export function createScriptResponse(content, scriptKey, hash, { ttl, updateType
     'Cache-Control': `public, max-age=${ttl}`
   };
 
-  // Add debug headers only if DEBUG_HEADERS is enabled
-  // IMPORTANT: Debug headers expose internal implementation details
-  // and can be used for fingerprinting. Only enable in development.
   if (CONFIG.DEBUG_HEADERS) {
     headers['X-Script-Key'] = scriptKey;
     headers['X-Script-Hash'] = hash;
@@ -50,7 +39,6 @@ export function createScriptResponse(content, scriptKey, hash, { ttl, updateType
 }
 
 /**
- * Creates a hash Response object
  * @param {string} hash - SHA-256 hash string
  * @param {number} ttl - Cache TTL in seconds
  * @returns {Response} Hash Response object

@@ -1,19 +1,11 @@
-// ============================================================
-// OPTIONS HANDLER - CORS PREFLIGHT
-// ============================================================
-// RESPONSIBILITY:
-// - handleOptions(request) → Response
-// - Chamar buildCORSHeaders
-// - Chamar addSecurityHeaders
-// - Retornar Response(null, { status: 204, headers })
-
-// FUNCTIONS:
-// - handleOptions(request) → Response
+/**
+ * @fileoverview Options Handler - CORS preflight
+ * @module handlers/options
+ */
 
 import { buildFullHeaders } from '../factories/headers-factory.js';
 
 /**
- * Handle OPTIONS request (CORS preflight)
  * @param {Request} request
  * @param {Object} rateLimit - Rate limit info from worker
  * @returns {Response}

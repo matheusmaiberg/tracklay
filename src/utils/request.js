@@ -1,17 +1,10 @@
-// ============================================================
-// REQUEST UTILITIES
-// ============================================================
-// RESPONSIBILITY:
-// - Request parsing and manipulation helpers
-// - URL extraction and parsing
-//
-// FUNCTIONS:
-// - getParsedUrl() - Parses request URL into URL object
+/**
+ * @fileoverview Request utilities - Request parsing helpers
+ */
 
 /**
- * Parses request URL
- * @param {Request} request - Fetch API Request object
- * @returns {URL} Parsed URL object
+ * @param {Request} request
+ * @returns {URL}
  */
 export function getParsedUrl(request) {
   return new URL(request.url);

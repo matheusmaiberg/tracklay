@@ -1,17 +1,6 @@
 /**
  * @fileoverview Dynamic Proxy Handler - Generic proxy for dynamic UUID endpoints
  * @module handlers/dynamic-proxy
- * 
- * @description
- * Handles requests to /x/{uuid} routes.
- * Resolves UUID to target URL via DynamicEndpointsManager
- * and proxies to the original destination.
- * Supports GET, POST, and OPTIONS methods.
- * Never caches tracking endpoints.
- * 
- * @example
- * // Route: GET /x/a3f9c2e1b8d4e5f6
- * // Proxies to: https://google-analytics.com/collect
  */
 
 import { getTargetUrl } from '../cache/dynamic-endpoints.js';
@@ -21,16 +10,10 @@ import { HTTP_STATUS } from '../utils/constants.js';
 import { Logger } from '../core/logger.js';
 
 /**
- * Handles dynamic proxy requests
- * Receives a UUID and proxies to the associated original URL
- * 
  * @param {Request} request - Incoming request object
  * @param {string} uuid - UUID extracted from URL path
  * @param {Object} [rateLimit=null] - Rate limit information
  * @returns {Promise<Response>} Proxied response from target URL
- * 
- * @example
- * const response = await handleDynamicProxy(request, 'a3f9c2e1b8d4e5f6', rateLimitInfo);
  */
 export async function handleDynamicProxy(request, uuid, rateLimit = null) {
   try {
@@ -82,17 +65,8 @@ export async function handleDynamicProxy(request, uuid, rateLimit = null) {
 }
 
 /**
- * Extracts UUID from pathname /x/{uuid}
- * 
  * @param {string} pathname - Request pathname
  * @returns {string|null} UUID string or null if invalid format
- * 
- * @example
- * const uuid = extractUuidFromPath('/x/a3f9c2e1b8d4e5f6');
- * console.log(uuid); // 'a3f9c2e1b8d4e5f6'
- * 
- * const invalid = extractUuidFromPath('/x/short');
- * console.log(invalid); // null
  */
 export function extractUuidFromPath(pathname) {
   if (!pathname?.startsWith('/x/')) {
