@@ -401,11 +401,3 @@ Tracklay 源于挫折。作为电商开发者，我们眼睁睁看着客户在 i
 MIT 许可证 - 详见 [LICENSE](LICENSE)。
 
 **如果这帮助您恢复丢失的转化，请给这个仓库 Star ⭐！**
-
----
-
-## 🚀 立即部署
-
-[![部署到 Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/analyzify/tracklay)
-
-**[📖 查看 AGENTS.md 了解详细设置和架构](AGENTS.md)**

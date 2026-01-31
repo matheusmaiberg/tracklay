@@ -390,11 +390,3 @@ Nous accueillons les contributions ! Veuillez consulter [`CONTRIBUTING.md`](CONT
 Licence MIT - consultez [LICENSE](LICENSE) pour les détails.
 
 **Donnez une ⭐ à ce dépôt si cela vous aide à récupérer les conversions perdues !**
-
----
-
-## 🚀 Déployez Maintenant
-
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/analyzify/tracklay)
-
-**[📖 Consultez AGENTS.md pour la configuration détaillée et l'architecture](AGENTS.md)**

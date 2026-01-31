@@ -401,11 +401,3 @@ Contribuições são bem-vindas! Por favor veja [`CONTRIBUTING.md`](CONTRIBUTING
 Licença MIT - veja [LICENSE](LICENSE) para detalhes.
 
 **Dê ⭐ neste repo se ele ajudar você a recuperar conversões perdidas!**
-
----
-
-## 🚀 Deploy Agora
-
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/analyzify/tracklay)
-
-**[📖 Veja AGENTS.md para setup detalhado e arquitetura](AGENTS.md)**

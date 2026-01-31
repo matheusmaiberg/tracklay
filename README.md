@@ -484,12 +484,3 @@ We welcome contributions! Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for gu
 MIT License - see [LICENSE](LICENSE) for details.
 
 **Star ⭐ this repo if it helps you recover lost conversions!**
-
----
-
-## 🚀 Deploy Now
-
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/analyzify/tracklay)
-
-**[📖 See AGENTS.md for detailed setup and architecture](AGENTS.md)**
-# Build Cache Reset

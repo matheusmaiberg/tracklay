@@ -397,11 +397,3 @@ Esta es la solución de rastreo que deseábamos haber tenido. Ahora es tuya.
 Licencia MIT - consulta [LICENSE](LICENSE) para obtener detalles.
 
 **¡Haz clic en ⭐ este repositorio si te ayuda a recuperar conversiones perdidas!**
-
----
-
-## 🚀 Implementa Ahora
-
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/analyzify/tracklay)
-
-**[📖 Consulta AGENTS.md para obtener configuración detallada y arquitectura](AGENTS.md)**
