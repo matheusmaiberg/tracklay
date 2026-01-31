@@ -101,80 +101,70 @@ In 2024-2025 **gehen 60-70% Ihrer Konversionsdaten verloren** durch moderne Brow
 - Shopify-Store (jeden Plan)
 - Git
 
-### Schritt 1: Installieren und Konfigurieren
+### Schritt 1: Installieren & Konfigurieren
 
 ```bash
 # Repository klonen
-git clone https://github.com/analyzify/tracklay.git
+git clone https://github.com/matheusmaiberg/tracklay.git
 cd tracklay
 
 # Abhängigkeiten installieren
 npm install
-
-# Interaktives Setup ausführen (generiert UUIDs, konfiguriert Secrets)
-chmod +x scripts/setup.sh
-./scripts/setup.sh
 ```
 
-Das Setup-Script wird:
-- ✅ Kryptographisch sichere UUIDs für Endpoints generieren
-- ✅ `.dev.vars` Datei für lokale Entwicklung erstellen
-- ✅ GTM-Server-URL abfragen (optional)
-- ✅ Auto-Injection-Einstellungen konfigurieren
+Konfigurieren Sie Ihre Umgebung:
 
-### Schritt 2: Bei Cloudflare bereitstellen
+1. Kopieren Sie `.env.example` zu `.env` und füllen Sie Ihre Werte aus
+2. Generieren Sie UUIDs: `node -e "console.log(crypto.randomUUID())"`
+3. Konfigurieren Sie Secrets über Wrangler
+
+📖 **Vollständige Anleitung**: [docs/setup/SETUP.md](docs/setup/SETUP.md)
+
+### Schritt 2: Auf Cloudflare deployen
 
 ```bash
 # Bei Cloudflare anmelden
 npm run login
 
-# Worker bereitstellen (erstes Mal)
+# Worker deployen
 npm run deploy
 
-# Obfuskierte URLs abrufen
-npm run urls
+# Deployment testen
+curl https://cdn.yourstore.com/health
+# Sollte zurückgeben: {"status":"ok","version":"1.0.0"}
 ```
 
-Ausgabe:
+Ihre verschleierten Endpoints sind verfügbar unter:
 ```
-╔════════════════════════════════════════════════════════════╗
-║  TRACKLAY - OBFUSKIERTE TRACKING-URLS                      ║
-║  VERSION 3.0.0                                             ║
-╚════════════════════════════════════════════════════════════╝
-
-Facebook Pixel: https://ihreshop.com/cdn/f/a8f3c2e1-b8d4-4f5a-8c3e-2d1f9b4a7c6e
-Google/GTM:     https://ihreshop.com/cdn/g/b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f
+GTM:    https://cdn.yourstore.com/cdn/g/{IHRE_GA_UUID}?id=GTM-XXXXXX
+GA4:    https://cdn.yourstore.com/cdn/g/{IHRE_GA_UUID}?id=G-XXXXXXXX
+Meta:   https://cdn.yourstore.com/cdn/f/{IHRE_FB_UUID}
 ```
 
-### Schritt 3: Zu Shopify hinzufügen
+### Schritt 3: Shopify-Integration
 
-#### Option A: Web Pixel API (Empfohlen, keine Theme-Bearbeitung)
+Tracklay verwendet **Custom Pixel + GTM** Architektur:
 
-```bash
-# Shopify-App mit Web-Pixel-Erweiterung erstellen
-cd ihre-shopify-app
-npm run generate extension
-# Wählen Sie: Web Pixel
-
-# Tracking-Code aus docs/shopify/examples/advanced/ kopieren
+```
+┌─────────────────┐     ┌──────────────┐     ┌─────────────────┐
+│  Custom Pixel   │────▶│  GTM (dataLayer) │──▶│ Tracklay Proxy  │
+│  (Shopify Sandbox)   │     └──────────────┘     └─────────────────┘
+└─────────────────┘                                     │
+                                                        ▼
+                                               ┌─────────────────┐
+                                               │  Meta, GA4, etc │
+                                               └─────────────────┘
 ```
 
-#### Option B: Shopify Theme (Legacy aber effektiv)
+**Installationsschritte:**
 
-Bearbeiten Sie `layout/theme.liquid`:
+1. **Tracklay Worker deployen** (Schritt 2)
+2. **Custom Pixel installieren** in Shopify Admin → Einstellungen → Kundenereignisse
+   - Code kopieren von: `docs/shopify/examples/advanced/custom-pixel/pixel.js`
+   - GTM ID und Proxy-Domain konfigurieren
+3. **GTM konfigurieren** mit Proxy-URLs
 
-```html
-<!-- Traditionelles GTM/GA4 ersetzen -->
-<script>
-  // Ultra-obfuskiert, werbeblocker-sicher
-  (function(w,d,s,o,f,js,fjs){
-    w['GoogleAnalyticsObject']=o;w[o]=w[o]||function(){
-    (w[o].q=w[o].q||[]).push(arguments)},w[o].l=1*new Date();
-    js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
-    js.src=f;js.async=1;fjs.parentNode.insertBefore(js,fjs);
-  })(window,document,'script','ga','IHRE-UUID.js?id=G-XXXXXXXXXX');
-</script>
-```
+📖 **Detaillierte Anleitung**: [docs/setup/SETUP.md](docs/setup/SETUP.md)
 
 ### Schritt 4: Überprüfen Sie, dass es funktioniert
 

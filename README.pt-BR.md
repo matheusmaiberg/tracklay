@@ -104,77 +104,69 @@ Em 2024-2025, **60-70% dos seus dados de conversão estão sendo perdidos** devi
 ### Passo 1: Instalar & Configurar
 
 ```bash
-# Clonar repositório
-git clone https://github.com/analyzify/tracklay.git
+# Clone o repositório
+git clone https://github.com/matheusmaiberg/tracklay.git
 cd tracklay
 
-# Instalar dependências
+# Instale as dependências
 npm install
-
-# Executar setup interativo (gera UUIDs, configura secrets)
-chmod +x scripts/setup.sh
-./scripts/setup.sh
 ```
 
-O script de setup vai:
-- ✅ Gerar UUIDs criptograficamente seguros para endpoints
-- ✅ Criar arquivo `.dev.vars` para desenvolvimento local
-- ✅ Solicitar URL do GTM Server (opcional)
-- ✅ Configurar configurações de injeção automática
+Configure seu ambiente:
 
-### Passo 2: Deploy para Cloudflare
+1. Copie `.env.example` para `.env` e preencha seus valores
+2. Gere UUIDs: `node -e "console.log(crypto.randomUUID())"`
+3. Configure os secrets via Wrangler
+
+📖 **Guia completo de setup**: [docs/setup/SETUP.md](docs/setup/SETUP.md)
+
+### Passo 2: Deploy no Cloudflare
 
 ```bash
 # Login no Cloudflare
 npm run login
 
-# Deploy worker (primeira vez)
+# Deploy do worker
 npm run deploy
 
-# Obter suas URLs ofuscadas
-npm run urls
+# Testar deploy
+curl https://cdn.yourstore.com/health
+# Deve retornar: {"status":"ok","version":"1.0.0"}
 ```
 
-Saída:
+Seus endpoints ofuscados estarão disponíveis em:
 ```
-╔════════════════════════════════════════════════════════════╗
-║  TRACKLAY - OBFUSCATED TRACKING URLS                       ║
-║  VERSION 3.0.0                                             ║
-╚════════════════════════════════════════════════════════════╝
-
-Facebook Pixel: https://sualoja.com/cdn/f/a8f3c2e1-b8d4-4f5a-8c3e-2d1f9b4a7c6e
-Google/GTM:     https://sualoja.com/cdn/g/b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f
+GTM:    https://cdn.yourstore.com/cdn/g/{SEU_GA_UUID}?id=GTM-XXXXXX
+GA4:    https://cdn.yourstore.com/cdn/g/{SEU_GA_UUID}?id=G-XXXXXXXX
+Meta:   https://cdn.yourstore.com/cdn/f/{SEU_FB_UUID}
 ```
 
-### Passo 3: Adicionar ao Shopify
+### Passo 3: Integração Shopify
 
-#### Opção A: Web Pixel API (Recomendado, sem editar tema)
+O Tracklay usa arquitetura **Custom Pixel + GTM** para máxima compatibilidade:
 
-```bash
-# Criar app Shopify com extensão web-pixel
-cd sua-app-shopify
-npm run generate extension
-# Escolher: Web Pixel
-
-# Copiar código de rastreamento de docs/shopify/examples/web-pixel-advanced-tracking.js
+```
+┌─────────────────┐     ┌──────────────┐     ┌─────────────────┐
+│  Custom Pixel   │────▶│  GTM (dataLayer) │──▶│ Tracklay Proxy  │
+│  (Shopify Sandbox)   │     └──────────────┘     └─────────────────┘
+└─────────────────┘                                     │
+                                                        ▼
+                                               ┌─────────────────┐
+                                               │  Meta, GA4, etc │
+                                               └─────────────────┘
 ```
 
-#### Opção B: Tema Shopify (Legado mas eficaz)
+**Passos de instalação:**
 
-Editar `layout/theme.liquid`:
+1. **Deploy do Tracklay Worker** (Passo 2 acima)
+2. **Instalar Custom Pixel** no Admin Shopify → Configurações → Eventos do cliente
+   - Copie o código de: `docs/shopify/examples/advanced/custom-pixel/pixel.js`
+   - Configure seu GTM ID e domínio do proxy
+3. **Configurar GTM** com suas URLs do proxy
+   - Atualize a tag Meta Pixel para usar seu endpoint `/cdn/f/{UUID}`
+   - Configure `transport_url` no GA4 para seu domínio proxy
 
-```html
-<!-- Substituir GTM/GA4 tradicional -->
-<script>
-  // Ultra-ofuscado, à prova de bloq. de anúncios
-  (function(w,d,s,o,f,js,fjs){
-    w['GoogleAnalyticsObject']=o;w[o]=w[o]||function(){
-    (w[o].q=w[o].q||[]).push(arguments)},w[o].l=1*new Date();
-    js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
-    js.src=f;js.async=1;fjs.parentNode.insertBefore(js,fjs);
-  })(window,document,'script','ga','SEU-UUID.js?id=G-XXXXXXXXXX');
-</script>
-```
+📖 **Guia detalhado**: [docs/setup/SETUP.md](docs/setup/SETUP.md)
 
 ### Passo 4: Verificar Se Funciona
 

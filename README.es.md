@@ -104,77 +104,67 @@ En 2024-2025, **60-70% de tus datos de conversión se están perdiendo** debido 
 ### Paso 1: Instalar y Configurar
 
 ```bash
-# Clonar repositorio
-git clone https://github.com/analyzify/tracklay.git
+# Clonar el repositorio
+git clone https://github.com/matheusmaiberg/tracklay.git
 cd tracklay
 
 # Instalar dependencias
 npm install
-
-# Ejecutar configuración interactiva (genera UUIDs, configura secretos)
-chmod +x scripts/setup.sh
-./scripts/setup.sh
 ```
 
-El script de configuración hará:
-- ✅ Generar UUIDs criptográficamente seguros para endpoints
-- ✅ Crear archivo `.dev.vars` para desarrollo local
-- ✅ Solicitar URL de GTM Server (opcional)
-- ✅ Configurar ajustes de inyección automática
+Configura tu entorno:
 
-### Paso 2: Implementar en Cloudflare
+1. Copia `.env.example` a `.env` y completa tus valores
+2. Genera UUIDs: `node -e "console.log(crypto.randomUUID())"`
+3. Configura los secrets vía Wrangler
+
+📖 **Guía completa**: [docs/setup/SETUP.md](docs/setup/SETUP.md)
+
+### Paso 2: Deploy en Cloudflare
 
 ```bash
-# Iniciar sesión en Cloudflare
+# Login en Cloudflare
 npm run login
 
-# Implementar worker (primera vez)
+# Deploy del worker
 npm run deploy
 
-# Obtener tus URLs ofuscadas
-npm run urls
+# Testear deploy
+curl https://cdn.yourstore.com/health
+# Debe retornar: {"status":"ok","version":"1.0.0"}
 ```
 
-Salida:
+Tus endpoints ofuscados estarán disponibles en:
 ```
-╔════════════════════════════════════════════════════════════╗
-║  TRACKLAY - URLS DE RASTREO OFUSCADAS                      ║
-║  VERSION 3.0.0                                             ║
-╚════════════════════════════════════════════════════════════╝
-
-Pixel de Facebook: https://tutienda.com/cdn/f/a8f3c2e1-b8d4-4f5a-8c3e-2d1f9b4a7c6e
-Google/GTM:        https://tutienda.com/cdn/g/b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f
+GTM:    https://cdn.yourstore.com/cdn/g/{TU_GA_UUID}?id=GTM-XXXXXX
+GA4:    https://cdn.yourstore.com/cdn/g/{TU_GA_UUID}?id=G-XXXXXXXX
+Meta:   https://cdn.yourstore.com/cdn/f/{TU_FB_UUID}
 ```
 
-### Paso 3: Agregar a Shopify
+### Paso 3: Integración Shopify
 
-#### Opción A: API Pixel Web (Recomendado, sin edición de tema)
+Tracklay usa arquitectura **Custom Pixel + GTM**:
 
-```bash
-# Crear aplicación Shopify con extensión web-pixel
-cd tu-aplicacion-shopify
-npm run generate extension
-# Elige: Web Pixel
-
-# Copiar código de rastreo de docs/shopify/examples/advanced/
+```
+┌─────────────────┐     ┌──────────────┐     ┌─────────────────┐
+│  Custom Pixel   │────▶│  GTM (dataLayer) │──▶│ Tracklay Proxy  │
+│  (Shopify Sandbox)   │     └──────────────┘     └─────────────────┘
+└─────────────────┘                                     │
+                                                        ▼
+                                               ┌─────────────────┐
+                                               │  Meta, GA4, etc │
+                                               └─────────────────┘
 ```
 
-#### Opción B: Tema Shopify (Heredado pero efectivo)
+**Pasos de instalación:**
 
-Edita `layout/theme.liquid`:
+1. **Deploy de Tracklay Worker** (Paso 2)
+2. **Instalar Custom Pixel** en Admin Shopify → Configuración → Eventos de cliente
+   - Copiar código de: `docs/shopify/examples/advanced/custom-pixel/pixel.js`
+   - Configurar GTM ID y dominio proxy
+3. **Configurar GTM** con URLs del proxy
 
-```html
-<!-- Reemplazar GTM/GA4 tradicional -->
-<script>
-  // Ofuscado ultraagresivamente, a prueba de bloqueadores
-  (function(w,d,s,o,f,js,fjs){
-    w['GoogleAnalyticsObject']=o;w[o]=w[o]||function(){
-    (w[o].q=w[o].q||[]).push(arguments)},w[o].l=1*new Date();
-    js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
-    js.src=f;js.async=1;fjs.parentNode.insertBefore(js,fjs);
-  })(window,document,'script','ga','TU-UUID.js?id=G-XXXXXXXXXX');
-</script>
-```
+📖 **Guía detallada**: [docs/setup/SETUP.md](docs/setup/SETUP.md)
 
 ### Paso 4: Verificar que Funcione
 
@@ -303,9 +293,7 @@ npm run deploy
 curl https://tu-worker.workers.dev/health
 # Debería devolver: {"status":"OK","version":"1.0.0"}
 
-# 3. Verificar rutas
-npm run urls
-# Confirmar que las URLs coincidan con tu wrangler.toml
+# 3. Verificar configuración en wrangler.toml
 ```
 
 ### Errores CORS

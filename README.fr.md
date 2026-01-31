@@ -105,76 +105,57 @@ En 2024-2025, **60-70% de vos données de conversion sont perdues** en raison de
 
 ```bash
 # Cloner le dépôt
-git clone https://github.com/analyzify/tracklay.git
+git clone https://github.com/matheusmaiberg/tracklay.git
 cd tracklay
 
 # Installer les dépendances
 npm install
-
-# Exécuter la configuration interactive (génère les UUIDs, configure les secrets)
-chmod +x scripts/setup.sh
-./scripts/setup.sh
 ```
 
-Le script de configuration va :
-- ✅ Générer des UUIDs cryptographiquement sécurisés pour les endpoints
-- ✅ Créer le fichier `.dev.vars` pour le développement local
-- ✅ Demander l'URL du serveur GTM (optionnel)
-- ✅ Configurer les paramètres d'injection automatique
+Configurez votre environnement :
+
+1. Copiez `.env.example` vers `.env` et remplissez vos valeurs
+2. Générez des UUIDs : `node -e "console.log(crypto.randomUUID())"`
+3. Configurez les secrets via Wrangler
+
+📖 **Guide complet** : [docs/setup/SETUP.md](docs/setup/SETUP.md)
 
 ### Étape 2 : Déployer sur Cloudflare
 
 ```bash
-# Se connecter à Cloudflare
+# Login Cloudflare
 npm run login
 
-# Déployer le worker (première fois)
+# Déployer le worker
 npm run deploy
 
-# Obtenir vos URLs offusquées
-npm run urls
+# Tester le déploiement
+curl https://cdn.yourstore.com/health
+# Doit retourner : {"status":"ok","version":"1.0.0"}
 ```
 
-Sortie :
+Vos endpoints obfusqués seront disponibles à :
 ```
-╔════════════════════════════════════════════════════════════╗
-║  TRACKLAY - URLS DE SUIVI OFFUSQUÉES                       ║
-║  VERSION 3.0.0                                             ║
-╚════════════════════════════════════════════════════════════╝
-
-Pixel Facebook: https://votreboutique.com/cdn/f/a8f3c2e1-b8d4-4f5a-8c3e-2d1f9b4a7c6e
-Google/GTM:     https://votreboutique.com/cdn/g/b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f
+GTM:    https://cdn.yourstore.com/cdn/g/{VOTRE_GA_UUID}?id=GTM-XXXXXX
+GA4:    https://cdn.yourstore.com/cdn/g/{VOTRE_GA_UUID}?id=G-XXXXXXXX
+Meta:   https://cdn.yourstore.com/cdn/f/{VOTRE_FB_UUID}
 ```
 
-### Étape 3 : Ajouter à Shopify
+### Étape 3 : Intégration Shopify
 
-#### Option A : API Pixel Web (Recommandé, pas de modification de thème)
+Tracklay utilise l'architecture **Custom Pixel + GTM** :
 
-```bash
-# Créer une application Shopify avec extension web-pixel
-cd votre-app-shopify
-npm run generate extension
-# Choisir : Web Pixel
+(diagramme ASCII comme dans README.md)
 
-# Copier le code de suivi de docs/shopify/examples/advanced/
-```
+**Étapes d'installation :**
 
-#### Option B : Thème Shopify (Hérité mais efficace)
+1. **Déployer Tracklay Worker** (Étape 2)
+2. **Installer Custom Pixel** dans Admin Shopify → Paramètres → Événements client
+   - Copier le code depuis : `docs/shopify/examples/advanced/custom-pixel/pixel.js`
+   - Configurer GTM ID et domaine proxy
+3. **Configurer GTM** avec vos URLs proxy
 
-Modifiez `layout/theme.liquid` :
-
-```html
-<!-- Remplacer GTM/GA4 traditionnel -->
-<script>
-  // Offusqué de façon ultraagressive, à l'épreuve des bloqueurs
-  (function(w,d,s,o,f,js,fjs){
-    w['GoogleAnalyticsObject']=o;w[o]=w[o]||function(){
-    (w[o].q=w[o].q||[]).push(arguments)},w[o].l=1*new Date();
-    js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
-    js.src=f;js.async=1;fjs.parentNode.insertBefore(js,fjs);
-  })(window,document,'script','ga','VOTRE-UUID.js?id=G-XXXXXXXXXX');
-</script>
-```
+📖 **Guide détaillé** : [docs/setup/SETUP.md](docs/setup/SETUP.md)
 
 ### Étape 4 : Vérifier que ça Fonctionne
 

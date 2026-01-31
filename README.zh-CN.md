@@ -105,22 +105,20 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/analyzify/tracklay.git
+git clone https://github.com/matheusmaiberg/tracklay.git
 cd tracklay
 
 # 安装依赖
 npm install
-
-# 运行交互式设置（生成 UUID，配置密钥）
-chmod +x scripts/setup.sh
-./scripts/setup.sh
 ```
 
-设置脚本将：
-- ✅ 为端点生成加密安全的 UUID
-- ✅ 为本地开发创建 `.dev.vars` 文件
-- ✅ 提示输入 GTM 服务器 URL（可选）
-- ✅ 配置自动注入设置
+配置您的环境：
+
+1. 复制 `.env.example` 到 `.env` 并填写您的值
+2. 生成 UUID：`node -e "console.log(crypto.randomUUID())"`
+3. 通过 Wrangler 配置 secrets
+
+📖 **完整设置指南**： [docs/setup/SETUP.md](docs/setup/SETUP.md)
 
 ### 步骤 2：部署到 Cloudflare
 
@@ -128,53 +126,45 @@ chmod +x scripts/setup.sh
 # 登录 Cloudflare
 npm run login
 
-# 部署 Worker（首次）
+# 部署 worker
 npm run deploy
 
-# 获取您的混淆 URL
-npm run urls
+# 测试部署
+curl https://cdn.yourstore.com/health
+# 应返回：{"status":"ok","version":"1.0.0"}
 ```
 
-输出：
+您的混淆端点将位于：
 ```
-╔════════════════════════════════════════════════════════════╗
-║  TRACKLAY - 混淆追踪 URL                                    ║
-║  版本 3.0.0                                                 ║
-╚════════════════════════════════════════════════════════════╝
-
-Facebook Pixel: https://yourstore.com/cdn/f/a8f3c2e1-b8d4-4f5a-8c3e-2d1f9b4a7c6e
-Google/GTM:     https://yourstore.com/cdn/g/b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f
+GTM:    https://cdn.yourstore.com/cdn/g/{YOUR_GA_UUID}?id=GTM-XXXXXX
+GA4:    https://cdn.yourstore.com/cdn/g/{YOUR_GA_UUID}?id=G-XXXXXXXX
+Meta:   https://cdn.yourstore.com/cdn/f/{YOUR_FB_UUID}
 ```
 
-### 步骤 3：添加到 Shopify
+### 步骤 3：Shopify 集成
 
-#### 选项 A：Web Pixel API（推荐，无需编辑主题）
+Tracklay 使用 **Custom Pixel + GTM** 架构：
 
-```bash
-# 使用 web-pixel 扩展创建 Shopify 应用
-cd your-shopify-app
-npm run generate extension
-# 选择：Web Pixel
-
-# 从 docs/shopify/examples/web-pixel-advanced-tracking.js 复制追踪代码
+```
+┌─────────────────┐     ┌──────────────┐     ┌─────────────────┐
+│  Custom Pixel   │────▶│  GTM (dataLayer) │──▶│ Tracklay Proxy  │
+│  (Shopify Sandbox)   │     └──────────────┘     └─────────────────┘
+└─────────────────┘                                     │
+                                                        ▼
+                                               ┌─────────────────┐
+                                               │  Meta, GA4, etc │
+                                               └─────────────────┘
 ```
 
-#### 选项 B：Shopify 主题（传统但有效）
+**安装步骤：**
 
-编辑 `layout/theme.liquid`：
+1. **部署 Tracklay Worker**（步骤 2）
+2. **安装 Custom Pixel** 在 Shopify 后台 → 设置 → 客户事件
+   - 从以下位置复制代码：`docs/shopify/examples/advanced/custom-pixel/pixel.js`
+   - 配置 GTM ID 和代理域名
+3. **配置 GTM** 使用代理 URL
 
-```html
-<!-- 替换传统 GTM/GA4 -->
-<script>
-  // 超级混淆，防广告拦截
-  (function(w,d,s,o,f,js,fjs){
-    w['GoogleAnalyticsObject']=o;w[o]=w[o]||function(){
-    (w[o].q=w[o].q||[]).push(arguments)},w[o].l=1*new Date();
-    js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
-    js.src=f;js.async=1;fjs.parentNode.insertBefore(js,fjs);
-  })(window,document,'script','ga','YOUR-UUID.js?id=G-XXXXXXXXXX');
-</script>
-```
+📖 **详细指南**： [docs/setup/SETUP.md](docs/setup/SETUP.md)
 
 ### 步骤 4：验证是否正常工作
 
