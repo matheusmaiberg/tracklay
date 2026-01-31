@@ -47,7 +47,9 @@ compatibility_flags = ["nodejs_compat"]
 # ENVIRONMENT VARIABLES ([vars])
 # ============================================================
 # These are NON-SECRET configurations visible in the Worker
-# For SECRETS, use: wrangler secret put <NAME>
+# For SECRETS:
+#   - Production: wrangler secret put <NAME>
+#   - Local dev: Create .env file (copy from .env.example)
 # ============================================================
 
 [vars]

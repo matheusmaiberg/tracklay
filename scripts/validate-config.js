@@ -98,11 +98,11 @@ function checkSecrets() {
       });
       logSuccess(`${secret} is configured`);
     } catch (err) {
-      // Secret not found - check if we have placeholder in .dev.vars
+      // Secret not found - check if we have placeholder in .env
       try {
-        const devVars = readFileSync('.dev.vars', 'utf8');
-        if (devVars.includes(`${secret}=`) && !devVars.includes(`${secret}=your-`)) {
-          logWarning(`${secret} found in .dev.vars but not in Cloudflare secrets`);
+        const envFile = readFileSync('.env', 'utf8');
+        if (envFile.includes(`${secret}=`) && !envFile.includes(`${secret}=your-`) && !envFile.includes(`${secret}=xxxxxxxx-`)) {
+          logWarning(`${secret} found in .env but not in Cloudflare secrets`);
           logInfo(`  Run: wrangler secret put ${secret}`);
         } else {
           logError(`${secret} is not configured`);

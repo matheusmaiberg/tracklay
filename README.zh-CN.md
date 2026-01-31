@@ -115,8 +115,7 @@ npm install
 
 # 复制配置模板
 cp wrangler.toml.example wrangler.toml
-cp .env.example .env              # 用于 CLI 认证
-cp .dev.vars.example .dev.vars    # 用于开发环境 secrets
+cp .env.example .env              # 用于开发环境 secrets
 ```
 
 **配置您的环境：**

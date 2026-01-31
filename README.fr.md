@@ -115,8 +115,7 @@ npm install
 
 # Copier les modèles de configuration
 cp wrangler.toml.example wrangler.toml
-cp .env.example .env              # Pour l'authentification CLI
-cp .dev.vars.example .dev.vars    # Pour les secrets de développement
+cp .env.example .env              # Pour les secrets de développement
 ```
 
 **Configurez votre environnement :**

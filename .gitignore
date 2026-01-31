@@ -21,7 +21,6 @@ wrangler.toml.bak
 .env
 .env.local
 .env.*.local
-.dev.vars
 .setup-config
 *.secret
 secrets.json
