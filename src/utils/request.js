@@ -15,12 +15,24 @@ export function getParsedUrl(request) {
 
 /**
  * @param {Request} request - Incoming request
- * @returns {string} Origin URL (protocol + hostname)
+ * @returns {string} Origin URL (from Origin header or Referer)
  */
 export const getOriginFromRequest = (request) => {
   try {
-    const { protocol, hostname } = new URL(request.url);
-    return `${protocol}//${hostname}`;
+    // First try the Origin header (most reliable)
+    const originHeader = request.headers.get('Origin');
+    if (originHeader && originHeader !== 'null') {
+      return originHeader;
+    }
+    
+    // Fallback to Referer header
+    const referer = request.headers.get('Referer');
+    if (referer) {
+      const url = new URL(referer);
+      return `${url.protocol}//${url.host}`;
+    }
+    
+    return null;
   } catch {
     return null;
   }

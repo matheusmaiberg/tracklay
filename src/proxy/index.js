@@ -57,9 +57,11 @@ export async function proxyRequest(targetUrl, request, options = {}) {
         const cacheStatus = forceRefresh ? 'REFRESHED' : (cachedScript.headers?.get('X-Cache-Status') || 'HIT-SCRIPT');
         Logger.debug('Script served', { scriptKey, cacheStatus, url: targetUrl });
 
+        // Pass isScript: true to disable X-Frame-Options for GTM/Facebook scripts that use iframes
         return buildResponse(cachedScript, request, {
           cacheStatus,
-          rateLimit
+          rateLimit,
+          isScript: true
         });
       }
     }

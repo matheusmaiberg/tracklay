@@ -14,16 +14,17 @@ import { addRateLimitHeaders } from '../headers/rate-limit.js';
  * @param {boolean} [options.includeSecurity=true] - Include security headers
  * @param {boolean} [options.includeRateLimit=true] - Include rate limit headers
  * @param {boolean} [options.includeCSP=true] - Include CSP header (disable for proxy responses)
+ * @param {boolean} [options.includeFrameOptions=true] - Include X-Frame-Options (disable for iframes)
  * @returns {Headers} Headers object with all requested headers
  */
 export const buildFullHeaders = (
   request,
-  { rateLimit, includeSecurity = true, includeRateLimit = true, includeCSP = true } = {}
+  { rateLimit, includeSecurity = true, includeRateLimit = true, includeCSP = true, includeFrameOptions = true } = {}
 ) => {
   const headers = buildCORSHeaders(request);
 
   if (includeSecurity) {
-    addSecurityHeaders(headers, { includeCSP });
+    addSecurityHeaders(headers, { includeCSP, includeFrameOptions });
   }
 
   if (includeRateLimit && rateLimit != null) {
