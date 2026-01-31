@@ -1,5 +1,5 @@
 {
-  "name": "Tracklay tracking",
+  "name": "tracklay-tracking",
   "version": "1.0.0",
   "description": "First-party tracking proxy for Shopify stores. Bypass Safari ITP, iOS tracking restrictions, ad-blockers, and Firefox ETP. Recover 40% lost conversion data. Serve Google Analytics, GTM, Meta Pixel from your domain. 90%+ ad-blocker bypass with UUID obfuscation. Cloudflare Workers serverless proxy for accurate ROAS tracking and conversion attribution.",
   "type": "module",
