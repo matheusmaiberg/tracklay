@@ -17,6 +17,7 @@ export let CONFIG = {
   OBFUSCATION_SECRET: generateDefaultSecret(),
   CACHE_TTL: 3600,
   MAX_REQUEST_SIZE: 1048576,
+  SCRIPT_SIZE_LIMIT: 10485760,  // 10MB default for ReDoS protection
   OBFUSCATION_FB_UUID: generateDefaultSecret(),
   OBFUSCATION_GA_UUID: generateDefaultSecret(),
   LOG_LEVEL: 'info',
@@ -44,7 +45,8 @@ export const initConfig = (env = {}) => {
     'FETCH_TIMEOUT',
     'UUID_ROTATION_INTERVAL_MS',
     'CACHE_TTL',
-    'MAX_REQUEST_SIZE'
+    'MAX_REQUEST_SIZE',
+    'SCRIPT_SIZE_LIMIT'
   ];
 
   for (const key of intConfigs) {
@@ -102,6 +104,13 @@ export const initConfig = (env = {}) => {
     CONFIG.WORKER_BASE_URL = env.WORKER_BASE_URL.replace(/\/$/, ''); // Remove trailing slash
   }
 
+  // Validate WORKER_BASE_URL if FULL_SCRIPT_PROXY is enabled
+  if (CONFIG.FULL_SCRIPT_PROXY_ENABLED && !CONFIG.WORKER_BASE_URL) {
+    console.warn('[CONFIG] ⚠️ WARNING: FULL_SCRIPT_PROXY_ENABLED is true but WORKER_BASE_URL is not set');
+    console.warn('[CONFIG] Cron jobs for script cache updates will not work correctly');
+    console.warn('[CONFIG] Set WORKER_BASE_URL in wrangler.toml [vars] section');
+  }
+
   const {
     GTM_SERVER_URL,
     UUID_ROTATION_ENABLED,
@@ -112,13 +121,16 @@ export const initConfig = (env = {}) => {
     RATE_LIMIT_REQUESTS,
     RATE_LIMIT_WINDOW,
     CACHE_TTL,
-    LOG_LEVEL
+    LOG_LEVEL,
+    SCRIPT_SIZE_LIMIT,
+    WORKER_BASE_URL
   } = CONFIG;
 
   console.log('[CONFIG] ============================================================');
   console.log('[CONFIG] Tracklay Worker Configuration Summary');
   console.log('[CONFIG] ============================================================');
   console.log('[CONFIG] GTM_SERVER_URL:', GTM_SERVER_URL || '(not set - client-side only)');
+  console.log('[CONFIG] WORKER_BASE_URL:', WORKER_BASE_URL || '(not set - cron jobs may fail)');
   console.log('[CONFIG] UUID_ROTATION_ENABLED:', UUID_ROTATION_ENABLED ? 'enabled (weekly rotation)' : 'disabled (fixed UUIDs)');
   console.log('[CONFIG] OBFUSCATION_FB_UUID:', OBFUSCATION_FB_UUID);
   console.log('[CONFIG] OBFUSCATION_GA_UUID:', OBFUSCATION_GA_UUID);
@@ -126,6 +138,7 @@ export const initConfig = (env = {}) => {
   console.log('[CONFIG] FULL_SCRIPT_PROXY_ENABLED:', FULL_SCRIPT_PROXY_ENABLED ? 'enabled (full proxy)' : 'disabled (transport_url only)');
   console.log('[CONFIG] RATE_LIMIT:', RATE_LIMIT_REQUESTS, 'requests per', RATE_LIMIT_WINDOW / 1000, 'seconds');
   console.log('[CONFIG] CACHE_TTL:', CACHE_TTL, 'seconds');
+  console.log('[CONFIG] SCRIPT_SIZE_LIMIT:', SCRIPT_SIZE_LIMIT / 1048576, 'MB');
   console.log('[CONFIG] LOG_LEVEL:', LOG_LEVEL);
   console.log('[CONFIG] ============================================================');
 };

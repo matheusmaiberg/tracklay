@@ -113,17 +113,43 @@ cd tracklay
 # Instalar dependencias
 npm install
 
-# Copiar archivos de configuración
+# Copiar plantillas de configuración
 cp wrangler.toml.example wrangler.toml
-cp .env.example .env
+cp .env.example .env              # Para autenticación CLI
+cp .dev.vars.example .dev.vars    # Para secrets de desarrollo local
 ```
 
-Configura tu entorno:
+**Configura tu entorno:**
 
-1. Edita `wrangler.toml` - agrega tu Account ID de Cloudflare (de `npm run whoami`)
-2. Edita `.env` - completa tus UUIDs y configuraciones
-3. Genera UUIDs: `node -e "console.log(crypto.randomUUID())"`
-4. Configura los secrets: `npm run secret:put`
+1. **Obtén tu Cloudflare Account ID:**
+   ```bash
+   npm run whoami
+   ```
+   Copia el Account ID y pégalo en `wrangler.toml` (descomenta la línea `account_id`)
+
+2. **Genera UUIDs para ofuscación:**
+   ```bash
+   node -e "console.log(crypto.randomUUID())"  # Para OBFUSCATION_FB_UUID
+   node -e "console.log(crypto.randomUUID())"  # Para OBFUSCATION_GA_UUID
+   ```
+
+3. **Edita `wrangler.toml` y configura:**
+   - `account_id` - Tu ID de cuenta Cloudflare
+   - `WORKER_BASE_URL` - Tu dominio del worker (ej: `https://cdn.tutienda.com`)
+   - `ALLOWED_ORIGINS` - Dominio(s) de tu tienda Shopify
+   - `OBFUSCATION_FB_UUID` - UUID generado para Facebook
+   - `OBFUSCATION_GA_UUID` - UUID generado para Google
+
+4. **Configura los secrets de producción:**
+   ```bash
+   npm run secret:put OBFUSCATION_SECRET
+   npm run secret:put ENDPOINTS_API_TOKEN
+   ```
+
+5. **Valida tu configuración:**
+   ```bash
+   npm run validate
+   ```
 
 📖 **Guía completa**: [docs/setup/SETUP.md](docs/setup/SETUP.md)
 

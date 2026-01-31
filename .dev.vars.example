@@ -1,15 +1,27 @@
 # ============================================================
-# LOCAL DEVELOPMENT SECRETS - .dev.vars
+# TRACKLAY - LOCAL DEVELOPMENT SECRETS
 # ============================================================
 # Copy this file to .dev.vars and fill in your secrets
-# .dev.vars is automatically loaded by wrangler dev/deploy
-# This file is gitignored for security
-#
-# Generate secrets with:
-# node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# .dev.vars is automatically loaded by 'wrangler dev'
+# This file is gitignored for security - NEVER commit it!
+# ============================================================
 
-# Obfuscation secret for hash generation
-OBFUSCATION_SECRET=your-generated-uuid-secret-here
+# ============================================================
+# REQUIRED SECRETS
+# ============================================================
 
-# Endpoints authentication token (for /endpoints API)
-ENDPOINTS_API_TOKEN=your-generated-secret-token-here
+# Obfuscation secret for hash generation (UUID format)
+# Generate: node -e "console.log(require('crypto').randomUUID())"
+OBFUSCATION_SECRET=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+# API Token for /endpoints authentication (any secure random string)
+# Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+ENDPOINTS_API_TOKEN=your-secure-random-token-here
+
+# ============================================================
+# OPTIONAL - Only if you need to override wrangler.toml vars
+# ============================================================
+
+# Uncomment to override for local testing:
+# DEBUG_HEADERS_ENABLED=true
+# LOG_LEVEL=debug

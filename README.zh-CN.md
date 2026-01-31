@@ -113,17 +113,43 @@ cd tracklay
 # 安装依赖
 npm install
 
-# 复制配置文件
+# 复制配置模板
 cp wrangler.toml.example wrangler.toml
-cp .env.example .env
+cp .env.example .env              # 用于 CLI 认证
+cp .dev.vars.example .dev.vars    # 用于开发环境 secrets
 ```
 
-配置您的环境：
+**配置您的环境：**
 
-1. 编辑 `wrangler.toml` - 添加您的 Cloudflare Account ID（从 `npm run whoami` 获取）
-2. 编辑 `.env` - 填写您的 UUID 和设置
-3. 生成 UUID：`node -e "console.log(crypto.randomUUID())"`
-4. 配置 secrets：`npm run secret:put`
+1. **获取您的 Cloudflare Account ID：**
+   ```bash
+   npm run whoami
+   ```
+   复制 Account ID 并粘贴到 `wrangler.toml` 中（取消 `account_id` 行的注释）
+
+2. **生成混淆用的 UUID：**
+   ```bash
+   node -e "console.log(crypto.randomUUID())"  # 用于 OBFUSCATION_FB_UUID
+   node -e "console.log(crypto.randomUUID())"  # 用于 OBFUSCATION_GA_UUID
+   ```
+
+3. **编辑 `wrangler.toml` 并设置：**
+   - `account_id` - 您的 Cloudflare 账户 ID
+   - `WORKER_BASE_URL` - 您的 worker 域名（例如：`https://cdn.yourstore.com`）
+   - `ALLOWED_ORIGINS` - 您的 Shopify 商店域名
+   - `OBFUSCATION_FB_UUID` - 为 Facebook 生成的 UUID
+   - `OBFUSCATION_GA_UUID` - 为 Google 生成的 UUID
+
+4. **设置生产环境 secrets：**
+   ```bash
+   npm run secret:put OBFUSCATION_SECRET
+   npm run secret:put ENDPOINTS_API_TOKEN
+   ```
+
+5. **验证您的配置：**
+   ```bash
+   npm run validate
+   ```
 
 📖 **完整设置指南**： [docs/setup/SETUP.md](docs/setup/SETUP.md)
 

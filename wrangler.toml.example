@@ -3,32 +3,40 @@
 # ============================================================
 # Copy this file to wrangler.toml and customize for your setup
 #
-# IMPORTANT: Never commit wrangler.toml with real secrets!
-# Use 'wrangler secret put' for sensitive values
+# IMPORTANT:
+# - This file configures the Worker runtime behavior
+# - Secrets (OBFUSCATION_SECRET, ENDPOINTS_API_TOKEN) must be set via:
+#     wrangler secret put OBFUSCATION_SECRET
+#     wrangler secret put ENDPOINTS_API_TOKEN
+# - For local development, create .dev.vars file with secrets
+# - NEVER commit wrangler.toml with real account_id or secrets!
 # ============================================================
 
+# ============================================================
+# WORKER IDENTIFICATION
+# ============================================================
 name = "tracklay"
 main = "worker.js"
 compatibility_date = "2026-01-26"
 
-# Modern features enabled
+# Modern Node.js compatibility
 compatibility_flags = ["nodejs_compat"]
 
 # ============================================================
-# WORKER SETTINGS
+# CLOUDFLARE ACCOUNT (REQUIRED FOR DEPLOY)
 # ============================================================
-
-# Account ID (get from: wrangler whoami)
-# Uncomment and fill with your Cloudflare account ID
+# Get your account ID: wrangler whoami
+# Uncomment and fill before deploying:
 # account_id = "your-account-id-here"
 
 # ============================================================
 # ROUTES (Custom Domain) - OPTIONAL
 # ============================================================
-# Configure routes to serve the worker from your domain
+# Configure routes to serve the worker from your own domain
+# Requires your domain to be on Cloudflare
 #
 # [[routes]]
-# pattern = "yourstore.com/cdn/*"
+# pattern = "cdn.yourstore.com/*"
 # zone_name = "yourstore.com"
 #
 # [[routes]]
@@ -36,113 +44,126 @@ compatibility_flags = ["nodejs_compat"]
 # zone_name = "yourstore.com"
 
 # ============================================================
-# ENVIRONMENT VARIABLES
+# ENVIRONMENT VARIABLES ([vars])
 # ============================================================
-# For local development, create .dev.vars file with secrets:
-#   OBFUSCATION_SECRET=your-secret-here
-#   ENDPOINTS_API_TOKEN=your-token-here
-#
-# For production, use:
-#   wrangler secret put OBFUSCATION_SECRET
-#   wrangler secret put ENDPOINTS_API_TOKEN
+# These are NON-SECRET configurations visible in the Worker
+# For SECRETS, use: wrangler secret put <NAME>
+# ============================================================
 
 [vars]
-# ============= REQUIRED FOR FULL SCRIPT PROXY ============
-# Your worker domain (required for cron jobs)
+
+# ============= REQUIRED CONFIGURATION =============
+# These should be configured for your specific setup
+
+# Your worker domain (required for Full Script Proxy cron jobs)
+# Must be the full URL without trailing slash
+# Example: "https://cdn.yourstore.com"
 WORKER_BASE_URL = "https://cdn.yourstore.com"
 
-# ============= OPTIONAL CONFIGURATION =============
-
-# GTM Server-Side URL (optional, leave empty if not using)
-GTM_SERVER_URL = "https://gtm.yourstore.com"
-
-# CORS Origins (optional, auto-detected by default)
-# Comma-separated list of allowed origins
+# CORS Origins - domains allowed to use your proxy
+# Comma-separated list, no spaces
+# Example: "https://yourstore.com,https://www.yourstore.com"
 ALLOWED_ORIGINS = "https://yourstore.com,https://www.yourstore.com"
 
-# Rate Limiting (optional)
-RATE_LIMIT_REQUESTS = "100"
-RATE_LIMIT_WINDOW = "60000"
-
-# Fetch Timeout in milliseconds (optional)
-FETCH_TIMEOUT = "10000"
-
-# Cache TTL in seconds (optional)
-CACHE_TTL = "3600"
-
-# Max Request Size in bytes (optional)
-MAX_REQUEST_SIZE = "1048576"
-
-# Log Level (optional: debug, info, warn, error)
-LOG_LEVEL = "info"
-
-# Script size limit for ReDoS protection (10MB default)
-SCRIPT_SIZE_LIMIT = "10485760"
-
-# ============= OBFUSCATION CONFIGURATION =============
-# Generate UUIDs: node -e "console.log(require('crypto').randomUUID())"
-
-# Facebook obfuscation UUID (creates: /cdn/f/{UUID}.js)
+# Facebook Pixel obfuscation UUID
+# Generate: node -e "console.log(require('crypto').randomUUID())"
+# This creates the endpoint: /cdn/f/{UUID}
 OBFUSCATION_FB_UUID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-# Google obfuscation UUID (creates: /cdn/g/{UUID}.js)
+# Google Analytics/GTM obfuscation UUID
+# Generate: node -e "console.log(require('crypto').randomUUID())"
+# This creates the endpoint: /cdn/g/{UUID}
 OBFUSCATION_GA_UUID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-# UUID Rotation (false = fixed, true = rotation)
-UUID_ROTATION_ENABLED = "false"
+# ============= OPTIONAL CONFIGURATION =============
+# These have sensible defaults - only change if needed
 
-# Debug headers (false = production, true = development)
-DEBUG_HEADERS_ENABLED = "true"
+# GTM Server-Side URL (optional)
+# Only needed if using GTM Server-Side container
+# Leave as empty string "" if not using
+GTM_SERVER_URL = ""
 
-# Full script proxy (true = rewrite URLs in scripts)
+# Debug headers (development: true, production: false)
+DEBUG_HEADERS_ENABLED = "false"
+
+# Full Script Proxy - rewrites URLs inside tracking scripts
+# Set to "true" for maximum ad-blocker bypass
 FULL_SCRIPT_PROXY_ENABLED = "true"
 
-# GTM Container aliases for query obfuscation (JSON string)
-GTM_CONTAINER_ALIASES = "{}"
+# UUID Rotation - auto-rotate endpoints weekly
+# "true" = rotation enabled, "false" = fixed UUIDs (recommended)
+UUID_ROTATION_ENABLED = "false"
 
-# UUID rotation interval in milliseconds (default: 7 days)
+# UUID rotation interval in milliseconds (default: 7 days = 604800000)
 UUID_ROTATION_INTERVAL_MS = "604800000"
 
+# GTM Container aliases (JSON string for query obfuscation)
+# Example: {"abc123":"GTM-XXXXXX","def456":"G-XXXXXXXX"}
+GTM_CONTAINER_ALIASES = "{}"
+
+# ============= PERFORMANCE CONFIGURATION =============
+
+# Rate limiting: max requests per window
+RATE_LIMIT_REQUESTS = "100"
+
+# Rate limiting: window duration in milliseconds (60 seconds)
+RATE_LIMIT_WINDOW = "60000"
+
+# Upstream fetch timeout in milliseconds (10 seconds)
+FETCH_TIMEOUT = "10000"
+
+# Script cache TTL in seconds (1 hour = 3600)
+CACHE_TTL = "3600"
+
+# Max request body size in bytes (1MB = 1048576)
+MAX_REQUEST_SIZE = "1048576"
+
+# Script size limit for ReDoS protection (10MB = 10485760)
+SCRIPT_SIZE_LIMIT = "10485760"
+
+# Log level: "debug", "info", "warn", or "error"
+LOG_LEVEL = "info"
+
 # ============================================================
-# CRON TRIGGERS
+# CRON TRIGGERS (Scheduled Events)
 # ============================================================
+# Automatic script cache updates
+# Full Script Proxy updates cached scripts every 12 hours
 
 [triggers]
-# Update script cache every 12 hours
 crons = ["0 */12 * * *"]
 
 # ============================================================
-# DEVELOPMENT ENVIRONMENT
+# SMART PLACEMENT
 # ============================================================
+# Automatically run Worker closest to backend services
+# Improves latency for Full Script Proxy operations
 
-[env.development]
-name = "tracklay-dev"
-vars = { ENVIRONMENT = "development", DEBUG_HEADERS_ENABLED = "true" }
-
-# ============================================================
-# STAGING ENVIRONMENT
-# ============================================================
-
-[env.staging]
-name = "tracklay-staging"
-vars = { ENVIRONMENT = "staging" }
+[placement]
+mode = "smart"
 
 # ============================================================
-# BUILD
+# BUILD CONFIGURATION
 # ============================================================
 
 [build]
 command = ""
 
 # ============================================================
-# SMART PLACEMENT
+# ENVIRONMENTS (Optional)
 # ============================================================
+# Uncomment to use: wrangler deploy --env development
 
-[placement]
-mode = "smart"
+# [env.development]
+# name = "tracklay-dev"
+# vars = { ENVIRONMENT = "development", DEBUG_HEADERS_ENABLED = "true", LOG_LEVEL = "debug" }
+
+# [env.staging]
+# name = "tracklay-staging"
+# vars = { ENVIRONMENT = "staging", DEBUG_HEADERS_ENABLED = "true" }
 
 # ============================================================
-# OBSERVABILITY
+# OBSERVABILITY (Optional - Cloudflare Dashboard Logs)
 # ============================================================
 
 [observability]
@@ -154,3 +175,20 @@ invocation_logs = true
 [observability.traces]
 enabled = true
 head_sampling_rate = 0.05
+
+# ============================================================
+# DEPLOYMENT CHECKLIST
+# ============================================================
+# Before deploying, ensure:
+#
+# 1. ✓ account_id is set (uncomment line 24)
+# 2. ✓ WORKER_BASE_URL is your actual domain
+# 3. ✓ ALLOWED_ORIGINS includes your Shopify store domain
+# 4. ✓ OBFUSCATION_FB_UUID is generated (node -e "console.log(crypto.randomUUID())")
+# 5. ✓ OBFUSCATION_GA_UUID is generated (node -e "console.log(crypto.randomUUID())")
+# 6. ✓ Secrets are set: wrangler secret put OBFUSCATION_SECRET
+# 7. ✓ Secrets are set: wrangler secret put ENDPOINTS_API_TOKEN
+# 8. ✓ Custom domain routes configured (optional but recommended)
+#
+# Deploy: wrangler deploy
+# ============================================================

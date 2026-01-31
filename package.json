@@ -5,6 +5,7 @@
   "type": "module",
   "main": "worker.js",
   "scripts": {
+    "validate": "node scripts/validate-config.js",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "deploy:dev": "wrangler deploy --env development",
