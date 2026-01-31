@@ -138,13 +138,36 @@
 
     items = items.filter(function(i) { return i != null; });
 
+    // Get page info from multiple sources to handle iframe contexts
+    var pageTitle = undefined;
+    var pageLocation = undefined;
+    var pagePath = undefined;
+    
+    // Try to get from event context first (Shopify provides this)
+    if (ctx && ctx.document) {
+      pageTitle = ctx.document.title;
+      pageLocation = ctx.document.location ? ctx.document.location.href : undefined;
+      pagePath = ctx.document.location ? ctx.document.location.pathname : undefined;
+    }
+    
+    // Fallback: try to infer from URL if context is missing or looks like an iframe
+    if (!pageTitle || pageTitle === 'sw_iframe.html' || pageTitle === '') {
+      if (d.page_title) {
+        pageTitle = d.page_title;
+      } else if (event.name === 'checkout_started' || event.name === 'checkout_completed') {
+        pageTitle = 'Checkout';
+      } else if (event.name === 'cart_viewed') {
+        pageTitle = 'Cart';
+      }
+    }
+
     return clean({
       event: event.name,
       event_id: event.id,
 
-      page_title: ctx && ctx.document ? ctx.document.title : undefined,
-      page_location: ctx && ctx.document && ctx.document.location ? ctx.document.location.href : undefined,
-      page_path: ctx && ctx.document && ctx.document.location ? ctx.document.location.pathname : undefined,
+      page_title: pageTitle,
+      page_location: pageLocation,
+      page_path: pagePath,
 
       customer_email: checkout && checkout.email ? checkout.email : undefined,
       customer_phone: checkout && checkout.phone ? checkout.phone : undefined,
