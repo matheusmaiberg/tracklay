@@ -152,6 +152,15 @@ const ThemeGTM = (function() {
    */
   function init(config) {
     config = config || {};
+    
+    // Detect if running inside GTM's first-party iframe
+    const isIframe = window.self !== window.top;
+    const isGtmIframe = isIframe && (document.title === 'sw_iframe.html' || location.href.includes('sw_iframe'));
+    
+    if (isGtmIframe) {
+      logger.info('🚫 Detectado iframe do GTM first-party, pulando inicialização');
+      return false;
+    }
 
     logger.info('═══════════════════════════════════════');
     logger.info('🚀 Theme GTM - Inicializando');
