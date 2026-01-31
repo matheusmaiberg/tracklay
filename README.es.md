@@ -112,13 +112,18 @@ cd tracklay
 
 # Instalar dependencias
 npm install
+
+# Copiar archivos de configuración
+cp wrangler.toml.example wrangler.toml
+cp .env.example .env
 ```
 
 Configura tu entorno:
 
-1. Copia `.env.example` a `.env` y completa tus valores
-2. Genera UUIDs: `node -e "console.log(crypto.randomUUID())"`
-3. Configura los secrets vía Wrangler
+1. Edita `wrangler.toml` - agrega tu Account ID de Cloudflare (de `npm run whoami`)
+2. Edita `.env` - completa tus UUIDs y configuraciones
+3. Genera UUIDs: `node -e "console.log(crypto.randomUUID())"`
+4. Configura los secrets: `npm run secret:put`
 
 📖 **Guía completa**: [docs/setup/SETUP.md](docs/setup/SETUP.md)
 

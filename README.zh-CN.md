@@ -112,13 +112,18 @@ cd tracklay
 
 # 安装依赖
 npm install
+
+# 复制配置文件
+cp wrangler.toml.example wrangler.toml
+cp .env.example .env
 ```
 
 配置您的环境：
 
-1. 复制 `.env.example` 到 `.env` 并填写您的值
-2. 生成 UUID：`node -e "console.log(crypto.randomUUID())"`
-3. 通过 Wrangler 配置 secrets
+1. 编辑 `wrangler.toml` - 添加您的 Cloudflare Account ID（从 `npm run whoami` 获取）
+2. 编辑 `.env` - 填写您的 UUID 和设置
+3. 生成 UUID：`node -e "console.log(crypto.randomUUID())"`
+4. 配置 secrets：`npm run secret:put`
 
 📖 **完整设置指南**： [docs/setup/SETUP.md](docs/setup/SETUP.md)
 
