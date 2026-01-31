@@ -4,6 +4,111 @@
  * Usa EventBridge para gerenciar BroadcastChannel + cookie polling.
  */
 
+// ============= ANTI-IFRAME PROTECTION =============
+// Proteção contra carregamento de scripts Google dentro do iframe do GTM
+(function() {
+  'use strict';
+  
+  // Verificação ultra-específica: só bloqueia no iframe do GTM service worker
+  const isInGtmIframe = window.self !== window.top && 
+                        document.title === 'sw_iframe.html';
+  
+  if (!isInGtmIframe) {
+    return; // Não está no iframe, não faz nada
+  }
+  
+  // Verifica se proteção foi desativada via config
+  if (window.ThemeGTMConfig?.disableIframeProtection === true) {
+    console.log('[ThemeGTM] 🛡️ Proteção de iframe desativada via config');
+    return;
+  }
+  
+  console.log('[ThemeGTM] 🛡️ Ativando proteção anti-iframe para scripts Google');
+  
+  const blockedDomains = [
+    'googletagmanager.com',
+    'google-analytics.com',
+    'googleadservices.com',
+    'doubleclick.net'
+  ];
+  
+  const originalCreateElement = document.createElement;
+  
+  document.createElement = function(tagName) {
+    const element = originalCreateElement.call(document, tagName);
+    
+    if (tagName.toLowerCase() !== 'script') {
+      return element;
+    }
+    
+    // Intercepta a propriedade src
+    const originalDescriptor = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src');
+    
+    Object.defineProperty(element, 'src', {
+      configurable: true,
+      enumerable: true,
+      get: function() {
+        return element.getAttribute('src') || '';
+      },
+      set: function(value) {
+        if (typeof value === 'string') {
+          const shouldBlock = blockedDomains.some(domain => value.includes(domain));
+          
+          if (shouldBlock) {
+            console.log('[ThemeGTM] 🚫 Bloqueado script Google no iframe:', value);
+            // Não define o src - script não carrega
+            return;
+          }
+        }
+        
+        // Permite scripts não-Google
+        originalDescriptor.set.call(this, value);
+      }
+    });
+    
+    // Também intercepta setAttribute para segurança extra
+    const originalSetAttribute = element.setAttribute;
+    element.setAttribute = function(name, value) {
+      if (name.toLowerCase() === 'src' && typeof value === 'string') {
+        const shouldBlock = blockedDomains.some(domain => value.includes(domain));
+        
+        if (shouldBlock) {
+          console.log('[ThemeGTM] 🚫 Bloqueado script Google via setAttribute:', value);
+          return;
+        }
+      }
+      return originalSetAttribute.call(this, name, value);
+    };
+    
+    return element;
+  };
+  
+  // Também bloqueia gtag global
+  if (typeof window.gtag === 'undefined') {
+    window.gtag = function() {
+      console.log('[ThemeGTM] 🚫 Bloqueada chamada gtag no iframe');
+    };
+  }
+  
+  // Bloqueia dataLayer.push para evitar acumulação
+  const noopDataLayer = {
+    push: function() {
+      console.log('[ThemeGTM] 🚫 Bloqueado push para dataLayer no iframe');
+      return 0;
+    }
+  };
+  
+  Object.defineProperty(window, 'dataLayer', {
+    get: function() { return noopDataLayer; },
+    set: function() { 
+      console.log('[ThemeGTM] 🚫 Tentativa de sobrescrever dataLayer no iframe bloqueada');
+    }
+  });
+  
+})();
+
+// ============= IMPORTS =============
+
 import { ConfigManager } from './module.config.js';
 import { Logger } from './module.logger.js';
 import { EventBridge } from './module.cookie-tracker.js';
