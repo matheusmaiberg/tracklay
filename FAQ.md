@@ -1,15 +1,6 @@
 # Frequently Asked Questions (FAQ)
 
-> ⚠️ **v3.3.0 UPDATE** - This FAQ references some legacy routes that were removed in v3.0.0
->
-> **Key Changes:**
-> - ❌ Legacy routes removed: `/cdn/gtag/js`, `/cdn/gtm.js`, `/cdn/fbevents.js`
-> - ✅ UUID-based routes only: `/cdn/f/{UUID}`, `/cdn/g/{UUID}`
-> - ✅ See [MIGRATION-V3.md](docs/MIGRATION-V3.md) for complete details
->
-> Some examples below use old paths for clarity - replace with your UUID-based paths.
->
-> ---
+
 
 Common questions and answers about Tracklay.
 
@@ -44,7 +35,7 @@ The Cloudflare Workers free tier includes 100,000 requests/day, which is enough 
 3. Worker adds proper CORS headers and returns the script
 4. Browser treats it as first-party and doesn't block it
 
-Note: v3.3.0 uses UUID-based obfuscated paths instead of detectable patterns.
+Note: UUID-based obfuscated paths are used instead of detectable patterns.
 
 ### What gets proxied?
 

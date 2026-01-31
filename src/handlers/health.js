@@ -21,7 +21,7 @@ export async function handleHealthCheck(request, rateLimit) {
       status: 'ok',
       timestamp: Date.now(),
       date: getCurrentDateISO(),
-      version: '2.0.0-factory'
+      version: '1.0.0'
     };
 
     if (CONFIG.DEBUG_HEADERS_ENABLED) {

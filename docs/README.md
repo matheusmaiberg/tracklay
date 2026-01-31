@@ -75,7 +75,7 @@ Security best practices
 ## 📊 Project Status & Planning
 
 ### [Implementation Status](IMPLEMENTATION_STATUS.md)
-Current project status (v3.2.0)
+Current project status (v1.0.0)
 - ✅ Full Script Proxy - Deep URL extraction and replacement
 - ✅ Container-specific caching (GTM/gtag per-container)
 - ✅ Dynamic endpoints (`/x/{uuid}` paths)
@@ -107,11 +107,7 @@ Current project status (v3.2.0)
 
 ### [Changelog](CHANGELOG.md)
 Version history and release notes
-- v3.2.0 (Full Script Proxy + Container-specific caching)
-- v3.1.0 (Server-side events + transport_url)
-- v3.0.0 (Ultra-aggressive obfuscation + UUID rotation) - **BREAKING**
-- v2.0.0-factory (Factory architecture)
-- v1.x.x (Legacy versions)
+- v1.0.0 (Full Script Proxy + Container-specific caching + Server-side events + Ultra-aggressive obfuscation + UUID rotation)
 
 ### [Obfuscation Changelog](CHANGELOG-OBFUSCATION.md)
 UUID obfuscation system evolution

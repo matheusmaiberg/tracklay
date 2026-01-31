@@ -586,7 +586,7 @@ npm run deploy
 
 # Test health endpoint
 curl https://your-worker.workers.dev/health
-# Should return: {"status":"OK","version":"3.3.0"}
+# Should return: {"status":"OK","version":"1.0.0"}
 
 # Verify routes
 npm run urls
