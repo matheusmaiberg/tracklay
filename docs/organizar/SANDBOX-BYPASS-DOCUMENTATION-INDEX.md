@@ -160,7 +160,7 @@ Shopify's sandbox isn't a bug - it's a feature. Design with it, not against it.
 
 ### Reference Implementations
 
-- `/docs/shopify/examples/custom-pixel.js` - UUID-based obfuscated routing (v3.0.0)
+- `/docs/shopify/examples/custom-pixel.js` - UUID-based obfuscated routing
 - `/docs/shopify/examples/custom-pixel-serverside.js` - Server-side event forwarding
 - `/docs/shopify/examples/web-pixel-advanced-tracking.js` - Advanced user data collection
 - This project's Cloudflare Worker implementation

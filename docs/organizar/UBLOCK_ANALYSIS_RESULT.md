@@ -120,7 +120,7 @@ document.head.appendChild(script);
 The Custom Pixel has `CONFIG.DEBUG = true`, so it should log:
 
 ```javascript
-[GTM] Initializing (v3.0.0)...
+[GTM] Initializing (v1.0.0)...
 [GTM] GTM loaded from https://cdn.suevich.com/cdn/g/...
 ```
 
@@ -218,22 +218,22 @@ Possible error causes:
 
 ### With uBlock DISABLED (should see):
 ```
-[GTM] Initializing (v3.0.0)...
+[GTM] Initializing (v1.0.0)...
 [GTM] GTM loaded from https://cdn.suevich.com/cdn/g/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f?c=MJ7DW8H
 [GTM] page_viewed {...}
-[GTM] Initialized ✓ (v3.0.0 UUID-based routing active)
+[GTM] Initialized ✓ (UUID-based routing active)
 ```
 
 ### With uBlock ENABLED (might see):
 ```
-[GTM] Initializing (v3.0.0)...
+[GTM] Initializing (v1.0.0)...
 Uncaught TypeError: Cannot read property 'subscribe' of undefined
     at custom-pixel.js:283
 ```
 
 OR:
 ```
-[GTM] Initializing (v3.0.0)...
+[GTM] Initializing (v1.0.0)...
 (nothing else - silent failure)
 ```
 

@@ -4,7 +4,6 @@
 
 This guide covers 3 strategies for integrating rotating UUIDs with Shopify themes.
 
-**Version:** 3.0.0
 **Last Updated:** 2026-01-25
 
 ---
@@ -466,14 +465,13 @@ Result: `gid://shopify/Shop/12345678` → Use `12345678`
 
 - [Tracklay Main README](../README.md)
 - [Obfuscation Documentation](OBFUSCATION.md)
-- [Migration Guide v3.0.0](MIGRATION-V3.md)
+- [Migration Guide](MIGRATION-V3.md)
 - [Cloudflare Workers Docs](https://developers.cloudflare.com/workers/)
 - [Shopify Admin API](https://shopify.dev/api/admin)
 
 ---
 
 **Last Updated:** 2026-01-25
-**Version:** 3.0.0
 **Contributors:** Claude Sonnet 4.5
 
 ---

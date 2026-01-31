@@ -175,7 +175,7 @@ curl https://yourstore.com/health
   "timestamp": 1706140800000,
   "date": "2026-01-24T12:00:00.000Z",
   "uuid": "a3f9c2e1b8d4",
-  "version": "2.0.0-fixed",
+  "version": "1.0.0",
   "metrics": {
     "rateLimit": {
       "remaining": 100,

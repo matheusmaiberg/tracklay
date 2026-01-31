@@ -1217,7 +1217,7 @@ const loadGTM = async () => {
 #### Implementation Checklist
 
 - [ ] Deploy Cloudflare Worker to first-party domain
-- [ ] Configure UUID-based obfuscated routes (v3.0.0)
+- [ ] Configure UUID-based obfuscated routes
 - [ ] Set up GTM Server-Side endpoints
 - [ ] Custom Pixel→Worker→GTM Server→GA4 flow
 - [ ] Test with uBlock Origin enabled
@@ -1622,7 +1622,7 @@ This documentation is provided for **legitimate e-commerce tracking protection**
 
 ### Code References
 
-- `/docs/shopify/examples/custom-pixel.js` - UUID-based obfuscated routing (v3.0.0)
+- `/docs/shopify/examples/custom-pixel.js` - UUID-based obfuscated routing
 - `/docs/shopify/examples/custom-pixel-serverside.js` - Server-side event forwarding
 - `/docs/shopify/examples/web-pixel-advanced-tracking.js` - Advanced user data collection
 - `/scripts/ARCHITECTURE.md` - Setup system architecture
