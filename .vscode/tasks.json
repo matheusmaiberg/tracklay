@@ -1,0 +1,162 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Setup: Copy all .example files",
+      "type": "shell",
+      "command": "cp .env.example .env && cp .dev.vars.example .dev.vars && cp wrangler.toml.example wrangler.toml",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "group": "build",
+      "detail": "Copies all .example configuration files to their active versions"
+    },
+    {
+      "label": "Setup: Copy .env.example → .env",
+      "type": "shell",
+      "command": "cp .env.example .env",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent"
+      },
+      "detail": "Copy environment configuration example"
+    },
+    {
+      "label": "Setup: Copy .dev.vars.example → .dev.vars",
+      "type": "shell",
+      "command": "cp .dev.vars.example .dev.vars",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent"
+      },
+      "detail": "Copy development secrets example"
+    },
+    {
+      "label": "Setup: Copy wrangler.toml.example → wrangler.toml",
+      "type": "shell",
+      "command": "cp wrangler.toml.example wrangler.toml",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent"
+      },
+      "detail": "Copy Wrangler configuration example"
+    },
+    {
+      "label": "Development: Start dev server",
+      "type": "shell",
+      "command": "npm run dev",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "build",
+      "detail": "Start local development server with wrangler"
+    },
+    {
+      "label": "Development: Deploy to production",
+      "type": "shell",
+      "command": "npm run deploy",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "build",
+      "detail": "Deploy worker to Cloudflare production"
+    },
+    {
+      "label": "Development: View logs",
+      "type": "shell",
+      "command": "npm run tail",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "build",
+      "detail": "View real-time logs from production"
+    },
+    {
+      "label": "Code Quality: Format all files",
+      "type": "shell",
+      "command": "npm run format",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent"
+      },
+      "group": "build",
+      "detail": "Run Prettier on all files"
+    },
+    {
+      "label": "Code Quality: Lint",
+      "type": "shell",
+      "command": "npm run lint",
+      "problemMatcher": ["$eslint-stylish"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "group": "build",
+      "detail": "Run ESLint on codebase"
+    },
+    {
+      "label": "Testing: Run all tests",
+      "type": "shell",
+      "command": "npm test",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "test",
+      "detail": "Run complete test suite"
+    },
+    {
+      "label": "Testing: Run tests in watch mode",
+      "type": "shell",
+      "command": "npm run test:watch",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "test",
+      "detail": "Run tests with file watcher"
+    },
+    {
+      "label": "Secrets: Set OBFUSCATION_SECRET",
+      "type": "shell",
+      "command": "wrangler secret put OBFUSCATION_SECRET",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "detail": "Set the obfuscation secret in Cloudflare"
+    },
+    {
+      "label": "Secrets: Set ENDPOINTS_API_TOKEN",
+      "type": "shell",
+      "command": "wrangler secret put ENDPOINTS_API_TOKEN",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "detail": "Set the API token for /endpoints endpoint"
+    },
+    {
+      "label": "Generate: New UUIDs",
+      "type": "shell",
+      "command": "node -e \"console.log('OBFUSCATION_FB_UUID:', require('crypto').randomUUID()); console.log('OBFUSCATION_GA_UUID:', require('crypto').randomUUID())\"",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "detail": "Generate new UUIDs for Facebook and Google obfuscation"
+    }
+  ]
+}

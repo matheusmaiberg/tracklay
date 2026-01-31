@@ -1,0 +1,55 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "files.associations": {
+    "*.toml*": "toml",
+    "wrangler.toml": "toml",
+    "*.vars": "properties",
+    ".env*": "properties",
+    ".dev.vars*": "properties"
+  },
+  "files.exclude": {
+    "node_modules": true,
+    ".wrangler": true
+  },
+  "search.exclude": {
+    "node_modules": true,
+    ".wrangler": true,
+    "dist": true
+  },
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact"
+  ],
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "editor.rulers": [
+    100
+  ],
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "vsicons.presets.hideExplorerArrows": false,
+  "vsicons.associations.files": [
+    { "icon": "config", "extensions": [".env.example"], "filename": true, "format": "svg" },
+    { "icon": "config", "extensions": [".dev.vars.example"], "filename": true, "format": "svg" },
+    { "icon": "cloudflare", "extensions": ["wrangler.toml.example"], "filename": true, "format": "svg" }
+  ],
+
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.sortOrder": "foldersNestsFiles",
+  "explorer.fileNesting.patterns": {
+    ".env": ".env.example",
+    ".dev.vars": ".dev.vars.example",
+    "wrangler.toml": "wrangler.toml.example",
+    ".eslintrc.json": ".eslintignore,.prettierrc,.prettierignore",
+    "package.json": "package-lock.json",
+    "README.md": "README.*,CHANGELOG.md,CONTRIBUTING.md,FAQ.md,SECURITY.md,LICENSE"
+  },
+  "files.defaultLanguage": "javascript"
+}

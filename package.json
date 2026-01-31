@@ -1,0 +1,99 @@
+{
+  "name": "Tracklay tracking",
+  "version": "1.0.0",
+  "description": "First-party tracking proxy for Shopify stores. Bypass Safari ITP, iOS tracking restrictions, ad-blockers, and Firefox ETP. Recover 40% lost conversion data. Serve Google Analytics, GTM, Meta Pixel from your domain. 90%+ ad-blocker bypass with UUID obfuscation. Cloudflare Workers serverless proxy for accurate ROAS tracking and conversion attribution.",
+  "type": "module",
+  "main": "worker.js",
+  "scripts": {
+    "setup": "./scripts/setup.sh",
+    "urls": "node scripts/get-urls.js",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:dev": "wrangler deploy --env development",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:prod": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "login": "wrangler login",
+    "whoami": "wrangler whoami",
+    "tail": "wrangler tail",
+    "secret:put": "wrangler secret put",
+    "secret:list": "wrangler secret list"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matheusmaiberg/tracklay.git"
+  },
+  "keywords": [
+    "shopify",
+    "shopify-tracking",
+    "safari-itp",
+    "ios-tracking",
+    "itp-bypass",
+    "ad-blocker-bypass",
+    "first-party-tracking",
+    "conversion-tracking",
+    "cloudflare-workers",
+    "google-analytics",
+    "google-tag-manager",
+    "gtm",
+    "ga4",
+    "meta-pixel",
+    "facebook-pixel",
+    "tracking-proxy",
+    "etp",
+    "firefox-tracking-protection",
+    "anti-tracking",
+    "privacy-sandbox",
+    "server-side-tagging",
+    "roas-tracking",
+    "attribution",
+    "e-commerce",
+    "conversion-optimization",
+    "analytics-proxy",
+    "uuid-obfuscation",
+    "edge-computing",
+    "serverless"
+  ],
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com",
+    "url": "https://github.com/your-github-username"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/your-github-username/tracklay/issues"
+  },
+  "homepage": "https://tracklay.app",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "@eslint/css": "^0.14.1",
+    "@eslint/js": "^9.39.2",
+    "@eslint/json": "^1.0.0",
+    "@eslint/markdown": "^7.5.1",
+    "@vitest/coverage-v8": "^4.0.18",
+    "eslint": "^8.57.1",
+    "globals": "^17.2.0",
+    "prettier": "^3.0.0",
+    "vitest": "^4.0.18",
+    "wrangler": "^4.60.0"
+  },
+  "files": [
+    "worker.js",
+    "src/",
+    "wrangler.toml",
+    "scripts/",
+    "README.md",
+    "README.pt-BR.md",
+    "LICENSE",
+    "CONTRIBUTING.md"
+  ]
+}

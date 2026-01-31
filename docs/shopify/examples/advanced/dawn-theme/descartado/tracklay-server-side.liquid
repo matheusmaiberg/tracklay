@@ -1,0 +1,339 @@
+{% comment %}
+  ============================================================
+  TRACKLAY SERVER-SIDE TRACKING - UNIVERSAL SNIPPET
+  ============================================================
+
+  INSTALLATION:
+  Add this line to your theme.liquid file, BEFORE </head>:
+  {% render 'tracklay-server-side' %}
+
+  COMPATIBILITY:
+  ✅ Works with ANY Shopify theme (Dawn, Debut, Brooklyn, etc)
+  ✅ No theme-specific code
+  ✅ Pure vanilla JavaScript + Liquid
+
+  CONFIGURATION:
+  Update the CONFIG object below with your settings
+
+  VERSION: 3.1.0
+  LAST UPDATED: 2026-01-26
+  ============================================================
+{% endcomment %}
+
+<script>
+(function() {
+  'use strict';
+
+  // ============= CONFIGURATION =============
+  // TODO: Update these values with your settings
+  const CONFIG = {
+    // Worker endpoint (your Cloudflare Worker URL)
+    WORKER_URL: 'https://cdn.suevich.com/cdn/events',
+
+    // GA4 Measurement ID (get from Google Analytics)
+    MEASUREMENT_ID: 'G-N5ZZGL11MW',
+
+    // Debug mode (set to false in production)
+    DEBUG: {{ settings.enable_debug_mode | default: false }},
+
+    // Session timeout in milliseconds (30 minutes)
+    SESSION_TIMEOUT: 30 * 60 * 1000,
+
+    // Engagement tracking interval (5 seconds)
+    ENGAGEMENT_INTERVAL: 5000
+  };
+
+  // ============= HELPERS =============
+  const log = (msg, data) => CONFIG.DEBUG && console.log(`[Tracklay] ${msg}`, data || '');
+  const error = (msg, err) => console.error(`[Tracklay] ${msg}`, err || '');
+
+  /**
+   * Get or create client ID (GA1.1.random.timestamp format)
+   */
+  function getClientId() {
+    let clientId = getCookie('_ga');
+
+    if (!clientId) {
+      const random = Math.random().toString(36).substring(2, 11);
+      const timestamp = Date.now();
+      clientId = `GA1.1.${random}.${timestamp}`;
+      setCookie('_ga', clientId, 365 * 2);
+      log('Generated new client ID', clientId);
+    }
+
+    return clientId;
+  }
+
+  /**
+   * Get or create session ID
+   */
+  function getSessionId() {
+    let sessionId = sessionStorage.getItem('_tracklay_session_id');
+    const sessionStart = sessionStorage.getItem('_tracklay_session_start');
+    const now = Date.now();
+
+    if (sessionId && sessionStart) {
+      const elapsed = now - parseInt(sessionStart);
+      if (elapsed > CONFIG.SESSION_TIMEOUT) {
+        sessionId = null;
+        log('Session expired, creating new session');
+      }
+    }
+
+    if (!sessionId) {
+      sessionId = now.toString();
+      sessionStorage.setItem('_tracklay_session_id', sessionId);
+      sessionStorage.setItem('_tracklay_session_start', now.toString());
+      log('Created new session', sessionId);
+    }
+
+    return sessionId;
+  }
+
+  /**
+   * Get cookie value
+   */
+  function getCookie(name) {
+    const value = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return value ? value.pop() : '';
+  }
+
+  /**
+   * Set cookie
+   */
+  function setCookie(name, value, days) {
+    const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax`;
+  }
+
+  /**
+   * Send event to Worker
+   */
+  function trackEvent(eventName, eventParams = {}) {
+    try {
+      const clientId = getClientId();
+      const sessionId = getSessionId();
+
+      const payload = {
+        event_name: eventName,
+        client_id: clientId,
+        measurement_id: CONFIG.MEASUREMENT_ID,
+        session_id: sessionId,
+        engagement_time_msec: '100',
+        page_location: window.location.href,
+        page_title: document.title,
+        page_referrer: document.referrer || '',
+        timestamp_micros: (Date.now() * 1000).toString(),
+        ...eventParams
+      };
+
+      fetch(CONFIG.WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true
+      })
+      .then(response => {
+        if (response.ok) {
+          log(`Event sent: ${eventName}`, eventParams);
+        } else {
+          error(`Event failed: ${eventName}`, response.statusText);
+        }
+      })
+      .catch(err => error(`Event error: ${eventName}`, err));
+
+    } catch (err) {
+      error('Track event failed', err);
+    }
+  }
+
+  // ============= SHOPIFY DATA EXTRACTION =============
+
+  /**
+   * Extract Shopify context data (works on any theme)
+   */
+  function getShopifyContext() {
+    const context = {};
+
+    // Try to get Shopify Analytics data (if available)
+    if (typeof window.ShopifyAnalytics !== 'undefined' && window.ShopifyAnalytics.meta) {
+      const meta = window.ShopifyAnalytics.meta;
+
+      if (meta.product) {
+        context.product_id = meta.product.id?.toString();
+        context.product_name = meta.product.title;
+        context.product_type = meta.product.type;
+        context.product_vendor = meta.product.vendor;
+      }
+
+      if (meta.currency) {
+        context.currency = meta.currency;
+      }
+    }
+
+    // Add Liquid-injected data (available on server-side render)
+    {% if customer %}
+    context.customer_id = '{{ customer.id }}';
+    context.customer_email = '{{ customer.email | escape }}';
+    context.customer_orders_count = {{ customer.orders_count }};
+    {% endif %}
+
+    {% if product %}
+    context.product_id = context.product_id || '{{ product.id }}';
+    context.product_name = context.product_name || '{{ product.title | escape }}';
+    context.product_type = context.product_type || '{{ product.type | escape }}';
+    context.product_vendor = context.product_vendor || '{{ product.vendor | escape }}';
+    context.price = {{ product.price | money_without_currency | remove: ',' }};
+    context.currency = context.currency || '{{ shop.currency }}';
+    {% endif %}
+
+    {% if collection %}
+    context.collection_id = '{{ collection.id }}';
+    context.collection_name = '{{ collection.title | escape }}';
+    {% endif %}
+
+    return context;
+  }
+
+  // ============= EVENT TRACKING =============
+
+  /**
+   * Track page view
+   */
+  function trackPageView() {
+    const context = getShopifyContext();
+    trackEvent('page_view', context);
+  }
+
+  /**
+   * Track add to cart (works with any theme)
+   */
+  function trackAddToCart(form) {
+    const context = getShopifyContext();
+
+    // Try to extract quantity from form
+    const quantityInput = form.querySelector('[name="quantity"]');
+    const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
+
+    // Try to extract variant ID
+    const variantInput = form.querySelector('[name="id"]');
+    const variantId = variantInput ? variantInput.value : null;
+
+    trackEvent('add_to_cart', {
+      ...context,
+      quantity: quantity.toString(),
+      variant_id: variantId
+    });
+  }
+
+  /**
+   * Track begin checkout
+   */
+  function trackBeginCheckout() {
+    const context = getShopifyContext();
+    trackEvent('begin_checkout', context);
+  }
+
+  /**
+   * Track scroll depth
+   */
+  let maxScrollDepth = 0;
+  function trackScrollDepth() {
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollPercent = Math.round((scrollTop / scrollHeight) * 100);
+
+    if (scrollPercent > maxScrollDepth) {
+      maxScrollDepth = scrollPercent;
+
+      if ([25, 50, 75, 90].includes(scrollPercent)) {
+        trackEvent('scroll', {
+          scroll_depth: scrollPercent.toString()
+        });
+      }
+    }
+  }
+
+  // ============= INITIALIZATION =============
+
+  /**
+   * Initialize tracking (universal for all themes)
+   */
+  function init() {
+    log('Initializing Tracklay server-side tracking v3.1.0...');
+
+    // Track page view on load
+    trackPageView();
+
+    // Track add to cart (universal selector works on any theme)
+    document.addEventListener('submit', function(e) {
+      const form = e.target;
+
+      // Check if this is an add to cart form (works on all themes)
+      if (form.action &&
+          (form.action.includes('/cart/add') ||
+           form.getAttribute('action') === '/cart/add' ||
+           form.action.includes('cart/add.js'))) {
+        trackAddToCart(form);
+      }
+    });
+
+    // Track checkout button clicks (universal)
+    document.addEventListener('click', function(e) {
+      const button = e.target.closest('a, button');
+      if (!button) return;
+
+      const href = button.getAttribute('href') || '';
+      const text = button.textContent.toLowerCase();
+
+      // Detect checkout buttons (works across languages)
+      if (href.includes('/checkout') ||
+          text.includes('checkout') ||
+          text.includes('finalizar') ||
+          text.includes('comprar')) {
+        trackBeginCheckout();
+      }
+    });
+
+    // Track scroll depth
+    let scrollTimeout;
+    window.addEventListener('scroll', function() {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(trackScrollDepth, 300);
+    }, { passive: true });
+
+    // Track engagement time
+    let lastActivity = Date.now();
+    let engagementTime = 0;
+
+    ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+      document.addEventListener(event, () => {
+        lastActivity = Date.now();
+      }, { passive: true });
+    });
+
+    setInterval(() => {
+      const now = Date.now();
+      const timeSinceActivity = now - lastActivity;
+
+      if (timeSinceActivity < 5000) {
+        engagementTime += CONFIG.ENGAGEMENT_INTERVAL;
+
+        trackEvent('user_engagement', {
+          engagement_time_msec: engagementTime.toString()
+        });
+      }
+    }, CONFIG.ENGAGEMENT_INTERVAL);
+
+    log('Initialized ✓ Server-side tracking active');
+  }
+
+  // ============= START =============
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
+</script>

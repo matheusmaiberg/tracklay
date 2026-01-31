@@ -1,0 +1,293 @@
+{
+  "export": {
+    "name": "Tracklay GTM Server-Side Configuration",
+    "description": "Complete GTM Server container configuration for Tracklay",
+    "version": "2.0.0",
+    "container": {
+      "clients": [
+        {
+          "name": "GA4 - Tracklay Client",
+          "type": "GA4",
+          "parameter": [
+            {
+              "key": "activateWithMeasurementProtocol",
+              "value": "true"
+            },
+            {
+              "key": "activateWithGoogleTag",
+              "value": "true"
+            }
+          ],
+          "priority": 10
+        },
+        {
+          "name": "Meta CAPI - Tracklay Client",
+          "type": "MetaConversionsAPI",
+          "parameter": [
+            {
+              "key": "accessToken",
+              "value": "{{Meta Access Token}}"
+            },
+            {
+              "key": "testId",
+              "value": "{{Meta Test ID}}"
+            },
+            {
+              "key": "enableAutomaticEventMapping",
+              "value": "true"
+            }
+          ],
+          "priority": 20
+        }
+      ],
+      "tags": [
+        {
+          "name": "GA4 - Tracklay Events",
+          "type": "GoogleAnalyticsGA4",
+          "parameter": [
+            {
+              "key": "measurementId",
+              "value": "{{GA4 Measurement ID}}"
+            },
+            {
+              "key": "enhancedUserId",
+              "value": "{{User ID}}"
+            },
+            {
+              "key": "customParams",
+              "value": [
+                {
+                  "map": [
+                    {
+                      "key": "customer_id",
+                      "value": "{{customer_id}}"
+                    },
+                    {
+                      "key": "customer_email",
+                      "value": "{{user_data.email}}"
+                    },
+                    {
+                      "key": "profit",
+                      "value": "{{profit}}"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "firingTriggerId": ["1"]
+        },
+        {
+          "name": "Meta CAPI - Purchase",
+          "type": "MetaConversionsAPI",
+          "parameter": [
+            {
+              "key": "eventName",
+              "value": "Purchase"
+            },
+            {
+              "key": "eventData",
+              "value": [
+                {
+                  "map": [
+                    {
+                      "key": "value",
+                      "value": "{{value}}"
+                    },
+                    {
+                      "key": "currency",
+                      "value": "{{currency}}"
+                    },
+                    {
+                      "key": "content_ids",
+                      "value": "{{items}}"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "key": "userData",
+              "value": [
+                {
+                  "map": [
+                    {
+                      "key": "em",
+                      "value": "{{user_data.email}}"
+                    },
+                    {
+                      "key": "ph",
+                      "value": "{{user_data.phone}}"
+                    },
+                    {
+                      "key": "external_id",
+                      "value": "{{customer_id}}"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "firingTriggerId": ["2"]
+        }
+      ],
+      "triggers": [
+        {
+          "name": "All GA4 Events",
+          "id": "1",
+          "type": "custom",
+          "filter": [
+            {
+              "key": "event_name",
+              "value": ".*",
+              "type": "matchRegex"
+            }
+          ]
+        },
+        {
+          "name": "Purchase Event",
+          "id": "2",
+          "type": "custom",
+          "filter": [
+            {
+              "key": "event_name",
+              "value": "purchase",
+              "type": "equals"
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "name": "GA4 Measurement ID",
+          "type": "c",
+          "parameter": [
+            {
+              "key": "value",
+              "value": "G-XXXXXXXXXX"
+            }
+          ]
+        },
+        {
+          "name": "Meta Access Token",
+          "type": "c",
+          "parameter": [
+            {
+              "key": "value",
+              "value": "EAAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            }
+          ]
+        },
+        {
+          "name": "Meta Test ID",
+          "type": "c",
+          "parameter": [
+            {
+              "key": "value",
+              "value": "TEST12345"
+            }
+          ]
+        },
+        {
+          "name": "User ID",
+          "type": "v",
+          "parameter": [
+            {
+              "key": "name",
+              "value": "user_data.external_id"
+            }
+          ]
+        },
+        {
+          "name": "customer_id",
+          "type": "v",
+          "parameter": [
+            {
+              "key": "name",
+              "value": "user_data.customer_id"
+            }
+          ]
+        },
+        {
+          "name": "value",
+          "type": "v",
+          "parameter": [
+            {
+              "key": "name",
+              "value": "value"
+            }
+          ]
+        },
+        {
+          "name": "currency",
+          "type": "v",
+          "parameter": [
+            {
+              "key": "name",
+              "value": "currency"
+            }
+          ]
+        },
+        {
+          "name": "items",
+          "type": "v",
+          "parameter": [
+            {
+              "key": "name",
+              "value": "items"
+            }
+          ]
+        },
+        {
+          "name": "user_data.email",
+          "type": "v",
+          "parameter": [
+            {
+              "key": "name",
+              "value": "user_data.email"
+            }
+          ]
+        },
+        {
+          "name": "user_data.phone",
+          "type": "v",
+          "parameter": [
+            {
+              "key": "name",
+              "value": "user_data.phone_number"
+            }
+          ]
+        },
+        {
+          "name": "profit",
+          "type": "jsm",
+          "parameter": [
+            {
+              "key": "javascript",
+              "value": "function() { return {{value}} - {{cost_of_goods}}; }"
+            }
+          ]
+        },
+        {
+          "name": "cost_of_goods",
+          "type": "v",
+          "parameter": [
+            {
+              "key": "name",
+              "value": "cost_of_goods"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "metadata": {
+    "created_at": "2026-01-26T16:44:28Z",
+    "created_by": "Tracklay Team",
+    "notes": [
+      "Import this JSON into GTM Server container",
+      "Update variable values (GA4 ID, Meta Token)",
+      "Configure triggers based on your needs"
+    ]
+  }
+}

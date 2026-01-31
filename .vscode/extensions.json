@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "vscode-icons-team.vscode-icons",
+    "tamasfe.even-better-toml",
+    "ms-vscode.vscode-json",
+    "github.vscode-pull-request-github",
+    "eamodio.gitlens",
+    "streetsidesoftware.code-spell-checker",
+    "yzhang.markdown-all-in-one",
+    "JorgeDorio.darkula-theme"
+  ],
+  "unwantedRecommendations": []
+}

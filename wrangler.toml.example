@@ -1,0 +1,156 @@
+# ============================================================
+# CLOUDFLARE WRANGLER CONFIGURATION - EXAMPLE FILE
+# ============================================================
+# Copy this file to wrangler.toml and customize for your setup
+#
+# IMPORTANT: Never commit wrangler.toml with real secrets!
+# Use 'wrangler secret put' for sensitive values
+# ============================================================
+
+name = "tracklay"
+main = "worker.js"
+compatibility_date = "2026-01-26"
+
+# Modern features enabled
+compatibility_flags = ["nodejs_compat"]
+
+# ============================================================
+# WORKER SETTINGS
+# ============================================================
+
+# Account ID (get from: wrangler whoami)
+# Uncomment and fill with your Cloudflare account ID
+# account_id = "your-account-id-here"
+
+# ============================================================
+# ROUTES (Custom Domain) - OPTIONAL
+# ============================================================
+# Configure routes to serve the worker from your domain
+#
+# [[routes]]
+# pattern = "yourstore.com/cdn/*"
+# zone_name = "yourstore.com"
+#
+# [[routes]]
+# pattern = "www.yourstore.com/cdn/*"
+# zone_name = "yourstore.com"
+
+# ============================================================
+# ENVIRONMENT VARIABLES
+# ============================================================
+# For local development, create .dev.vars file with secrets:
+#   OBFUSCATION_SECRET=your-secret-here
+#   ENDPOINTS_API_TOKEN=your-token-here
+#
+# For production, use:
+#   wrangler secret put OBFUSCATION_SECRET
+#   wrangler secret put ENDPOINTS_API_TOKEN
+
+[vars]
+# ============= REQUIRED FOR FULL SCRIPT PROXY ============
+# Your worker domain (required for cron jobs)
+WORKER_BASE_URL = "https://cdn.yourstore.com"
+
+# ============= OPTIONAL CONFIGURATION =============
+
+# GTM Server-Side URL (optional, leave empty if not using)
+GTM_SERVER_URL = "https://gtm.yourstore.com"
+
+# CORS Origins (optional, auto-detected by default)
+# Comma-separated list of allowed origins
+ALLOWED_ORIGINS = "https://yourstore.com,https://www.yourstore.com"
+
+# Rate Limiting (optional)
+RATE_LIMIT_REQUESTS = "100"
+RATE_LIMIT_WINDOW = "60000"
+
+# Fetch Timeout in milliseconds (optional)
+FETCH_TIMEOUT = "10000"
+
+# Cache TTL in seconds (optional)
+CACHE_TTL = "3600"
+
+# Max Request Size in bytes (optional)
+MAX_REQUEST_SIZE = "1048576"
+
+# Log Level (optional: debug, info, warn, error)
+LOG_LEVEL = "info"
+
+# Script size limit for ReDoS protection (10MB default)
+SCRIPT_SIZE_LIMIT = "10485760"
+
+# ============= OBFUSCATION CONFIGURATION =============
+# Generate UUIDs: node -e "console.log(require('crypto').randomUUID())"
+
+# Facebook obfuscation UUID (creates: /cdn/f/{UUID}.js)
+OBFUSCATION_FB_UUID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# Google obfuscation UUID (creates: /cdn/g/{UUID}.js)
+OBFUSCATION_GA_UUID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# UUID Rotation (false = fixed, true = rotation)
+UUID_ROTATION_ENABLED = "false"
+
+# Debug headers (false = production, true = development)
+DEBUG_HEADERS_ENABLED = "true"
+
+# Full script proxy (true = rewrite URLs in scripts)
+FULL_SCRIPT_PROXY_ENABLED = "true"
+
+# GTM Container aliases for query obfuscation (JSON string)
+GTM_CONTAINER_ALIASES = "{}"
+
+# UUID rotation interval in milliseconds (default: 7 days)
+UUID_ROTATION_INTERVAL_MS = "604800000"
+
+# ============================================================
+# CRON TRIGGERS
+# ============================================================
+
+[triggers]
+# Update script cache every 12 hours
+crons = ["0 */12 * * *"]
+
+# ============================================================
+# DEVELOPMENT ENVIRONMENT
+# ============================================================
+
+[env.development]
+name = "tracklay-dev"
+vars = { ENVIRONMENT = "development", DEBUG_HEADERS_ENABLED = "true" }
+
+# ============================================================
+# STAGING ENVIRONMENT
+# ============================================================
+
+[env.staging]
+name = "tracklay-staging"
+vars = { ENVIRONMENT = "staging" }
+
+# ============================================================
+# BUILD
+# ============================================================
+
+[build]
+command = ""
+
+# ============================================================
+# SMART PLACEMENT
+# ============================================================
+
+[placement]
+mode = "smart"
+
+# ============================================================
+# OBSERVABILITY
+# ============================================================
+
+[observability]
+[observability.logs]
+enabled = true
+head_sampling_rate = 0.2
+invocation_logs = true
+
+[observability.traces]
+enabled = true
+head_sampling_rate = 0.05
