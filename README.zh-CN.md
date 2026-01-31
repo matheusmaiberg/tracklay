@@ -2,7 +2,7 @@
 
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)](https://github.com/analyzify/tracklay/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/analyzify/tracklay/releases)
 
 > **绕过 Safari ITP、广告拦截器（uBlock、AdBlock）和浏览器隐私保护。通过第一方追踪恢复 40%+ 丢失的转化数据。**
 
@@ -26,7 +26,7 @@
 
 ### 财务影响
 
-| 指标 | 无 Tracklay | 使用 Tracklay v3.0 |
+| 指标 | 无 Tracklay | 使用 Tracklay |
 |------|-------------|-------------------|
 | **iOS 追踪准确性** | 50% | **95%+** |
 | **广告拦截器绕过率** | 10% | **95%+** |
@@ -39,105 +39,56 @@
 
 ---
 
-## Tracklay 的独特之处
+## 是什么让 Tracklay 与众不同
 
-### 超激进混淆（v3.0.0 突破）
+### 传统代理 vs Tracklay
 
-与传统追踪代理不同，Tracklay 使用 **基于 UUID 的路径轮换**，具有 **零可检测模式**：
+| 方面 | 传统代理 | Tracklay |
+|------|---------|----------|
+| **URL 模式** | `proxy.com/gtag.js`（可检测） | `yourstore.com/cdn/g/{uuid}`（随机） |
+| **文件扩展名** | `.js` 后缀 | 无扩展名 |
+| **黑名单抵抗** | 容易被阻止 | 无法永久黑名单 |
+| **检测率** | 90-100% | <5% |
+| **轮换** | 静态 URL | 自动每周 UUID 轮换 |
+| **容器别名** | 无 | `?c=alias` 混淆 |
 
-```javascript
-// ❌ 传统代理（容易被拦截）
-https://proxy.com/gtag.js
-https://proxy.com/fbevents.js
+### 功能比较
 
-// ✅ Tracklay v3.0（无法永久加入黑名单）
-https://yourstore.com/cdn/g/a8f3c2e1-b8d4-4f5a-8c3e-2d1f9b4a7c6e
-https://yourstore.com/cdn/f/b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f
-```
+| 功能 | 描述 | 优势 |
+|------|------|------|
+| **UUID 轮换** | 通过 API 自动每周轮换 | 防止永久黑名单 |
+| **无扩展名** | 没有 `.js` 的脚本 | 更难检测 |
+| **别名** | `?c=alias` → `?id=GTM-XXXXX` | 参数混淆 |
+| **统一设计** | 脚本和端点使用相同模式 | 无法区分的路由 |
+| **全脚本代理** | 深度 URL 提取和替换 | 98%+ 广告拦截器绕过 |
 
-**特性**：
-- ✅ **UUID 轮换**：自动每周轮换（通过 `/endpoints` API + n8n）
-- ✅ **无文件扩展名**：脚本不带 `.js` 后缀提供
-- ✅ **容器别名**：查询混淆（`?c=alias` → `?id=GTM-XXXXX`）
-- ✅ **脚本和端点相同路径**：无可区分模式
-- ✅ **<5% 检测率**：从传统代理的 90-100% 降低
+### 全脚本代理如何工作
 
-### 全脚本代理（v3.2.0）- 完全绕过广告拦截器
+| 步骤 | 操作 | 结果 |
+|------|------|------|
+| 1. 提取 | Worker 下载脚本，提取所有 URL | 识别 30+ 域名 |
+| 2. 生成 | 为每个 URL 创建唯一 UUID | `/x/{uuid}` 端点 |
+| 3. 替换 | 在脚本内容中替换 URL | 所有调用为一方 |
+| 4. 缓存 | SHA-256 变更检测 | 最小性能影响 |
+| 5. 路由 | 客户端 → UUID → Worker → 目标 | 透明代理 |
 
-Tracklay 在追踪脚本内部执行 **深度 URL 提取和替换**。在 GTM、gtag 或 Facebook 脚本中找到的每个外部 URL 都会通过唯一的 UUID 端点自动代理。
+### 支持的服务
 
-```javascript
-// 原始 GTM 脚本包含：
-"https://www.google-analytics.com/collect"
-"https://www.googleadservices.com/pagead/conversion"
-"https://region1.google-analytics.com/g/collect"
+| 类别 | 服务 |
+|------|------|
+| **Google** | Analytics, Ads, Tag Manager, DoubleClick, Syndication |
+| **Meta** | Pixel, Connect, Graph API |
+| **Microsoft** | Clarity, Bing Ads |
+| **社交** | LinkedIn, Snapchat, TikTok, Pinterest, Twitter/X |
+| **分析** | Segment, Tealium, Mixpanel, Hotjar, Heap |
 
-// Tracklay 自动转换为：
-"https://yourstore.com/x/a3f9c2e1b8d4e5f6"  // → google-analytics.com
-"https://yourstore.com/x/b7e4d3f2c9a1b2c3"  // → googleadservices.com
-"https://yourstore.com/x/d8e5f4c3b2a1d0e9"  // → region1.google-analytics.com
-```
+### 部署模式
 
-**工作原理**：
-1. **提取**：Worker 下载脚本并使用正则表达式模式提取所有 URL
-2. **生成**：为每个外部 URL 创建唯一 UUID（`/x/{uuid}`）
-3. **替换**：用代理版本替换脚本内容中的所有 URL
-4. **缓存**：使用 SHA-256 变更检测缓存处理后的脚本
-5. **路由**：客户端调用 `/x/{uuid}` → Worker 解析 → 代理到原始目标
-
-**支持的服务（30+ 域名）**：
-- **Google**：Analytics、Ads、Tag Manager、DoubleClick、Syndication
-- **Facebook/Meta**：Pixel、Connect、Graph API
-- **Microsoft**：Clarity、Bing Ads
-- **社交媒体**：LinkedIn、Snapchat、TikTok、Pinterest、Twitter/X
-- **分析平台**：Segment、Tealium、Mixpanel、Hotjar、Heap
-- 以及脚本中找到的任何其他 URL！
-
-**容器特定缓存（新功能）**：
-- GTM/gtag 脚本按容器缓存（`gtm:GTM-MJ7DW8H`）
-- 按需获取：首次请求获取并缓存，后续请求即时响应
-- DoS 保护：在创建缓存前验证容器 ID
-
-**优势**：
-- 🚀 **98%+ 广告拦截器绕过率**：即使 uBlock Origin 也无法检测第一方请求
-- 🔒 **100% 第一方**：所有追踪调用都源自您的域名
-- 🔄 **自动化**：无需配置，适用于任何脚本
-- 💾 **缓存**：URL 映射缓存 7 天，性能影响最小
-- 🛡️ **轮换 UUID**：URL 每周更改以获得最大安全性
-- 📦 **多容器**：支持多个 GTM 容器，使用独立缓存
-
-**配置**：
-```toml
-[vars]
-# 启用全脚本代理（默认：true）
-FULL_SCRIPT_PROXY_ENABLED = "true"
-```
-
-### 三种部署模式，适用于各种用例
-
-| 模式 | 最适合 | 设置时间 | 数据质量 | 广告拦截器绕过 |
-|------|--------|----------|----------|----------------|
-| **Web（客户端）** | 快速实施 | 1 小时 | 标准 | 90%+ |
-| **GTM 服务端** | 增强隐私 | 4 小时 | 高（EMQ 7-8） | 95%+ |
-| **GTM + GA4 传输** | 最高准确性 | 1 天 | **最高（EMQ 9+）** | **98%+** |
-
-### 现代架构
-
-```
-Shopify 商店 → Web Pixel API → Tracklay Worker → GTM 服务器 → GA4/Meta
-     ↓
-Cloudflare Workers（200+ 边缘位置，<50ms 延迟）
-     ↓
-自动 UUID 轮换 → 无法维护黑名单
-     ↓
-第一方 Cookie → 2+ 年生命周期 → 准确归因
-```
-
-**性能**：
-- **11 项内置优化**：智能放置、URL 解析缓存、无 Response 克隆
-- **比传统设置快 61-123ms**
-- **自动更新脚本**：SHA-256 变更检测，每 12 小时刷新
-- **零维护**：Cron 触发器自动处理一切
+| 模式 | 适用于 | 设置 | 数据质量 | 绕过率 |
+|------|--------|------|---------|--------|
+| **Web (客户端)** | 快速启动 | 1 小时 | 标准 | 90%+ |
+| **GTM 服务器端** | 增强隐私 | 4 小时 | 高 (EMQ 7-8) | 95%+ |
+| **GTM + GA4 传输** | 最高精度 | 2 小时 | 非常高 | 98%+ |
 
 ---
 
@@ -350,7 +301,7 @@ npm run deploy
 
 # 2. 测试健康端点
 curl https://your-worker.workers.dev/health
-# 应返回：{"status":"OK","version":"3.0.0"}
+# 应返回：{"status":"OK","version":"1.0.0"}
 
 # 3. 验证路由
 npm run urls
@@ -397,7 +348,7 @@ npm run deploy
 - 广告拦截器用户：30% 流量（无数据）
 - 报告 ROAS：2.1x
 
-**使用 Tracklay v3.0 之后：**
+**使用 Tracklay 之后：**
 - iOS 转化率：3.4%（准确）
 - 广告拦截器绕过：恢复 96% 被拦截用户
 - 报告 ROAS：3.8x（真实性能）
@@ -442,9 +393,9 @@ Tracklay 源于挫折。作为电商开发者，我们眼睁睁看着客户在 i
 
 ### 路线图
 
-- [x] **全脚本代理** - 完整 URL 提取和代理（v3.2.0）
-- [x] **容器特定缓存** - 按容器 GTM/gtag 缓存（v3.2.0）
-- [x] **按需获取** - 首次请求时获取并缓存（v3.2.0）
+- [x] **全脚本代理** - 完整 URL 提取和代理
+- [x] **容器特定缓存** - 按容器 GTM/gtag 缓存
+- [x] **按需获取** - 首次请求时获取并缓存
 - [ ] TikTok Pixel 集成
 - [ ] 内置分析仪表板
 - [ ] 追踪方法 A/B 测试框架

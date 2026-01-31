@@ -2,7 +2,7 @@
 
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/analyzify/tracklay/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/analyzify/tracklay/releases)
 
 > **Contournez Safari ITP, les Bloqueurs de Publicités (uBlock, AdBlock) et les Protections de Confidentialité. Récupérez 40%+ de Données de Conversion Perdues avec le Suivi First-Party.**
 
@@ -26,7 +26,7 @@ En 2024-2025, **60-70% de vos données de conversion sont perdues** en raison de
 
 ### L'Impact Financier
 
-| Métrique | Sans Tracklay | Avec Tracklay v3.0 |
+| Métrique | Sans Tracklay | Avec Tracklay |
 |----------|---------------|-------------------|
 | **Précision du Suivi iOS** | 50% | **95%+** |
 | **Taux de Contournement des Bloqueurs** | 10% | **95%+** |
@@ -39,100 +39,56 @@ En 2024-2025, **60-70% de vos données de conversion sont perdues** en raison de
 
 ---
 
-## Ce qui Rend Tracklay Différent
+## Ce qui différencie Tracklay
 
-### Offuscation Ultraagressive (Percée v3.0.0)
+### Proxy Traditionnel vs Tracklay
 
-Contrairement aux proxies de suivi traditionnels, Tracklay utilise la **rotation de chemin basée sur UUID** avec **zéro motifs détectables** :
+| Aspect | Proxy Traditionnel | Tracklay |
+|--------|-------------------|----------|
+| **Modèle d'URL** | `proxy.com/gtag.js` (détectable) | `yourstore.com/cdn/g/{uuid}` (aléatoire) |
+| **Extensions de Fichier** | Suffixes `.js` | Sans extensions |
+| **Résistance au Blacklist** | Facilement bloqué | Impossible à blacklister définitivement |
+| **Taux de Détection** | 90-100% | <5% |
+| **Rotation** | URLs statiques | Rotation UUID hebdomadaire automatique |
+| **Aliases de Conteneur** | Aucun | Obfuscation `?c=alias` |
 
-```javascript
-// ❌ Proxy Traditionnel (facilement bloqué)
-https://proxy.com/gtag.js
-https://proxy.com/fbevents.js
+### Comparaison des Fonctionnalités
 
-// ✅ Tracklay v3.0 (impossible à mettre sur liste noire de façon permanente)
-https://votreboutique.com/cdn/g/a8f3c2e1-b8d4-4f5a-8c3e-2d1f9b4a7c6e
-https://votreboutique.com/cdn/f/b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f
-```
+| Fonctionnalité | Description | Bénéfice |
+|----------------|-------------|----------|
+| **Rotation UUID** | Rotation hebdomadaire automatique via API | Empêche le blacklist permanent |
+| **Sans Extensions** | Scripts sans `.js` | Plus difficile à détecter |
+| **Aliases** | `?c=alias` → `?id=GTM-XXXXX` | Obfuscation des paramètres |
+| **Design Unifié** | Scripts et endpoints même modèle | Routes indistinguables |
+| **Full Script Proxy** | Extraction et remplacement d'URLs | 98%+ contournement ad-blockers |
 
-**Caractéristiques** :
-- ✅ **Rotation UUID** : Rotation automatique hebdomadaire (via API `/endpoints` + n8n)
-- ✅ **Sans Extension de Fichier** : Scripts servis sans suffixes `.js`
-- ✅ **Alias de Conteneur** : Offuscation de requête (`?c=alias` → `?id=GTM-XXXXX`)
-- ✅ **Même Chemin pour Scripts et Endpoints** : Aucun motif distinguable
-- ✅ **Taux de Détection <5%** : Réduit de 90-100% avec les proxies traditionnels
+### Comment Fonctionne le Full Script Proxy
 
-### Proxy de Script Complet (v3.1.0) - Contournement Complet du Bloqueur
+| Étape | Action | Résultat |
+|-------|--------|----------|
+| 1. Extraire | Worker télécharge le script, extrait TOUTES les URLs | Identifie 30+ domaines |
+| 2. Générer | Crée un UUID unique pour chaque URL | Endpoints `/x/{uuid}` |
+| 3. Remplacer | Remplace les URLs dans le contenu | Tous les appels first-party |
+| 4. Cache | Détection de changement SHA-256 | Impact performance minimal |
+| 5. Router | Client → UUID → Worker → Destination | Proxy transparent |
 
-Tracklay effectue maintenant l'**extraction et le remplacement d'URL profonds** dans les scripts de suivi. Chaque URL externe trouvée dans les scripts GTM, gtag ou Facebook est automatiquement proxefiée via des endpoints UUID uniques.
+### Services Supportés
 
-```javascript
-// Le script GTM original contient :
-"https://www.google-analytics.com/collect"
-"https://www.googleadservices.com/pagead/conversion"
-"https://region1.google-analytics.com/g/collect"
+| Catégorie | Services |
+|-----------|----------|
+| **Google** | Analytics, Ads, Tag Manager, DoubleClick, Syndication |
+| **Meta** | Pixel, Connect, Graph API |
+| **Microsoft** | Clarity, Bing Ads |
+| **Social** | LinkedIn, Snapchat, TikTok, Pinterest, Twitter/X |
+| **Analytics** | Segment, Tealium, Mixpanel, Hotjar, Heap |
 
-// Tracklay transforme automatiquement en :
-"https://votreboutique.com/x/a3f9c2e1b8d4e5f6"  // → google-analytics.com
-"https://votreboutique.com/x/b7e4d3f2c9a1b2c3"  // → googleadservices.com
-"https://votreboutique.com/x/d8e5f4c3b2a1d0e9"  // → region1.google-analytics.com
-```
+### Modes de Déploiement
 
-**Comment ça Fonctionne** :
-1. **Extraire** : Le Worker télécharge le script et extrait TOUTES les URLs en utilisant des motifs regex
-2. **Générer** : Crée un UUID unique pour chaque URL externe (`/x/{uuid}`)
-3. **Remplacer** : Substitue toutes les URLs dans le contenu du script par des versions proxefiées
-4. **Router** : Le client appelle `/x/{uuid}` → Worker résout → Proxefie vers la destination originale
-
-**Services Pris en Charge** :
-- Google Analytics (`google-analytics.com`)
-- Google Ads (`googleadservices.com`)
-- Google Tag Manager (`googletagmanager.com`)
-- Facebook Pixel (`facebook.com`, `connect.facebook.net`)
-- Microsoft Clarity (`clarity.ms`)
-- Tealium (`tiqcdn.com`)
-- Segment (`segment.com`)
-- Et toute autre URL trouvée dans les scripts !
-
-**Avantages** :
-- 🚀 **Contournement du Bloqueur 98%+** : Même uBlock Origin ne peut pas détecter les demandes first-party
-- 🔒 **100% First-Party** : Tous les appels de suivi proviennent de votre domaine
-- 🔄 **Automatique** : Zéro configuration requise, fonctionne avec n'importe quel script
-- 💾 **Mis en Cache** : Mapages d'URL en cache pendant 7 jours, impact minimal sur les performances
-- 🛡️ **UUIDs Rotatifs** : Les URLs changent hebdomadairement pour une sécurité maximale
-
-**Configuration** :
-```toml
-[vars]
-# Activer le proxy de script complet (par défaut : true)
-FULL_SCRIPT_PROXY = "true"
-```
-
-### Trois Modes de Déploiement pour Chaque Cas d'Usage
-
-| Mode | Meilleur Pour | Temps de Configuration | Qualité des Données | Contournement du Bloqueur |
-|------|---------------|----------------------|----------------------|--------------------------|
-| **Web (Côté Client)** | Implémentation rapide | 1 heure | Standard | 90%+ |
-| **GTM Server-Side** | Confidentialité Améliorée | 4 heures | Haute (EMQ 7-8) | 95%+ |
-| **GTM + GA4 Transport** | Précision Maximale | 1 jour | **Maximale (EMQ 9+)** | **98%+** |
-
-### Architecture Moderne
-
-```
-Boutique Shopify → API Pixel Web → Worker Tracklay → Serveur GTM → GA4/Meta
-     ↓
-Cloudflare Workers (200+ emplacements de périphérie, latence <50ms)
-     ↓
-Rotation Automatique d'UUID → Impossible de maintenir des listes noires
-     ↓
-Cookies First-Party → Durée de vie de 2+ ans → Attribution Précise
-```
-
-**Performances** :
-- **11 optimisations intégrées** : Placement Intelligent, cache d'analyse d'URL, pas de clonage de Response
-- **61-123ms plus rapide** que les configurations traditionnelles
-- **Scripts auto-mis à jour** : Détection de changement SHA-256, actualise tous les 12h
-- **Zéro maintenance** : Les déclencheurs Cron gèrent tout automatiquement
+| Mode | Idéal Pour | Setup | Qualité des Données | Taux de Bypass |
+|------|------------|-------|---------------------|----------------|
+| **Web (Client-Side)** | Démarrage rapide | 1 heure | Standard | 90%+ |
+| **GTM Server-Side** | Confidentialité renforcée | 4 heures | Haute (EMQ 7-8) | 95%+ |
+| **GTM + GA4 Transport** | Précision maximale | 2 heures | Très Haute | 98%+ |
 
 ---
 
@@ -345,7 +301,7 @@ npm run deploy
 
 # 2. Tester l'endpoint de santé
 curl https://votre-worker.workers.dev/health
-# Devrait retourner : {"status":"OK","version":"3.0.0"}
+# Devrait retourner : {"status":"OK","version":"1.0.0"}
 
 # 3. Vérifier les routes
 npm run urls
@@ -392,7 +348,7 @@ npm run deploy
 - Utilisateurs de bloqueurs : 30% du trafic (aucune donnée)
 - ROAS rapporté : 2,1x
 
-**Après Tracklay v3.0 :**
+**Après Tracklay :**
 - Taux de conversion iOS : 3,4% (précis)
 - Contournement de bloqueur : 96% des utilisateurs bloqués récupérés
 - ROAS rapporté : 3,8x (rendement réel)
@@ -437,7 +393,7 @@ Nous accueillons les contributions ! Veuillez consulter [`CONTRIBUTING.md`](CONT
 
 ### Feuille de Route
 
-- [x] **Proxy de Script Complet** - Extraction et proxy d'URL complet (v3.1.0) ✅
+- [x] **Proxy de Script Complet** - Extraction et proxy d'URL complet ✅
 - [ ] Intégration Pixel TikTok
 - [ ] Tableau de bord d'analyse intégré
 - [ ] Cadre de tests A/B pour les méthodes de suivi

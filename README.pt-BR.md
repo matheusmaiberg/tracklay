@@ -2,7 +2,7 @@
 
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/analyzify/tracklay/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/analyzify/tracklay/releases)
 
 > **Contorne Safari ITP, Bloqueadores de Anúncios (uBlock, AdBlock) e Proteções de Privacidade. Recupere 40%+ dos Dados de Conversão Perdidos com Rastreamento First-Party.**
 
@@ -26,7 +26,7 @@ Em 2024-2025, **60-70% dos seus dados de conversão estão sendo perdidos** devi
 
 ### O Impacto Financeiro
 
-| Métrica | Sem Tracklay | Com Tracklay v3.0 |
+| Métrica | Sem Tracklay | Com Tracklay |
 |---------|--------------|-------------------|
 | **Precisão de Rastreamento iOS** | 50% | **95%+** |
 | **Taxa de Bypass de Bloqueadores** | 10% | **95%+** |
@@ -41,98 +41,54 @@ Em 2024-2025, **60-70% dos seus dados de conversão estão sendo perdidos** devi
 
 ## O Que Faz Tracklay Ser Diferente
 
-### Ofuscação Ultra-Agressiva (Avanço da v3.0.0)
+### Proxy Tradicional vs Tracklay
 
-Diferente de proxies de rastreamento tradicionais, Tracklay usa **rotação de caminhos baseada em UUID** com **zero padrões detectáveis**:
+| Aspecto | Proxy Tradicional | Tracklay |
+|---------|-------------------|----------|
+| **Padrão de URL** | `proxy.com/gtag.js` (detectável) | `yourstore.com/cdn/g/{uuid}` (aleatório) |
+| **Extensões de Arquivo** | Sufixos `.js` | Sem extensões |
+| **Resistência a Blacklist** | Facilmente bloqueado | Impossível de blacklist permanente |
+| **Taxa de Detecção** | 90-100% | <5% |
+| **Rotação** | URLs estáticas | Rotação automática semanal de UUID |
+| **Aliases de Container** | Nenhum | Ofuscação `?c=alias` |
 
-```javascript
-// ❌ Proxy Tradicional (facilmente bloqueado)
-https://proxy.com/gtag.js
-https://proxy.com/fbevents.js
+### Comparação de Features
 
-// ✅ Tracklay v3.0 (impossível de blacklist permanentemente)
-https://sualoja.com/cdn/g/a8f3c2e1-b8d4-4f5a-8c3e-2d1f9b4a7c6e
-https://sualoja.com/cdn/f/b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f
-```
+| Feature | Descrição | Benefício |
+|---------|-----------|-----------|
+| **Rotação de UUID** | Rotação automática semanal via API | Previne blacklist permanente |
+| **Sem Extensões** | Scripts sem `.js` | Mais difícil de detectar |
+| **Aliases** | `?c=alias` → `?id=GTM-XXXXX` | Ofuscação de parâmetros |
+| **Design Unificado** | Scripts e endpoints mesmo padrão | Rotas indistinguíveis |
+| **Full Script Proxy** | Extração e substituição de URLs | 98%+ bypass de ad-blockers |
 
-**Recursos**:
-- ✅ **Rotação UUID**: Rotação automática semanal (via API `/endpoints` + n8n)
-- ✅ **Sem Extensões de Arquivo**: Scripts servidos sem sufixos `.js`
-- ✅ **Aliases de Container**: Ofuscação de query (`?c=alias` → `?id=GTM-XXXXX`)
-- ✅ **Mesmo Caminho para Scripts & Endpoints**: Sem padrões distinguíveis
-- ✅ **<5% de Taxa de Detecção**: Reduzido de 90-100% com proxies tradicionais
+### Como Funciona o Full Script Proxy
 
-### Full Script Proxy (v3.1.0) - Bypass Completo de Bloqueadores
+| Etapa | Ação | Resultado |
+|-------|------|-----------|
+| 1. Extrair | Worker baixa script, extrai TODAS URLs | Identifica 30+ domínios |
+| 2. Gerar | Cria UUID único para cada URL | Endpoints `/x/{uuid}` |
+| 3. Substituir | Troca URLs no conteúdo | Todas chamadas first-party |
+| 4. Cache | Detecção de mudança SHA-256 | Mínimo impacto performance |
+| 5. Rotear | Cliente → UUID → Worker → Destino | Proxy transparente |
 
-Tracklay agora executa **extração e substituição profunda de URLs** dentro dos scripts de rastreamento. Toda URL externa encontrada em scripts GTM, gtag ou Facebook é automaticamente proxiada através de endpoints UUID únicos.
+### Serviços Suportados
 
-```javascript
-// Script GTM original contém:
-"https://www.google-analytics.com/collect"
-"https://www.googleadservices.com/pagead/conversion"
-"https://region1.google-analytics.com/g/collect"
+| Categoria | Serviços |
+|-----------|----------|
+| **Google** | Analytics, Ads, Tag Manager, DoubleClick, Syndication |
+| **Meta** | Pixel, Connect, Graph API |
+| **Microsoft** | Clarity, Bing Ads |
+| **Social** | LinkedIn, Snapchat, TikTok, Pinterest, Twitter/X |
+| **Analytics** | Segment, Tealium, Mixpanel, Hotjar, Heap |
 
-// Tracklay transforma automaticamente para:
-"https://sualoja.com/x/a3f9c2e1b8d4e5f6"  // → google-analytics.com
-"https://sualoja.com/x/b7e4d3f2c9a1b2c3"  // → googleadservices.com
-"https://sualoja.com/x/d8e5f4c3b2a1d0e9"  // → region1.google-analytics.com
-```
+### Modos de Deploy
 
-**Como Funciona**:
-1. **Extrair**: Worker baixa o script e extrai TODAS as URLs usando padrões regex
-2. **Gerar**: Cria UUID único para cada URL externa (`/x/{uuid}`)
-3. **Substituir**: Troca todas as URLs no conteúdo do script por versões proxiadas
-4. **Rotear**: Cliente chama `/x/{uuid}` → Worker resolve → Faz proxy para destino original
-
-**Serviços Suportados**:
-- Google Analytics (`google-analytics.com`)
-- Google Ads (`googleadservices.com`)
-- Google Tag Manager (`googletagmanager.com`)
-- Facebook Pixel (`facebook.com`, `connect.facebook.net`)
-- Microsoft Clarity (`clarity.ms`)
-- Tealium (`tiqcdn.com`)
-- Segment (`segment.com`)
-- E qualquer outra URL encontrada nos scripts!
-
-**Benefícios**:
-- 🚀 **98%+ Bypass de Bloqueadores**: Mesmo uBlock Origin não detecta requests first-party
-- 🔒 **100% First-Party**: Todas as chamadas de rastreamento originam do seu domínio
-- 🔄 **Automático**: Zero configuração necessária, funciona com qualquer script
-- 💾 **Cacheado**: Mapeamentos de URL cacheados por 7 dias, impacto mínimo na performance
-- 🛡️ **UUIDs Rotativos**: URLs mudam semanalmente para máxima segurança
-
-**Configuração**:
-```toml
-[vars]
-# Habilitar full script proxy (padrão: true)
-FULL_SCRIPT_PROXY = "true"
-```
-
-### Três Modos de Deploy Para Cada Caso de Uso
-
-| Modo | Ideal Para | Tempo de Setup | Qualidade de Dados | Bypass de Bloqueadores |
-|------|------------|----------------|---------------------|------------------------|
-| **Web (Client-Side)** | Implementação rápida | 1 hora | Padrão | 90%+ |
-| **GTM Server-Side** | Privacidade aprimorada | 4 horas | Alta (EMQ 7-8) | 95%+ |
-| **GTM + GA4 Transport** | Máxima precisão | 1 dia | **Máxima (EMQ 9+)** | **98%+** |
-
-### Arquitetura Moderna
-
-```
-Loja Shopify → Web Pixel API → Tracklay Worker → GTM Server → GA4/Meta
-     ↓
-Cloudflare Workers (200+ locais edge, <50ms de latência)
-     ↓
-Rotação Automática UUID → Impossível manter blacklists
-     ↓
-Cookies First-Party → 2+ anos de vida útil → Atribuição precisa
-```
-
-**Performance**:
-- **11 otimizações integradas**: Smart Placement, cache de parsing de URL, sem clonagem de Response
-- **61-123ms mais rápido** que implementações padrão de GTM
-- **Scripts auto-atualizáveis**: Detecção de mudanças SHA-256, atualizações a cada 12h
-- **Zero manutenção**: Triggers Cron gerenciam tudo automaticamente
+| Modo | Ideal Para | Setup | Qualidade de Dados | Taxa de Bypass |
+|------|------------|-------|-------------------|----------------|
+| **Web (Client-Side)** | Início rápido | 1 hora | Padrão | 90%+ |
+| **GTM Server-Side** | Privacidade reforçada | 4 horas | Alta (EMQ 7-8) | 95%+ |
+| **GTM + GA4 Transport** | Máxima precisão | 2 horas | Muito Alta | 98%+ |
 
 ---
 
@@ -345,7 +301,7 @@ npm run deploy
 
 # 2. Testar endpoint health
 curl https://seu-worker.workers.dev/health
-# Deve retornar: {"status":"OK","version":"3.0.0"}
+# Deve retornar: {"status":"OK","version":"1.0.0"}
 
 # 3. Verificar rotas
 npm run urls
@@ -392,7 +348,7 @@ npm run deploy
 - Usuários com bloqueadores: 30% do tráfego (sem dados)
 - ROAS reportado: 2.1x
 
-**Depois do Tracklay v3.0:**
+**Depois do Tracklay:**
 - Taxa de conversão iOS: 3.4% (precisa)
 - Bypass de bloqueadores: 96% de usuários bloqueados recuperados
 - ROAS reportado: 3.8x (performance real)
@@ -437,7 +393,7 @@ Contribuições são bem-vindas! Por favor veja [`CONTRIBUTING.md`](CONTRIBUTING
 
 ### Roadmap
 
-- [x] **Full Script Proxy** - Extração e proxy completo de URLs (v3.1.0) ✅
+- [x] **Full Script Proxy** - Extração e proxy completo de URLs ✅
 - [ ] Integração TikTok Pixel
 - [ ] Dashboard de análise integrado
 - [ ] Framework de A/B testing para métodos de rastreamento
