@@ -44,8 +44,9 @@ export async function handleGenericProxy(request, options) {
       return errorResponse('Not found', HTTP_STATUS.NOT_FOUND, headers);
     }
 
+    // Check if targetUrl already includes query params (from resolver)
     const finalTargetUrl = typeof targetUrl === 'string' 
-      ? `${targetUrl}${url.search}`
+      ? (targetUrl.includes('?') ? targetUrl : `${targetUrl}${url.search}`)
       : targetUrl;
 
     return await proxyRequest(finalTargetUrl, request, {

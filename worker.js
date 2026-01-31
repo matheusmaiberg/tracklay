@@ -19,6 +19,10 @@ import { HTTP_STATUS } from './src/utils/constants.js';
 import { initConfig, CONFIG } from './src/config/index.js';
 import { addRateLimitHeaders } from './src/headers/rate-limit.js';
 import { buildFullHeaders } from './src/factories/headers-factory.js';
+import { getScriptFromCache, SCRIPT_URLS, fetchAndCompareScript } from './src/cache/script-cache.js';
+
+// Track if cache warming has been triggered
+let cacheWarmed = false;
 
 // ============= MODERN ES MODULES EXPORT =============
 // Export default handler for ES modules format (recommended)
@@ -52,10 +56,63 @@ if (typeof addEventListener !== 'undefined') {
   });
 }
 
+// ============= CACHE WARMING =============
+async function warmCacheIfNeeded() {
+  if (cacheWarmed) return;
+  cacheWarmed = true;
+  
+  try {
+    // Check if scripts are already cached
+    const cacheChecks = await Promise.all(
+      Object.keys(SCRIPT_URLS).map(key => getScriptFromCache(key))
+    );
+    
+    const hasAllCached = cacheChecks.every(script => script !== null);
+    
+    if (!hasAllCached) {
+      Logger.info('Cache cold - warming scripts after deploy');
+      
+      const startTime = Date.now();
+      const results = await Promise.all(
+        Object.entries(SCRIPT_URLS).map(async ([scriptKey, url]) => {
+          try {
+            const result = await fetchAndCompareScript(url, scriptKey);
+            return { scriptKey, ...result };
+          } catch (error) {
+            Logger.error('Failed to warm cache for script', { 
+              scriptKey, 
+              error: error?.message 
+            });
+            return { scriptKey, updated: false, error: error?.message };
+          }
+        })
+      );
+      
+      const updated = results.filter(r => r.updated).length;
+      const duration = Date.now() - startTime;
+      
+      Logger.info('Cache warming completed', { 
+        duration: `${duration}ms`,
+        scriptsUpdated: updated,
+        totalScripts: results.length
+      });
+    } else {
+      Logger.debug('Cache already warm - skipping');
+    }
+  } catch (error) {
+    Logger.error('Cache warming failed', { error: error?.message });
+  }
+}
+
 // ============= HANDLER PRINCIPAL =============
 async function handleRequest(request) {
   const startTime = Date.now();
   const url = new URL(request.url);
+
+  // Trigger cache warming in background on first request (non-blocking)
+  if (!cacheWarmed) {
+    warmCacheIfNeeded();
+  }
 
   try {
     // Log request recebido
