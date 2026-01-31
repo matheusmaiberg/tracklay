@@ -83,6 +83,21 @@ let currentGtmId = undefined;
  * @returns {boolean} True if initialization was successful
  */
 const init = (options = {}) => {
+  // Prevent duplicate initialization
+  if (isInitialized) {
+    log.debug('GTM already initialized, skipping duplicate init');
+    return true;
+  }
+  
+  // Detect if running inside GTM's first-party iframe
+  const isIframe = window.self !== window.top;
+  const isGtmIframe = isIframe && (document.title === 'sw_iframe.html' || location.href.includes('sw_iframe'));
+  
+  if (isGtmIframe) {
+    log.debug('Detected GTM first-party iframe, skipping GTM initialization in iframe context');
+    return false;
+  }
+  
   const gtmId = options.gtmId || ConfigManager.get('GTM.ID');
   
   if (!gtmId) {
