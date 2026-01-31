@@ -220,9 +220,6 @@ Tracklay 使用 **Custom Pixel + GTM** 架构：
 
 ```toml
 [vars]
-# GTM 服务端 URL（获得最高数据质量）
-GTM_SERVER_URL = "https://gtm.yourstore.com"
-
 # CORS 来源（建议自动检测）
 ALLOWED_ORIGINS = "https://yourstore.com,https://www.yourstore.com"
 

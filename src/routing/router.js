@@ -7,7 +7,7 @@ import { handleHealthCheck } from '../handlers/health.js';
 import { handleScriptProxy } from '../handlers/scripts.js';
 import { handleEndpointProxy } from '../handlers/endpoints.js';
 import { handleEndpointsInfo } from '../handlers/endpoints-info.js';
-import { handleEventProxy } from '../handlers/events.js';
+
 import { handleLibProxy } from '../handlers/lib-proxy.js';
 import { handleDynamicProxy } from '../handlers/dynamic-proxy.js';
 import { extractUuidFromPath } from '../utils/url.js';
@@ -39,10 +39,6 @@ export class Router {
 
     if (pathname === '/endpoints') {
       return handleEndpointsInfo(request);
-    }
-
-    if (pathname === '/cdn/events' && method === 'POST') {
-      return handleEventProxy(request, rateLimit);
     }
 
     const [endpointMap, scriptMap] = await Promise.all([
@@ -80,19 +76,6 @@ export class Router {
 
     if (['/cdn/', '/assets/', '/static/'].some(prefix => pathname.startsWith(prefix))) {
       return handleScriptProxy(request, rateLimit);
-    }
-
-    if (pathname === '/g/collect' && CONFIG.GTM_SERVER_URL) {
-      const origin = request.headers.get('Origin');
-      const referrer = request.headers.get('Referer');
-
-      Logger.warn('[Router] GTM fallback /g/collect hit - transport_url auto-injection may have failed', {
-        origin,
-        referrer,
-        pathname,
-        search
-      });
-      return handleEndpointProxy(request, rateLimit);
     }
 
     return errorResponse('Not found', HTTP_STATUS.NOT_FOUND);

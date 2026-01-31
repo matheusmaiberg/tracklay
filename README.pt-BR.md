@@ -222,9 +222,6 @@ O Tracklay usa arquitetura **Custom Pixel + GTM** para máxima compatibilidade:
 
 ```toml
 [vars]
-# URL GTM Server-Side (para máxima qualidade de dados)
-GTM_SERVER_URL = "https://gtm.sualoja.com"
-
 # Origens CORS (auto-detect recomendado)
 ALLOWED_ORIGINS = "https://sualoja.com,https://www.sualoja.com"
 

@@ -220,9 +220,6 @@ Tracklay usa arquitectura **Custom Pixel + GTM**:
 
 ```toml
 [vars]
-# URL del Servidor GTM (para máxima calidad de datos)
-GTM_SERVER_URL = "https://gtm.tutienda.com"
-
 # Orígenes CORS (se recomienda auto-detección)
 ALLOWED_ORIGINS = "https://tutienda.com,https://www.tutienda.com"
 

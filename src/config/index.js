@@ -8,7 +8,6 @@ import { parseArrayConfig } from '../utils/parsing.js';
 import { generateDefaultSecret } from '../utils/crypto.js';
 
 export let CONFIG = {
-  GTM_SERVER_URL: '',
   ALLOWED_ORIGINS: [],
   RATE_LIMIT_REQUESTS: 100,
   RATE_LIMIT_WINDOW: 60000,
@@ -33,8 +32,6 @@ export let CONFIG = {
  * @param {Object} env - Environment variables from Cloudflare Workers
  */
 export const initConfig = (env = {}) => {
-  CONFIG.GTM_SERVER_URL = env.GTM_SERVER_URL ?? CONFIG.GTM_SERVER_URL;
-
   if (env.ALLOWED_ORIGINS) {
     CONFIG.ALLOWED_ORIGINS = parseArrayConfig(env.ALLOWED_ORIGINS);
   }
@@ -112,7 +109,6 @@ export const initConfig = (env = {}) => {
   }
 
   const {
-    GTM_SERVER_URL,
     UUID_ROTATION_ENABLED,
     OBFUSCATION_FB_UUID,
     OBFUSCATION_GA_UUID,
@@ -129,7 +125,6 @@ export const initConfig = (env = {}) => {
   console.log('[CONFIG] ============================================================');
   console.log('[CONFIG] Tracklay Worker Configuration Summary');
   console.log('[CONFIG] ============================================================');
-  console.log('[CONFIG] GTM_SERVER_URL:', GTM_SERVER_URL || '(not set - client-side only)');
   console.log('[CONFIG] WORKER_BASE_URL:', WORKER_BASE_URL || '(not set - cron jobs may fail)');
   console.log('[CONFIG] UUID_ROTATION_ENABLED:', UUID_ROTATION_ENABLED ? 'enabled (weekly rotation)' : 'disabled (fixed UUIDs)');
   console.log('[CONFIG] OBFUSCATION_FB_UUID:', OBFUSCATION_FB_UUID);

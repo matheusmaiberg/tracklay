@@ -46,11 +46,6 @@ export async function getEndpointMap() {
 
   map[`${PATH_PREFIXES.FACEBOOK}${fbUUID}`] = UPSTREAM_URLS.FACEBOOK_ENDPOINT;
 
-  if (CONFIG.GTM_SERVER_URL) {
-    map[`${PATH_PREFIXES.GOOGLE}${googleUUID}`] = `${CONFIG.GTM_SERVER_URL}${UPSTREAM_URLS.GTM_TRANSPORT_SUFFIX}`;
-    map[PATH_PREFIXES.GTM_FALLBACK] = `${CONFIG.GTM_SERVER_URL}${UPSTREAM_URLS.GTM_TRANSPORT_SUFFIX}`;
-  }
-
   endpointMapCache = map;
   endpointMapCacheTime = Date.now();
   return endpointMapCache;

@@ -222,9 +222,6 @@ Tracklay uses **Custom Pixel + GTM** architecture for maximum compatibility:
 
 ```toml
 [vars]
-# GTM Server-Side URL (for maximum data quality)
-GTM_SERVER_URL = "https://gtm.yourstore.com"
-
 # CORS Origins (auto-detect recommended)
 ALLOWED_ORIGINS = "https://yourstore.com,https://www.yourstore.com"
 
