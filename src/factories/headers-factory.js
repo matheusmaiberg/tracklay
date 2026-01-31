@@ -19,7 +19,7 @@ import { addRateLimitHeaders } from '../headers/rate-limit.js';
  */
 export const buildFullHeaders = (
   request,
-  { rateLimit, includeSecurity = true, includeRateLimit = true, includeCSP = true, includeFrameOptions = true } = {}
+  { rateLimit, includeSecurity = true, includeRateLimit = true, includeCSP = true, includeFrameOptions = false } = {}
 ) => {
   const headers = buildCORSHeaders(request);
 
