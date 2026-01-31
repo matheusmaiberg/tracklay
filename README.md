@@ -105,22 +105,20 @@ In 2024-2025, **60-70% of your conversion data is being lost** due to modern bro
 
 ```bash
 # Clone repository
-git clone https://github.com/analyzify/tracklay.git
+git clone https://github.com/matheusmaiberg/tracklay.git
 cd tracklay
 
 # Install dependencies
 npm install
-
-# Run interactive setup (generates UUIDs, configures secrets)
-chmod +x scripts/setup.sh
-./scripts/setup.sh
 ```
 
-The setup script will:
-- ✅ Generate cryptographically secure UUIDs for endpoints
-- ✅ Create `.dev.vars` file for local development
-- ✅ Prompt for GTM Server URL (optional)
-- ✅ Configure auto-injection settings
+Configure your environment:
+
+1. Copy `.env.example` to `.env` and fill in your values
+2. Generate UUIDs: `node -e "console.log(crypto.randomUUID())"`
+3. Set required secrets via Wrangler
+
+📖 **Complete setup guide**: [docs/setup/SETUP.md](docs/setup/SETUP.md)
 
 ### Step 2: Deploy to Cloudflare
 
@@ -128,53 +126,47 @@ The setup script will:
 # Login to Cloudflare
 npm run login
 
-# Deploy worker (first time)
+# Deploy worker
 npm run deploy
 
-# Get your obfuscated URLs
-npm run urls
+# Test deployment
+curl https://cdn.yourstore.com/health
+# Should return: {"status":"ok","version":"1.0.0"}
 ```
 
-Output:
+Your obfuscated endpoints will be available at:
 ```
-╔════════════════════════════════════════════════════════════╗
-║  TRACKLAY - OBFUSCATED TRACKING URLS                       ║
-║  VERSION 3.3.0                                             ║
-╚════════════════════════════════════════════════════════════╝
-
-Facebook Pixel: https://yourstore.com/cdn/f/a8f3c2e1-b8d4-4f5a-8c3e-2d1f9b4a7c6e
-Google/GTM:     https://yourstore.com/cdn/g/b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f
+GTM:    https://cdn.yourstore.com/cdn/g/{YOUR_GA_UUID}?id=GTM-XXXXXX
+GA4:    https://cdn.yourstore.com/cdn/g/{YOUR_GA_UUID}?id=G-XXXXXXXX
+Meta:   https://cdn.yourstore.com/cdn/f/{YOUR_FB_UUID}
 ```
 
-### Step 3: Add to Shopify
+### Step 3: Shopify Integration
 
-#### Option A: Web Pixel API (Recommended, no theme editing)
+Tracklay uses **Custom Pixel + GTM** architecture for maximum compatibility:
 
-```bash
-# Create Shopify app with web-pixel extension
-cd your-shopify-app
-npm run generate extension
-# Choose: Web Pixel
-
-# Copy tracking code from docs/shopify/examples/web-pixel-advanced-tracking.js
+```
+┌─────────────────┐     ┌──────────────┐     ┌─────────────────┐
+│  Custom Pixel   │────▶│  GTM (dataLayer) │──▶│ Tracklay Proxy  │
+│  (Shopify Sandbox)   │     └──────────────┘     └─────────────────┘
+└─────────────────┘                                     │
+                                                        ▼
+                                               ┌─────────────────┐
+                                               │  Meta, GA4, etc │
+                                               └─────────────────┘
 ```
 
-#### Option B: Shopify Theme (Legacy but effective)
+**Installation steps:**
 
-Edit `layout/theme.liquid`:
+1. **Deploy Tracklay Worker** (Step 2 above)
+2. **Install Custom Pixel** in Shopify Admin → Settings → Customer Events
+   - Copy code from: `docs/shopify/examples/advanced/custom-pixel/pixel.js`
+   - Set your GTM ID and proxy domain
+3. **Configure GTM** with your proxy URLs
+   - Update Meta Pixel tag to use your `/cdn/f/{UUID}` endpoint
+   - Set `transport_url` in GA4 to your proxy domain
 
-```html
-<!-- Replace traditional GTM/GA4 -->
-<script>
-  // Ultra-obfuscated, ad-blocker proof
-  (function(w,d,s,o,f,js,fjs){
-    w['GoogleAnalyticsObject']=o;w[o]=w[o]||function(){
-    (w[o].q=w[o].q||[]).push(arguments)},w[o].l=1*new Date();
-    js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
-    js.src=f;js.async=1;fjs.parentNode.insertBefore(js,fjs);
-  })(window,document,'script','ga','YOUR-UUID.js?id=G-XXXXXXXXXX');
-</script>
-```
+📖 **Detailed guide**: [docs/setup/SETUP.md](docs/setup/SETUP.md)
 
 ### Step 4: Verify It's Working
 

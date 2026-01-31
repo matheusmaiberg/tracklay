@@ -5,8 +5,6 @@
   "type": "module",
   "main": "worker.js",
   "scripts": {
-    "setup": "./scripts/setup.sh",
-    "urls": "node scripts/get-urls.js",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "deploy:dev": "wrangler deploy --env development",
@@ -23,7 +21,8 @@
     "whoami": "wrangler whoami",
     "tail": "wrangler tail",
     "secret:put": "wrangler secret put",
-    "secret:list": "wrangler secret list"
+    "secret:list": "wrangler secret list",
+    "typegen": "wrangler types"
   },
   "repository": {
     "type": "git",
