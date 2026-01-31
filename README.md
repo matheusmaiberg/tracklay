@@ -113,39 +113,39 @@ cd tracklay
 # Install dependencies
 npm install
 
-# Copy configuration templates
+# Copy configuration files
 cp wrangler.toml.example wrangler.toml
-cp .env.example .env        # For local development secrets
+cp .env.example .env
 ```
 
 **Configure your environment:**
 
-1. **Get your Cloudflare Account ID:**
+1. **Edit `.env` file with all your settings:**
    ```bash
-   npm run whoami
+   # Required settings
+   WORKER_BASE_URL=https://cdn.yourstore.com
+   ALLOWED_ORIGINS=https://yourstore.com,https://www.yourstore.com
+   OBFUSCATION_FB_UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # Generate: node -e "console.log(crypto.randomUUID())"
+   OBFUSCATION_GA_UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # Generate: node -e "console.log(crypto.randomUUID())"
+   
+   # Secrets (for local dev only - production uses wrangler secret)
+   OBFUSCATION_SECRET=your-secret-here
+   ENDPOINTS_API_TOKEN=your-token-here
    ```
-   Copy the Account ID and paste in `wrangler.toml` (uncomment `account_id` line)
 
-2. **Generate UUIDs for obfuscation:**
+2. **Edit `wrangler.toml` - only add your account_id:**
    ```bash
-   node -e "console.log(crypto.randomUUID())"  # For OBFUSCATION_FB_UUID
-   node -e "console.log(crypto.randomUUID())"  # For OBFUSCATION_GA_UUID
+   npm run whoami  # Get your account ID
    ```
+   Then uncomment and set: `account_id = "your-id"`
 
-3. **Edit `wrangler.toml` and set:**
-   - `account_id` - Your Cloudflare account ID
-   - `WORKER_BASE_URL` - Your worker domain (e.g., `https://cdn.yourstore.com`)
-   - `ALLOWED_ORIGINS` - Your Shopify store domain(s)
-   - `OBFUSCATION_FB_UUID` - Generated UUID for Facebook
-   - `OBFUSCATION_GA_UUID` - Generated UUID for Google
-
-4. **Set production secrets:**
+3. **Set production secrets:**
    ```bash
    npm run secret:put OBFUSCATION_SECRET
    npm run secret:put ENDPOINTS_API_TOKEN
    ```
 
-5. **Validate your configuration:**
+4. **Validate configuration:**
    ```bash
    npm run validate
    ```

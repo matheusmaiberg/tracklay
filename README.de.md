@@ -113,39 +113,39 @@ cd tracklay
 # Abhängigkeiten installieren
 npm install
 
-# Konfigurationsvorlagen kopieren
+# Konfigurationsdateien kopieren
 cp wrangler.toml.example wrangler.toml
-cp .env.example .env              # Für Entwicklungs-Secrets
+cp .env.example .env
 ```
 
 **Konfigurieren Sie Ihre Umgebung:**
 
-1. **Holen Sie sich Ihre Cloudflare Account ID:**
+1. **Bearbeiten Sie die `.env` Datei mit allen Ihren Einstellungen:**
    ```bash
-   npm run whoami
+   # Erforderliche Einstellungen
+   WORKER_BASE_URL=https://cdn.ihreshop.com
+   ALLOWED_ORIGINS=https://ihreshop.com,https://www.ihreshop.com
+   OBFUSCATION_FB_UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # Generieren: node -e "console.log(crypto.randomUUID())"
+   OBFUSCATION_GA_UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # Generieren: node -e "console.log(crypto.randomUUID())"
+   
+   # Secrets (nur für lokale Entwicklung - Produktion verwendet wrangler secret)
+   OBFUSCATION_SECRET=ihr-secret-hier
+   ENDPOINTS_API_TOKEN=ihr-token-hier
    ```
-   Kopieren Sie die Account ID und fügen Sie sie in `wrangler.toml` ein (Kommentar bei `account_id` entfernen)
 
-2. **Generieren Sie UUIDs für Obfuskation:**
+2. **Bearbeiten Sie `wrangler.toml` - fügen Sie nur Ihre account_id hinzu:**
    ```bash
-   node -e "console.log(crypto.randomUUID())"  # Für OBFUSCATION_FB_UUID
-   node -e "console.log(crypto.randomUUID())"  # Für OBFUSCATION_GA_UUID
+   npm run whoami  # Holen Sie sich Ihre account ID
    ```
+   Dann entkommentieren und setzen: `account_id = "ihre-id"`
 
-3. **Bearbeiten Sie `wrangler.toml` und konfigurieren Sie:**
-   - `account_id` - Ihre Cloudflare Account ID
-   - `WORKER_BASE_URL` - Ihre Worker-Domain (z.B.: `https://cdn.ihreshop.com`)
-   - `ALLOWED_ORIGINS` - Domain(s) Ihres Shopify-Stores
-   - `OBFUSCATION_FB_UUID` - Generierte UUID für Facebook
-   - `OBFUSCATION_GA_UUID` - Generierte UUID für Google
-
-4. **Konfigurieren Sie Produktions-Secrets:**
+3. **Konfigurieren Sie Produktions-Secrets:**
    ```bash
    npm run secret:put OBFUSCATION_SECRET
    npm run secret:put ENDPOINTS_API_TOKEN
    ```
 
-5. **Validieren Sie Ihre Konfiguration:**
+4. **Validieren Sie Ihre Konfiguration:**
    ```bash
    npm run validate
    ```

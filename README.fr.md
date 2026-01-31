@@ -113,39 +113,39 @@ cd tracklay
 # Installer les dépendances
 npm install
 
-# Copier les modèles de configuration
+# Copier les fichiers de configuration
 cp wrangler.toml.example wrangler.toml
-cp .env.example .env              # Pour les secrets de développement
+cp .env.example .env
 ```
 
 **Configurez votre environnement :**
 
-1. **Obtenez votre Cloudflare Account ID :**
+1. **Éditez le fichier `.env` avec tous vos paramètres :**
    ```bash
-   npm run whoami
+   # Paramètres requis
+   WORKER_BASE_URL=https://cdn.votreboutique.com
+   ALLOWED_ORIGINS=https://votreboutique.com,https://www.votreboutique.com
+   OBFUSCATION_FB_UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # Générez : node -e "console.log(crypto.randomUUID())"
+   OBFUSCATION_GA_UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # Générez : node -e "console.log(crypto.randomUUID())"
+   
+   # Secrets (pour dev local uniquement - production utilise wrangler secret)
+   OBFUSCATION_SECRET=votre-secret-ici
+   ENDPOINTS_API_TOKEN=votre-token-ici
    ```
-   Copiez l'Account ID et collez-le dans `wrangler.toml` (décommentez la ligne `account_id`)
 
-2. **Générez des UUIDs pour l'obfuscation :**
+2. **Éditez `wrangler.toml` - ajoutez uniquement votre account_id :**
    ```bash
-   node -e "console.log(crypto.randomUUID())"  # Pour OBFUSCATION_FB_UUID
-   node -e "console.log(crypto.randomUUID())"  # Pour OBFUSCATION_GA_UUID
+   npm run whoami  # Obtenez votre account ID
    ```
+   Puis décommentez et configurez : `account_id = "votre-id"`
 
-3. **Éditez `wrangler.toml` et configurez :**
-   - `account_id` - Votre ID de compte Cloudflare
-   - `WORKER_BASE_URL` - Votre domaine worker (ex: `https://cdn.votreboutique.com`)
-   - `ALLOWED_ORIGINS` - Domaine(s) de votre boutique Shopify
-   - `OBFUSCATION_FB_UUID` - UUID généré pour Facebook
-   - `OBFUSCATION_GA_UUID` - UUID généré pour Google
-
-4. **Configurez les secrets de production :**
+3. **Configurez les secrets de production :**
    ```bash
    npm run secret:put OBFUSCATION_SECRET
    npm run secret:put ENDPOINTS_API_TOKEN
    ```
 
-5. **Validez votre configuration :**
+4. **Validez votre configuration :**
    ```bash
    npm run validate
    ```

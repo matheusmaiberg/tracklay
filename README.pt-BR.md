@@ -113,39 +113,39 @@ cd tracklay
 # Instale as dependências
 npm install
 
-# Copie os templates de configuração
+# Copie os arquivos de configuração
 cp wrangler.toml.example wrangler.toml
-cp .env.example .env              # Para secrets de desenvolvimento
+cp .env.example .env
 ```
 
 **Configure seu ambiente:**
 
-1. **Obtenha seu Cloudflare Account ID:**
+1. **Edite o arquivo `.env` com todas as suas configurações:**
    ```bash
-   npm run whoami
+   # Configurações obrigatórias
+   WORKER_BASE_URL=https://cdn.sualoja.com
+   ALLOWED_ORIGINS=https://sualoja.com,https://www.sualoja.com
+   OBFUSCATION_FB_UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # Gere: node -e "console.log(crypto.randomUUID())"
+   OBFUSCATION_GA_UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # Gere: node -e "console.log(crypto.randomUUID())"
+   
+   # Secrets (apenas para dev local - produção usa wrangler secret)
+   OBFUSCATION_SECRET=seu-secreto-aqui
+   ENDPOINTS_API_TOKEN=seu-token-aqui
    ```
-   Copie o Account ID e cole no `wrangler.toml` (descomente a linha `account_id`)
 
-2. **Gere UUIDs para ofuscação:**
+2. **Edite o `wrangler.toml` - apenas adicione seu account_id:**
    ```bash
-   node -e "console.log(crypto.randomUUID())"  # Para OBFUSCATION_FB_UUID
-   node -e "console.log(crypto.randomUUID())"  # Para OBFUSCATION_GA_UUID
+   npm run whoami  # Obtenha seu account ID
    ```
+   Depois descomente e configure: `account_id = "seu-id"`
 
-3. **Edite o `wrangler.toml` e configure:**
-   - `account_id` - Seu ID da conta Cloudflare
-   - `WORKER_BASE_URL` - Seu domínio do worker (ex: `https://cdn.sualoja.com`)
-   - `ALLOWED_ORIGINS` - Domínio(s) da sua loja Shopify
-   - `OBFUSCATION_FB_UUID` - UUID gerado para Facebook
-   - `OBFUSCATION_GA_UUID` - UUID gerado para Google
-
-4. **Configure os secrets de produção:**
+3. **Configure os secrets de produção:**
    ```bash
    npm run secret:put OBFUSCATION_SECRET
    npm run secret:put ENDPOINTS_API_TOKEN
    ```
 
-5. **Valide sua configuração:**
+4. **Valide sua configuração:**
    ```bash
    npm run validate
    ```

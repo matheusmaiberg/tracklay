@@ -58,6 +58,29 @@ function logInfo(msg) {
   console.log(`${BLUE}ℹ${RESET} ${msg}`);
 }
 
+function parseEnvFile() {
+  try {
+    const content = readFileSync('.env', 'utf8');
+    const vars = {};
+    
+    const lines = content.split('\n');
+    for (const line of lines) {
+      // Skip comments and empty lines
+      if (line.startsWith('#') || !line.trim()) continue;
+      
+      const match = line.match(/^([A-Z_]+)=(.+)$/);
+      if (match) {
+        vars[match[1]] = match[2];
+      }
+    }
+    
+    return vars;
+  } catch (err) {
+    logError('Could not read .env - did you copy .env.example?');
+    process.exit(1);
+  }
+}
+
 function parseWranglerToml() {
   try {
     const content = readFileSync('wrangler.toml', 'utf8');
@@ -67,16 +90,6 @@ function parseWranglerToml() {
     const accountMatch = content.match(/account_id\s*=\s*"([^"]+)"/);
     if (accountMatch) {
       vars.account_id = accountMatch[1];
-    }
-    
-    // Extract [vars] section
-    const varsMatch = content.match(/\[vars\]([\s\S]*?)(?=\[|$)/);
-    if (varsMatch) {
-      const varsSection = varsMatch[1];
-      const varMatches = varsSection.matchAll(/(\w+)\s*=\s*"([^"]*)"/g);
-      for (const match of varMatches) {
-        vars[match[1]] = match[2];
-      }
     }
     
     return vars;
@@ -181,34 +194,35 @@ console.log('\n╔════════════════════�
 console.log('║  TRACKLAY - Configuration Validator                        ║');
 console.log('╚════════════════════════════════════════════════════════════╝\n');
 
-const vars = parseWranglerToml();
+const envVars = parseEnvFile();
+const wranglerVars = parseWranglerToml();
 
 // Check account_id
 logInfo('Checking Cloudflare account...');
-if (!vars.account_id || vars.account_id === 'your-account-id-here') {
+if (!wranglerVars.account_id || wranglerVars.account_id === 'your-account-id-here') {
   logError('account_id is not set in wrangler.toml');
   logInfo('  Get it from: wrangler whoami');
   logInfo('  Then uncomment and set: account_id = "your-id" in wrangler.toml');
 } else {
-  logSuccess(`account_id is set: ${vars.account_id.substring(0, 8)}...`);
+  logSuccess(`account_id is set: ${wranglerVars.account_id.substring(0, 8)}...`);
 }
 
 // Check required vars
 logInfo('\nChecking required variables...');
 
-if (validateURL(vars.WORKER_BASE_URL, 'WORKER_BASE_URL')) {
+if (validateURL(envVars.WORKER_BASE_URL, 'WORKER_BASE_URL')) {
   logSuccess('WORKER_BASE_URL is valid');
 }
 
-if (validateOrigins(vars.ALLOWED_ORIGINS)) {
-  logSuccess(`ALLOWED_ORIGINS: ${vars.ALLOWED_ORIGINS}`);
+if (validateOrigins(envVars.ALLOWED_ORIGINS)) {
+  logSuccess(`ALLOWED_ORIGINS: ${envVars.ALLOWED_ORIGINS}`);
 }
 
-if (validateUUID(vars.OBFUSCATION_FB_UUID, 'OBFUSCATION_FB_UUID')) {
+if (validateUUID(envVars.OBFUSCATION_FB_UUID, 'OBFUSCATION_FB_UUID')) {
   logSuccess('OBFUSCATION_FB_UUID is valid');
 }
 
-if (validateUUID(vars.OBFUSCATION_GA_UUID, 'OBFUSCATION_GA_UUID')) {
+if (validateUUID(envVars.OBFUSCATION_GA_UUID, 'OBFUSCATION_GA_UUID')) {
   logSuccess('OBFUSCATION_GA_UUID is valid');
 }
 
