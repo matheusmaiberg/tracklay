@@ -31,7 +31,7 @@ export default {
 
   // Scheduled event handler (Cloudflare Cron Triggers)
   // Runs every 12 hours to update script cache
-  async scheduled(event, env, ctx) {
+  async scheduled(_event, env, ctx) {
     try {
       initConfig(env);
       const { updateScripts } = await import('./src/scheduled/update-scripts.js');
