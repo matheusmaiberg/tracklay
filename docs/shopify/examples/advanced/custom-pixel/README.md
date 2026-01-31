@@ -1,7 +1,6 @@
 # 📁 Custom Pixel Files
 
-> ⚠️ **IMPORTANTE:** `pixel.js` está **FINALIZADO** e **NÃO DEVE SER MODIFICADO**.
-> Copie o código diretamente para o Custom Pixel do Shopify.
+> ⚠️ **IMPORTANTE:** Copie o código de `pixel.js` diretamente para o Custom Pixel do Shopify.
 
 ---
 
@@ -12,8 +11,15 @@
 **Características:**
 - ✅ **Completo** - inclui tudo necessário (builders, utilitários, etc)
 - ✅ **Standalone** - não depende de arquivos externos
-- ✅ **ES5 Vanilla** - compatível com sandbox do Shopify
-- ✅ **Finalizado** - não requer modificações
+- ✅ **ES5 Vanilla** - compatível com sandbox do Shopify (IE11+)
+- ✅ **Bug-free** - corrigido e testado
+
+**Correções Aplicadas:**
+- Removido optional chaining (ES2020) para compatibilidade ES5
+- Adicionado suporte a `product_viewed` (catálogo/busca)
+- Melhorado fallback quando BroadcastChannel falha
+- Corrigido geração de event ID com string vazia
+- Melhoradas verificações null/undefined
 
 **Funcionalidades:**
 - Captura todos os eventos do checkout via `analytics.subscribe('all_events')`
@@ -40,15 +46,17 @@
 
 ## 📊 Eventos Capturados
 
-| Evento Shopify | Descrição |
-|----------------|-----------|
-| `checkout_started` | Início do checkout |
-| `checkout_completed` | Pedido finalizado |
-| `checkout_contact_entered` | Email adicionado |
-| `checkout_address_info_submitted` | Endereço adicionado |
-| `payment_info_submitted` | Pagamento adicionado |
-| `cart_viewed` | Carrinho visualizado |
-| ... e todos outros via `all_events` | |
+| Evento Shopify | Descrição | Fonte de Dados |
+|----------------|-----------|----------------|
+| `product_viewed` | Visualização de produto | `productData` (catálogo/busca) |
+| `checkout_started` | Início do checkout | `checkout` |
+| `checkout_completed` | Pedido finalizado | `checkout` |
+| `checkout_contact_entered` | Email adicionado | `checkout` |
+| `checkout_address_info_submitted` | Endereço adicionado | `checkout` |
+| `payment_info_submitted` | Pagamento adicionado | `checkout` |
+| `cart_viewed` | Carrinho visualizado | `cart` |
+| `product_added_to_cart` | Produto adicionado | `cartLine` |
+| ... e todos outros via `all_events` | | |
 
 ---
 

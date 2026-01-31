@@ -81,12 +81,12 @@
   function buildItem(product, variant, price, qty) {
     if (!product) return null;
     return {
-      item_id: product?.id?.toString?.() || undefined,
+      item_id: product && product.id ? String(product.id) : undefined,
       item_name: product.title,
       item_variant: variant ? variant.title : undefined,
       item_brand: product.vendor,
       item_category: product.type,
-      price: toFloat(price ? price.amount : undefined),
+      price: toFloat(price && price.amount ? price.amount : undefined),
       quantity: qty || 1
     };
   }
@@ -105,8 +105,14 @@
 
     var items = [];
 
+    // productVariant (view_item, add_to_cart from product page)
     if (pv) {
       items.push(buildItem(pv.product, pv, pv.price));
+    }
+    
+    // productData (product_viewed from catalog/search)
+    if (d.productData) {
+      items.push(buildItem(d.productData, null, null, 1));
     }
 
     if (cartLine) {
@@ -122,9 +128,9 @@
       checkout.lineItems.forEach(function(item) {
         if (!item) return;
         items.push(buildItem(
-          item?.variant?.product || null,
+          item && item.variant && item.variant.product ? item.variant.product : null,
           item.variant,
-          item?.variant?.price || null,
+          item && item.variant && item.variant.price ? item.variant.price : null,
           item.quantity
         ));
       });
@@ -136,14 +142,14 @@
       event: event.name,
       event_id: event.id,
 
-      page_title: ctx.document ? ctx.document.title : undefined,
-      page_location: ctx.document && ctx.document.location ? ctx.document.location.href : undefined,
-      page_path: ctx.document && ctx.document.location ? ctx.document.location.pathname : undefined,
+      page_title: ctx && ctx.document ? ctx.document.title : undefined,
+      page_location: ctx && ctx.document && ctx.document.location ? ctx.document.location.href : undefined,
+      page_path: ctx && ctx.document && ctx.document.location ? ctx.document.location.pathname : undefined,
 
-      customer_email: checkout ? checkout.email : undefined,
-      customer_phone: checkout ? checkout.phone : undefined,
-      customer_city: checkout && checkout.shippingAddress ? checkout.shippingAddress.city : undefined,
-      customer_country: checkout && checkout.shippingAddress ? checkout.shippingAddress.country : undefined,
+      customer_email: checkout && checkout.email ? checkout.email : undefined,
+      customer_phone: checkout && checkout.phone ? checkout.phone : undefined,
+      customer_city: checkout && checkout.shippingAddress && checkout.shippingAddress.city ? checkout.shippingAddress.city : undefined,
+      customer_country: checkout && checkout.shippingAddress && checkout.shippingAddress.country ? checkout.shippingAddress.country : undefined,
 
       cart_total: toFloat(cart && cart.cost && cart.cost.totalAmount ? cart.cost.totalAmount.amount : undefined),
 
@@ -157,7 +163,7 @@
         checkout && checkout.totalPrice ? checkout.totalPrice.amount : undefined
       ),
 
-      transaction_id: checkout?.order?.id?.toString?.() || undefined,
+      transaction_id: checkout && checkout.order && checkout.order.id ? String(checkout.order.id) : undefined,
       tax: toFloat(checkout && checkout.totalTax ? checkout.totalTax.amount : undefined),
       shipping: toFloat(checkout && checkout.shippingLine && checkout.shippingLine.price ? checkout.shippingLine.price.amount : undefined),
       discount: toFloat(checkout && checkout.discountsAmount ? checkout.discountsAmount.amount : undefined),
@@ -171,28 +177,34 @@
   // ==========================================
   var BroadcastManager = {
     channel: null,
+    available: false,
 
     init: function() {
       if (typeof BroadcastChannel === 'undefined') {
-        log('BroadcastChannel unavailable');
+        log('BroadcastChannel unavailable - using cookie fallback');
+        this.available = false;
         return false;
       }
       try {
         this.channel = new BroadcastChannel(CONFIG.CHANNEL_NAME);
+        this.available = true;
         log('BroadcastChannel initialized');
         return true;
       } catch (e) {
         error('BroadcastChannel error:', e.message);
+        this.available = false;
         return false;
       }
     },
 
     send: function(data) {
-      if (!this.channel) return false;
+      if (!this.available || !this.channel) return false;
       try {
         this.channel.postMessage(data);
         return true;
       } catch (e) {
+        // On failure, mark as unavailable and let fallback take over
+        this.available = false;
         return false;
       }
     },
@@ -255,7 +267,7 @@
       var data = {
         type: 'pixel_event',
         event: {
-          id: event.clientId || event.id || ('evt_' + Date.now()),
+          id: (event.clientId && event.clientId !== '') ? event.clientId : (event.id || ('evt_' + Date.now())),
           name: event.name,
           data: event.data || event,
           timestamp: Date.now(),
@@ -264,18 +276,20 @@
         _sentAt: Date.now()
       };
 
-      // Priority 1: BroadcastChannel
-      if (BroadcastManager.send(data)) {
+      // Priority 1: BroadcastChannel (if available)
+      if (BroadcastManager.available && BroadcastManager.send(data)) {
         log('BroadcastChannel sent:', event.name);
         return true;
       }
 
       // Priority 2: Cookie fallback
+      log('BC unavailable or failed, trying cookie fallback for:', event.name);
       if (CookieManager.send(data.event)) {
         log('Cookie sent:', event.name);
         return true;
       }
 
+      error('All send methods failed for:', event.name);
       return false;
     }
   };
