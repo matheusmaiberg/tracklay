@@ -2,6 +2,8 @@
  * @fileoverview Router - Ultra-aggressive obfuscation routing layer
  */
 
+/** @typedef {Request & { _parsedUrl?: URL }} RequestWithParsedUrl */
+
 import { handleOptions } from '../handlers/options.js';
 import { handleHealthCheck } from '../handlers/health.js';
 import { handleScriptProxy } from '../handlers/scripts.js';
@@ -26,7 +28,7 @@ export class Router {
    */
   static async route(request, rateLimit = null) {
     const { method } = request;
-    const parsedUrl = request._parsedUrl ?? new URL(request.url);
+    const parsedUrl = /** @type {RequestWithParsedUrl} */ (request)._parsedUrl ?? new URL(request.url);
     const { pathname, search } = parsedUrl;
 
     if (method === 'OPTIONS') {

@@ -3,6 +3,8 @@
  * @module handlers/base-proxy
  */
 
+/** @typedef {Request & { _parsedUrl?: URL }} RequestWithParsedUrl */
+
 import { proxyRequest } from '../proxy/index.js';
 import { errorResponse } from '../utils/response.js';
 import { buildFullHeaders } from '../factories/headers-factory.js';
@@ -28,7 +30,7 @@ export async function handleGenericProxy(request, options) {
     handlerName = 'base-proxy'
   } = options;
   
-  const url = request._parsedUrl ?? safeParseURL(request.url);
+  const url = /** @type {RequestWithParsedUrl} */ (request)._parsedUrl ?? safeParseURL(request.url);
 
   if (!url) {
     return errorResponse('Invalid URL', HTTP_STATUS.BAD_REQUEST);

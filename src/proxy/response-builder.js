@@ -5,6 +5,15 @@
 import { CONFIG } from '../config/index.js';
 import { buildFullHeaders } from '../factories/headers-factory.js';
 
+/**
+ * @param {Response} upstreamResponse
+ * @param {Request} request
+ * @param {Object} options
+ * @param {string} [options.cacheStatus='MISS']
+ * @param {Object} [options.rateLimit]
+ * @param {boolean} [options.isProxy=true]
+ * @returns {Response}
+ */
 export function buildResponse(upstreamResponse, request, { cacheStatus = 'MISS', rateLimit, isProxy = true } = {}) {
   const response = new Response(upstreamResponse?.body, upstreamResponse);
 

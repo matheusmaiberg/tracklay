@@ -4,8 +4,8 @@
 
 /**
  * @param {Headers} headers
- * @param {Object} options
- * @param {boolean} options.includeCSP - Whether to include CSP header (default: true)
+ * @param {Object} [options={}]
+ * @param {boolean} [options.includeCSP=true] - Whether to include CSP header
  * @returns {Headers}
  */
 export const addSecurityHeaders = (headers, { includeCSP = true } = {}) => {

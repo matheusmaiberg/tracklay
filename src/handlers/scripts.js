@@ -3,6 +3,8 @@
  * @module handlers/scripts
  */
 
+/** @typedef {Request & { _parsedUrl?: URL }} RequestWithParsedUrl */
+
 import { getScriptTarget } from '../routing/mapping.js';
 import { handleGenericProxy } from './base-proxy.js';
 
@@ -12,7 +14,7 @@ import { handleGenericProxy } from './base-proxy.js';
  * @returns {Promise<Response>} Proxied script or 404
  */
 export async function handleScriptProxy(request, rateLimit = null) {
-  const url = request._parsedUrl ?? new URL(request.url);
+  const url = /** @type {RequestWithParsedUrl} */ (request)._parsedUrl ?? new URL(request.url);
 
   // Check for force refresh parameter (_refresh=1)
   const forceRefresh = url.searchParams.get('_refresh') === '1';

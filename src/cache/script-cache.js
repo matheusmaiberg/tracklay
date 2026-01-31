@@ -234,12 +234,9 @@ export function isContainerSpecificKey(scriptKey) {
 }
 
 /**
- * Fetches script on-demand, processes through Full Script Proxy, and caches
- * Used for container-specific scripts (GTM/gtag with ?id= parameter)
- * @param {string} targetUrl - Full URL with container ID
- * @param {string} scriptKey - Composite key (e.g., 'gtm:GTM-XXX')
- * @param {string} [workerOrigin] - Worker origin for absolute URLs (e.g., https://cdn.yourstore.com)
- * @returns {Promise<Response|null>}
+ * Validates worker origin format
+ * @param {string} origin - Worker origin URL
+ * @returns {boolean}
  */
 function isValidWorkerOrigin(origin) {
   if (!origin) return false;
@@ -251,6 +248,14 @@ function isValidWorkerOrigin(origin) {
   }
 }
 
+/**
+ * Fetches script on-demand, processes through Full Script Proxy, and caches
+ * Used for container-specific scripts (GTM/gtag with ?id= parameter)
+ * @param {string} targetUrl - Full URL with container ID
+ * @param {string} scriptKey - Composite key (e.g., 'gtm:GTM-XXX')
+ * @param {string} [workerOrigin] - Worker origin for absolute URLs (e.g., https://cdn.yourstore.com)
+ * @returns {Promise<Response|null>}
+ */
 export async function fetchAndCacheOnDemand(targetUrl, scriptKey, workerOrigin = '') {
   // Check pending fetch
   if (pendingFetches.has(scriptKey)) {
