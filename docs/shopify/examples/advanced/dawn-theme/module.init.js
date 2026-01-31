@@ -5,7 +5,7 @@
  */
 
 // ============= ANTI-IFRAME PROTECTION (PAGE CONTEXT) =============
-// Intercepta criação de iframes do GTM service worker na página principal
+// Intercepta criação de iframes do GTM/gtag service worker na página principal
 (function() {
   'use strict';
   
@@ -20,11 +20,11 @@
     return;
   }
   
-  console.log('[ThemeGTM] 🛡️ Ativando proteção contra iframes do GTM service worker');
+  console.log('[ThemeGTM] 🛡️ Ativando proteção contra iframes do GTM/gtag service worker');
   
   const IFRAME_MARKER = 'sw_iframe.html';
   
-  // Intercepta document.createElement para bloquear iframes do GTM
+  // Intercepta document.createElement para bloquear iframes
   const originalCreateElement = document.createElement;
   
   document.createElement = function(tagName) {
@@ -45,7 +45,7 @@
       },
       set: function(value) {
         if (typeof value === 'string' && value.includes(IFRAME_MARKER)) {
-          console.log('[ThemeGTM] 🚫 Bloqueado iframe do GTM service worker:', value);
+          console.log('[ThemeGTM] 🚫 Bloqueado iframe do service worker:', value);
           // Não define o src - iframe não carrega
           iframeSrc = '';
           return;
@@ -63,13 +63,13 @@
     mutations.forEach(function(mutation) {
       mutation.addedNodes.forEach(function(node) {
         if (node.tagName === 'IFRAME' && node.src && node.src.includes(IFRAME_MARKER)) {
-          console.log('[ThemeGTM] 🚫 Removendo iframe do GTM service worker:', node.src);
+          console.log('[ThemeGTM] 🚫 Removendo iframe do service worker:', node.src);
           node.remove();
         }
         // Também verifica filhos
         if (node.querySelectorAll) {
           node.querySelectorAll('iframe[src*="' + IFRAME_MARKER + '"]').forEach(function(iframe) {
-            console.log('[ThemeGTM] 🚫 Removendo iframe do GTM service worker (filho):', iframe.src);
+            console.log('[ThemeGTM] 🚫 Removendo iframe do service worker (filho):', iframe.src);
             iframe.remove();
           });
         }
@@ -88,9 +88,57 @@
   
   // Limpa iframes existentes
   document.querySelectorAll('iframe[src*="' + IFRAME_MARKER + '"]').forEach(function(iframe) {
-    console.log('[ThemeGTM] 🚫 Removendo iframe existente do GTM:', iframe.src);
+    console.log('[ThemeGTM] 🚫 Removendo iframe existente do service worker:', iframe.src);
     iframe.remove();
   });
+  
+  // ========== PROTEÇÃO ADICIONAL CONTRA gtag.js ==========
+  // O gtag.js (Tag do Google) também cria iframes de service worker
+  // Interceptamos o carregamento de scripts gtag para prevenir criação do iframe
+  
+  const blockedGtagPatterns = [
+    '/gtag/js?id=GT-',
+    'googletagmanager.com/gtag/js'
+  ];
+  
+  // Sobrescreve a função de carregamento de scripts do gtag
+  const originalAppendChild = Element.prototype.appendChild;
+  Element.prototype.appendChild = function(child) {
+    if (child.tagName === 'SCRIPT' && child.src) {
+      // Verifica se é script gtag
+      const isGtagScript = blockedGtagPatterns.some(pattern => child.src.includes(pattern));
+      
+      if (isGtagScript) {
+        console.log('[ThemeGTM] 🚫 Detectado script gtag, interceptando criação de iframe:', child.src);
+        
+        // Intercepta o onload do script para prevenir execução do gtag
+        const originalOnload = child.onload;
+        child.onload = function() {
+          // Desativa o gtag service worker
+          if (window.gtag) {
+            const originalGtag = window.gtag;
+            window.gtag = function() {
+              // Bloqueia chamadas que criam service worker
+              const args = Array.from(arguments);
+              const command = args[0];
+              
+              if (command === 'config' || command === 'js') {
+                console.log('[ThemeGTM] 🚫 Bloqueada chamada gtag:', command);
+                return;
+              }
+              
+              return originalGtag.apply(this, arguments);
+            };
+          }
+          
+          if (originalOnload) {
+            originalOnload.call(this);
+          }
+        };
+      }
+    }
+    return originalAppendChild.call(this, child);
+  };
   
 })();
 
