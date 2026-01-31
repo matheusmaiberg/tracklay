@@ -61,10 +61,6 @@ function getDefaultCurrency() {
   return ConfigManager.get('GTM.CURRENCY');
 }
 
-// ============= LOGGER =============
-
-const log = Logger.create('GTMLoader');
-
 // ============= STATE =============
 
 let currentTransportUrl = undefined;
