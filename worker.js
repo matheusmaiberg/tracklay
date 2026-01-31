@@ -11,6 +11,7 @@
 
 import { Router } from './src/routing/router.js';
 import { RateLimiter } from './src/core/rate-limiter.js';
+import { Logger } from './src/core/logger.js';
 import { handleError } from './src/middleware/error-handler.js';
 import { Metrics } from './src/core/metrics.js';
 import { errorResponse } from './src/utils/response.js';
@@ -38,7 +39,7 @@ export default {
       // Execute script update in background
       ctx.waitUntil(updateScripts());
     } catch (error) {
-      console.error('Scheduled event failed:', error);
+      Logger.error('Scheduled event failed', { error: error.message, stack: error.stack });
     }
   }
 };
@@ -54,8 +55,17 @@ if (typeof addEventListener !== 'undefined') {
 // ============= HANDLER PRINCIPAL =============
 async function handleRequest(request) {
   const startTime = Date.now();
+  const url = new URL(request.url);
 
   try {
+    // Log request recebido
+    Logger.debug('Request received', {
+      method: request.method,
+      pathname: url.pathname,
+      cfRay: request.headers.get('CF-Ray'),
+      cfCountry: request.headers.get('CF-IPCountry')
+    });
+
     // Registrar request recebido
     Metrics.recordRequest(request);
 
@@ -73,6 +83,7 @@ async function handleRequest(request) {
     const rateLimit = await RateLimiter.check(clientIP);
 
     if (!rateLimit.allowed) {
+      Logger.warn('Rate limit exceeded', { clientIP, path: url.pathname });
       const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
       const headers = buildFullHeaders(request, { includeRateLimit: false });
       headers.set('Retry-After', retryAfter.toString());
@@ -93,6 +104,12 @@ async function handleRequest(request) {
     // Registrar métricas
     const duration = Date.now() - startTime;
     Metrics.record(request, response, duration);
+
+    Logger.debug('Request completed', {
+      pathname: url.pathname,
+      status: response.status,
+      duration: `${duration}ms`
+    });
 
     return response;
 
