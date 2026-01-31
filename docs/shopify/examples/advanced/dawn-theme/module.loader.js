@@ -110,9 +110,17 @@ const init = (options = {}) => {
 
   window.dataLayer = window.dataLayer || [];
   
+  // Capture page info from main document (not iframe)
+  const pageTitle = document.title || '';
+  const pageLocation = window.location.href || '';
+  const pagePath = window.location.pathname || '';
+  
   const initialPush = {
     'gtm.start': new Date().getTime(),
-    event: 'gtm.js'
+    event: 'gtm.js',
+    page_title: pageTitle,
+    page_location: pageLocation,
+    page_path: pagePath
   };
   
   const defaultCurrency = options.currency || getDefaultCurrency();

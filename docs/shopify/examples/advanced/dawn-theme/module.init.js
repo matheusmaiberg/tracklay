@@ -44,9 +44,17 @@ const ThemeGTM = (function() {
 
     if (typeof GTMLoader !== 'undefined' && typeof GTMLoader.push === 'function') {
       try {
+        // Ensure page info is always present (not from iframe)
+        const pageTitle = document.title || '';
+        const pageLocation = window.location.href || '';
+        const pagePath = window.location.pathname || '';
+        
         const payload = {
           event: event.name,
           ...event.data,
+          page_title: event.data?.page_title || pageTitle,
+          page_location: event.data?.page_location || pageLocation,
+          page_path: event.data?.page_path || pagePath,
           _tracklay_event_id: event.id,
           _tracklay_timestamp: event.timestamp,
           _tracklay_source: source
@@ -79,9 +87,17 @@ const ThemeGTM = (function() {
       logger.warn('[pushToDataLayer] ⚠️ Limite de dataLayer excedido, removidos', removedCount, 'itens');
     }
 
+    // Ensure page info is always present (not from iframe)
+    const pageTitle = document.title || '';
+    const pageLocation = window.location.href || '';
+    const pagePath = window.location.pathname || '';
+    
     const dataLayerEntry = {
       event: event.name,
       ...event.data,
+      page_title: event.data?.page_title || pageTitle,
+      page_location: event.data?.page_location || pageLocation,
+      page_path: event.data?.page_path || pagePath,
       _tracklay_event_id: event.id,
       _tracklay_timestamp: event.timestamp,
       _tracklay_source: source
