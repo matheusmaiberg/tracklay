@@ -1,0 +1,280 @@
+# Shopify Admin GraphQL — Tracklay Metafields
+# ============================================================
+# Use estas queries/mutations no Shopify Admin API (GraphiQL app,
+# Postman, ou dentro do seu app Shopify).
+#
+# Escopo necessário: read_shop_metafields, write_shop_metafields
+# API Version recomendada: 2024-01 ou superior
+# ============================================================
+
+# ------------------------------------------------------------
+# 1. DESCUBRIR O SHOP ID (necessario para mutations)
+# ------------------------------------------------------------
+query GetShopId {
+  shop {
+    id
+    name
+    myshopifyDomain
+  }
+}
+
+# Resposta esperada:
+# {
+#   "data": {
+#     "shop": {
+#       "id": "gid://shopify/Shop/1234567890",
+#       "name": "Suevich",
+#       "myshopifyDomain": "suevich.myshopify.com"
+#     }
+#   }
+# }
+
+
+# ------------------------------------------------------------
+# 2. LER TODOS OS METAFIELDS DA SHOP NO NAMESPACE "tracklay"
+# ------------------------------------------------------------
+query GetTracklayMetafields($namespace: String!) {
+  shop {
+    metafields(first: 20, namespace: $namespace) {
+      edges {
+        node {
+          id
+          namespace
+          key
+          value
+          type
+          createdAt
+          updatedAt
+        }
+      }
+    }
+  }
+}
+
+# Variaveis:
+# {
+#   "namespace": "tracklay"
+# }
+
+
+# ------------------------------------------------------------
+# 3. LER UM METAFIELD ESPECIFICO
+# ------------------------------------------------------------
+query GetTracklayMetafield($namespace: String!, $key: String!) {
+  shop {
+    metafield(namespace: $namespace, key: $key) {
+      id
+      value
+      type
+      updatedAt
+    }
+  }
+}
+
+# Variaveis:
+# {
+#   "namespace": "tracklay",
+#   "key": "gtm_id"
+# }
+
+
+# ------------------------------------------------------------
+# 4. CRIAR / ATUALIZAR TODOS OS METAFIELDS DO TRACKLAY DE UMA VEZ
+# ------------------------------------------------------------
+# Preencha o $ownerId com o gid retornado na query 1.
+# Exemplo de ownerId: "gid://shopify/Shop/1234567890"
+# ------------------------------------------------------------
+mutation SetTracklayMetafields(
+  $ownerId: ID!,
+  $gtmId: String!,
+  $measurementId: String!,
+  $workerUrl: String!,
+  $gtmServerUrl: String!,
+  $googleUuid: String!,
+  $facebookUuid: String!,
+  $currency: String!,
+  $debug: String!
+) {
+  metafieldsSet(metafields: [
+    {
+      ownerId: $ownerId
+      namespace: "tracklay"
+      key: "gtm_id"
+      value: $gtmId
+      type: "single_line_text_field"
+    },
+    {
+      ownerId: $ownerId
+      namespace: "tracklay"
+      key: "measurement_id"
+      value: $measurementId
+      type: "single_line_text_field"
+    },
+    {
+      ownerId: $ownerId
+      namespace: "tracklay"
+      key: "worker_url"
+      value: $workerUrl
+      type: "single_line_text_field"
+    },
+    {
+      ownerId: $ownerId
+      namespace: "tracklay"
+      key: "gtm_server_url"
+      value: $gtmServerUrl
+      type: "single_line_text_field"
+    },
+    {
+      ownerId: $ownerId
+      namespace: "tracklay"
+      key: "google_uuid"
+      value: $googleUuid
+      type: "single_line_text_field"
+    },
+    {
+      ownerId: $ownerId
+      namespace: "tracklay"
+      key: "facebook_uuid"
+      value: $facebookUuid
+      type: "single_line_text_field"
+    },
+    {
+      ownerId: $ownerId
+      namespace: "tracklay"
+      key: "currency"
+      value: $currency
+      type: "single_line_text_field"
+    },
+    {
+      ownerId: $ownerId
+      namespace: "tracklay"
+      key: "debug"
+      value: $debug
+      type: "boolean"
+    }
+  ]) {
+    metafields {
+      id
+      namespace
+      key
+      value
+      type
+    }
+    userErrors {
+      field
+      message
+      code
+    }
+  }
+}
+
+# Variaveis:
+# {
+#   "ownerId": "gid://shopify/Shop/1234567890",
+#   "gtmId": "GTM-MJ7DW8H",
+#   "measurementId": "G-XXXXXX",
+#   "workerUrl": "https://cdn.suevich.com",
+#   "gtmServerUrl": "https://gtm.suevich.com",
+#   "googleUuid": "b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f",
+#   "facebookUuid": "",
+#   "currency": "BRL",
+#   "debug": "false"
+# }
+
+
+# ------------------------------------------------------------
+# 5. ATUALIZAR APENAS UM METAFIELD (exemplo: google_uuid)
+# ------------------------------------------------------------
+mutation UpdateSingleMetafield(
+  $ownerId: ID!,
+  $key: String!,
+  $value: String!,
+  $type: String!
+) {
+  metafieldsSet(metafields: [
+    {
+      ownerId: $ownerId
+      namespace: "tracklay"
+      key: $key
+      value: $value
+      type: $type
+    }
+  ]) {
+    metafields {
+      id
+      key
+      value
+      updatedAt
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}
+
+# Variaveis:
+# {
+#   "ownerId": "gid://shopify/Shop/1234567890",
+#   "key": "google_uuid",
+#   "value": "SEU_UUID_AQUI",
+#   "type": "single_line_text_field"
+# }
+
+
+# ------------------------------------------------------------
+# 6. DELETAR UM METAFIELD PELO ID
+# ------------------------------------------------------------
+# ATENCAO: irrecuperavel. Use com cuidado.
+# Rode a query 2 para pegar o metafield.id, depois use aqui.
+# ------------------------------------------------------------
+mutation DeleteTracklayMetafield($id: ID!) {
+  metafieldDelete(input: { id: $id }) {
+    deletedId
+    userErrors {
+      field
+      message
+    }
+  }
+}
+
+# Variaveis:
+# {
+#   "id": "gid://shopify/Metafield/1234567890"
+# }
+
+
+# ------------------------------------------------------------
+# 7. VERIFICAR CONFIGURACAO COMPLETA DO TRACKLAY
+# ------------------------------------------------------------
+query VerifyTracklayConfig {
+  shop {
+    gtmId: metafield(namespace: "tracklay", key: "gtm_id") { value }
+    measurementId: metafield(namespace: "tracklay", key: "measurement_id") { value }
+    workerUrl: metafield(namespace: "tracklay", key: "worker_url") { value }
+    gtmServerUrl: metafield(namespace: "tracklay", key: "gtm_server_url") { value }
+    googleUuid: metafield(namespace: "tracklay", key: "google_uuid") { value }
+    facebookUuid: metafield(namespace: "tracklay", key: "facebook_uuid") { value }
+    currency: metafield(namespace: "tracklay", key: "currency") { value }
+    debug: metafield(namespace: "tracklay", key: "debug") { value }
+  }
+}
+
+
+# ============================================================
+# DICAS DE USO
+# ============================================================
+# - No GraphiQL App, a aba "Variables" fica na parte de baixo.
+#   Cole o JSON das variaveis la em vez de editar o query.
+#
+# - Em apps/programas, envie o payload assim:
+#   {
+#     "query": "mutation SetTracklayMetafields($ownerId: ID!, ...) { ... }",
+#     "variables": { "ownerId": "...", "gtmId": "...", ... }
+#   }
+#
+# - Metafields de loja (Shop) sao acessiveis via Liquid em
+#   qualquer template usando: shop.metafields.tracklay.key
+#
+# - Nao e necessario expor esses metafields para Storefront API.
+# ============================================================
