@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tracklay — Shopify GraphQL Tool</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-hover: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #10b981;
+      --danger: #ef4444;
+      --border: #334155;
+      --font: 'Segoe UI', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.5;
+      padding: 2rem 1rem;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    header h1 {
+      font-size: 1.75rem;
+      margin-bottom: 0.25rem;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .card h2 {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 0.75rem;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .field label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .field input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.375rem;
+      padding: 0.5rem 0.75rem;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field input:focus {
+      border-color: var(--accent);
+    }
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button:hover { background: var(--accent-hover); }
+    button.secondary { background: var(--surface-hover); }
+    button.secondary:hover { background: #475569; }
+    button.success { background: var(--success); }
+    button.success:hover { background: #059669; }
+    button.danger { background: var(--danger); }
+    .query-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .query-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+    .query-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: rgba(15,23,42,0.6);
+      cursor: pointer;
+      user-select: none;
+    }
+    .query-header:hover { background: rgba(15,23,42,0.9); }
+    .query-header strong {
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+    .query-header span {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .query-body {
+      display: none;
+      padding: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .query-body.open { display: block; }
+    pre {
+      background: #020617;
+      border: 1px solid var(--border);
+      border-radius: 0.375rem;
+      padding: 0.75rem;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #e2e8f0;
+    }
+    .copy-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .toast {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: var(--success);
+      color: white;
+      padding: 0.6rem 1rem;
+      border-radius: 0.375rem;
+      font-size: 0.9rem;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .hint {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🚀 Tracklay — Shopify GraphQL Tool</h1>
+      <p>Gere queries e mutations do Shopify Admin API com seus valores salvos no navegador.</p>
+    </header>
+
+    <section class="card">
+      <h2>⚙️ Configuração da Loja</h2>
+      <div class="grid" id="config-form">
+        <div class="field">
+          <label for="ownerId">Shop ID (gid)</label>
+          <input id="ownerId" type="text" placeholder="gid://shopify/Shop/1234567890">
+        </div>
+        <div class="field">
+          <label for="gtmId">GTM ID</label>
+          <input id="gtmId" type="text" placeholder="GTM-MJ7DW8H">
+        </div>
+        <div class="field">
+          <label for="measurementId">Measurement ID (GA4)</label>
+          <input id="measurementId" type="text" placeholder="G-XXXXXX">
+        </div>
+        <div class="field">
+          <label for="workerUrl">Worker URL</label>
+          <input id="workerUrl" type="text" placeholder="https://cdn.suevich.com">
+        </div>
+        <div class="field">
+          <label for="gtmServerUrl">GTM Server URL</label>
+          <input id="gtmServerUrl" type="text" placeholder="https://gtm.suevich.com">
+        </div>
+        <div class="field">
+          <label for="googleUuid">Google UUID</label>
+          <input id="googleUuid" type="text" placeholder="b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f">
+        </div>
+        <div class="field">
+          <label for="facebookUuid">Facebook UUID</label>
+          <input id="facebookUuid" type="text" placeholder="deixe vazio se nao usar">
+        </div>
+        <div class="field">
+          <label for="currency">Moeda</label>
+          <input id="currency" type="text" placeholder="BRL">
+        </div>
+        <div class="field">
+          <label for="debug">Debug (true/false)</label>
+          <input id="debug" type="text" placeholder="false">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="success" onclick="saveConfig()">💾 Salvar no navegador</button>
+        <button class="secondary" onclick="loadDefaults()">♻️ Restaurar padrões</button>
+        <button class="danger" onclick="clearConfig()">🗑️ Limpar tudo</button>
+      </div>
+      <p class="hint">Os dados são salvos automaticamente no <strong>localStorage</strong> deste navegador. Nenhum dado sai da sua máquina.</p>
+    </section>
+
+    <section class="card">
+      <h2>📋 Queries & Mutations</h2>
+      <div class="query-list" id="queries"></div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast">Copiado!</div>
+
+  <script>
+    const STORAGE_KEY = 'tracklay_graphql_config_v1';
+
+    const defaults = {
+      ownerId: '',
+      gtmId: 'GTM-MJ7DW8H',
+      measurementId: 'G-XXXXXX',
+      workerUrl: 'https://cdn.suevich.com',
+      gtmServerUrl: 'https://gtm.suevich.com',
+      googleUuid: 'b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f',
+      facebookUuid: '',
+      currency: 'BRL',
+      debug: 'false'
+    };
+
+    const operations = [
+      {
+        id: 'getShopId',
+        title: '1. Descobrir Shop ID',
+        description: 'Query sem variáveis',
+        hasVars: false,
+        query: `query GetShopId {
+  shop {
+    id
+    name
+    myshopifyDomain
+  }
+}`
+      },
+      {
+        id: 'getTracklayMetafields',
+        title: '2. Ler metafields do namespace "tracklay"',
+        description: 'Query com variável $namespace',
+        hasVars: true,
+        buildVars: (cfg) => JSON.stringify({ namespace: "tracklay" }, null, 2),
+        query: `query GetTracklayMetafields($namespace: String!) {
+  shop {
+    metafields(first: 20, namespace: $namespace) {
+      edges {
+        node {
+          id
+          namespace
+          key
+          value
+          type
+          createdAt
+          updatedAt
+        }
+      }
+    }
+  }
+}`
+      },
+      {
+        id: 'setTracklayMetafields',
+        title: '3. Criar / Atualizar todos os metafields',
+        description: 'Mutation completa com variáveis',
+        hasVars: true,
+        buildVars: (cfg) => JSON.stringify({
+          ownerId: cfg.ownerId,
+          gtmId: cfg.gtmId,
+          measurementId: cfg.measurementId,
+          workerUrl: cfg.workerUrl,
+          gtmServerUrl: cfg.gtmServerUrl,
+          googleUuid: cfg.googleUuid,
+          facebookUuid: cfg.facebookUuid,
+          currency: cfg.currency,
+          debug: cfg.debug
+        }, null, 2),
+        query: (cfg) => `mutation SetTracklayMetafields(
+  $ownerId: ID!,
+  $gtmId: String!,
+  $measurementId: String!,
+  $workerUrl: String!,
+  $gtmServerUrl: String!,
+  $googleUuid: String!,
+  $facebookUuid: String!,
+  $currency: String!,
+  $debug: String!
+) {
+  metafieldsSet(metafields: [
+    { ownerId: $ownerId, namespace: "tracklay", key: "gtm_id", value: "${cfg.gtmId}", type: "single_line_text_field" },
+    { ownerId: $ownerId, namespace: "tracklay", key: "measurement_id", value: "${cfg.measurementId}", type: "single_line_text_field" },
+    { ownerId: $ownerId, namespace: "tracklay", key: "worker_url", value: "${cfg.workerUrl}", type: "single_line_text_field" },
+    { ownerId: $ownerId, namespace: "tracklay", key: "gtm_server_url", value: "${cfg.gtmServerUrl}", type: "single_line_text_field" },
+    { ownerId: $ownerId, namespace: "tracklay", key: "google_uuid", value: "${cfg.googleUuid}", type: "single_line_text_field" },
+    { ownerId: $ownerId, namespace: "tracklay", key: "facebook_uuid", value: "${cfg.facebookUuid}", type: "single_line_text_field" },
+    { ownerId: $ownerId, namespace: "tracklay", key: "currency", value: "${cfg.currency}", type: "single_line_text_field" },
+    { ownerId: $ownerId, namespace: "tracklay", key: "debug", value: "${cfg.debug}", type: "boolean" }
+  ]) {
+    metafields { id namespace key value type }
+    userErrors { field message code }
+  }
+}`
+      },
+      {
+        id: 'updateSingle',
+        title: '4. Atualizar apenas um metafield (ex: google_uuid)',
+        description: 'Mutation com variáveis genéricas',
+        hasVars: true,
+        buildVars: (cfg) => JSON.stringify({
+          ownerId: cfg.ownerId,
+          key: "google_uuid",
+          value: "SEU_UUID_AQUI",
+          type: "single_line_text_field"
+        }, null, 2),
+        query: `mutation UpdateSingleMetafield(
+  $ownerId: ID!,
+  $key: String!,
+  $value: String!,
+  $type: String!
+) {
+  metafieldsSet(metafields: [
+    { ownerId: $ownerId, namespace: "tracklay", key: $key, value: $value, type: $type }
+  ]) {
+    metafields { id key value updatedAt }
+    userErrors { field message }
+  }
+}`
+      },
+      {
+        id: 'deleteMetafield',
+        title: '5. Deletar um metafield pelo ID',
+        description: 'Mutation irreversível — use com cuidado',
+        hasVars: true,
+        buildVars: () => JSON.stringify({ id: "gid://shopify/Metafield/1234567890" }, null, 2),
+        query: `mutation DeleteTracklayMetafield($id: ID!) {
+  metafieldDelete(input: { id: $id }) {
+    deletedId
+    userErrors { field message }
+  }
+}`
+      },
+      {
+        id: 'verifyConfig',
+        title: '6. Verificar configuração completa do Tracklay',
+        description: 'Query sem variáveis',
+        hasVars: false,
+        query: `query VerifyTracklayConfig {
+  shop {
+    gtmId: metafield(namespace: "tracklay", key: "gtm_id") { value }
+    measurementId: metafield(namespace: "tracklay", key: "measurement_id") { value }
+    workerUrl: metafield(namespace: "tracklay", key: "worker_url") { value }
+    gtmServerUrl: metafield(namespace: "tracklay", key: "gtm_server_url") { value }
+    googleUuid: metafield(namespace: "tracklay", key: "google_uuid") { value }
+    facebookUuid: metafield(namespace: "tracklay", key: "facebook_uuid") { value }
+    currency: metafield(namespace: "tracklay", key: "currency") { value }
+    debug: metafield(namespace: "tracklay", key: "debug") { value }
+  }
+}`
+      }
+    ];
+
+    function getInputs() {
+      const out = {};
+      for (const key of Object.keys(defaults)) {
+        out[key] = document.getElementById(key).value.trim();
+      }
+      return out;
+    }
+
+    function setInputs(cfg) {
+      for (const key of Object.keys(defaults)) {
+        document.getElementById(key).value = cfg[key] ?? '';
+      }
+    }
+
+    function loadConfig() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return { ...defaults };
+    }
+
+    function saveConfig() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(getInputs()));
+      renderQueries();
+      showToast('💾 Configuração salva!');
+    }
+
+    function loadDefaults() {
+      setInputs({ ...defaults });
+      saveConfig();
+      showToast('♻️ Padrões restaurados');
+    }
+
+    function clearConfig() {
+      localStorage.removeItem(STORAGE_KEY);
+      setInputs({ ...defaults });
+      renderQueries();
+      showToast('🗑️ Dados limpos');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => showToast('📋 Copiado!'));
+    }
+
+    function renderQueries() {
+      const cfg = getInputs();
+      const container = document.getElementById('queries');
+      container.innerHTML = '';
+
+      operations.forEach(op => {
+        const qText = typeof op.query === 'function' ? op.query(cfg) : op.query;
+        const varsText = op.hasVars && op.buildVars ? op.buildVars(cfg) : '';
+
+        const item = document.createElement('div');
+        item.className = 'query-item';
+        item.innerHTML = `
+          <div class="query-header" onclick="toggleQuery('${op.id}')">
+            <div>
+              <strong>${op.title}</strong>
+              <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.15rem;">${op.description}</div>
+            </div>
+            <span>▼</span>
+          </div>
+          <div class="query-body" id="body-${op.id}">
+            <pre id="code-${op.id}">${escapeHtml(qText)}</pre>
+            <div class="copy-bar">
+              <button onclick="copyQuery('${op.id}')">📋 Copiar query</button>
+              ${varsText ? `<button class="secondary" onclick="copyVars('${op.id}')">📋 Copiar variáveis</button>` : ''}
+            </div>
+            ${varsText ? `<pre style="margin-top:0.75rem;background:#0f172a;" id="vars-${op.id}">${escapeHtml(varsText)}</pre>` : ''}
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function toggleQuery(id) {
+      const body = document.getElementById(`body-${id}`);
+      body.classList.toggle('open');
+    }
+
+    function copyQuery(id) {
+      const op = operations.find(o => o.id === id);
+      const cfg = getInputs();
+      const text = typeof op.query === 'function' ? op.query(cfg) : op.query;
+      copyText(text);
+    }
+
+    function copyVars(id) {
+      const op = operations.find(o => o.id === id);
+      const cfg = getInputs();
+      const text = op.buildVars(cfg);
+      copyText(text);
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    // Auto-save ao digitar (com debounce)
+    let timeout;
+    document.getElementById('config-form').addEventListener('input', () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(getInputs()));
+        renderQueries();
+      }, 400);
+    });
+
+    // Init
+    const saved = loadConfig();
+    setInputs(saved);
+    renderQueries();
+    // Abre a primeira query por padrão
+    setTimeout(() => toggleQuery('setTracklayMetafields'), 50);
+  </script>
+</body>
+</html>
