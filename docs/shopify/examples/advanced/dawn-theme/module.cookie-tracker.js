@@ -514,11 +514,11 @@ const SimplePoll = {
 const SessionStoragePoll = {
   intervalId: null,
   listeners: new Set(),
-  nextIndex: 0,
-  prefix: 'tracklay_event_',
+  queueKey: 'tracklay_event_queue',
 
   start() {
     if (this.intervalId) return;
+    if (typeof sessionStorage === 'undefined') return;
 
     const pollInterval = 1000;
     this.intervalId = setInterval(() => {
@@ -536,32 +536,34 @@ const SessionStoragePoll = {
   processQueue() {
     if (typeof sessionStorage === 'undefined') return;
 
-    let processed = 0;
-    const maxBatch = 50;
+    const raw = sessionStorage.getItem(this.queueKey);
+    if (!raw) return;
 
-    while (processed < maxBatch) {
-      const key = this.prefix + this.nextIndex;
-      const raw = sessionStorage.getItem(key);
-
-      if (!raw) break;
-
-      try {
-        const event = JSON.parse(raw);
-        this.listeners.forEach(listener => {
-          try {
-            listener(event);
-          } catch (e) {
-            log.error('SessionStoragePoll Listener error:', e);
-          }
-        });
-      } catch (e) {
-        log.error('SessionStoragePoll JSON parse error:', e);
+    let queue;
+    try {
+      queue = JSON.parse(raw);
+      if (!Array.isArray(queue)) {
+        sessionStorage.removeItem(this.queueKey);
+        return;
       }
-
-      sessionStorage.removeItem(key);
-      this.nextIndex++;
-      processed++;
+    } catch (e) {
+      log.error('SessionStoragePoll JSON parse error:', e);
+      sessionStorage.removeItem(this.queueKey);
+      return;
     }
+
+    for (const event of queue) {
+      if (!event) continue;
+      this.listeners.forEach(listener => {
+        try {
+          listener(event);
+        } catch (e) {
+          log.error('SessionStoragePoll Listener error:', e);
+        }
+      });
+    }
+
+    sessionStorage.removeItem(this.queueKey);
   },
 
   subscribe(callback) {
