@@ -20,7 +20,7 @@ export async function handleEventProxy(request, rateLimit = null) {
   try {
     if (!CONFIG.GTM_SERVER_URL) {
       Logger.warn('Event proxy called but GTM_SERVER_URL not configured');
-      return errorResponse('Server-side tracking not configured', HTTP_STATUS.SERVICE_UNAVAILABLE);
+      return buildResponse(errorResponse('Server-side tracking not configured', HTTP_STATUS.SERVICE_UNAVAILABLE), request, { preserveHeaders: false, allowCache: false, rateLimit });
     }
 
     let eventData;
@@ -28,13 +28,13 @@ export async function handleEventProxy(request, rateLimit = null) {
       eventData = await request.json();
     } catch (parseError) {
       Logger.warn('Failed to parse event JSON', { error: parseError.message });
-      return errorResponse('Invalid JSON', HTTP_STATUS.BAD_REQUEST);
+      return buildResponse(errorResponse('Invalid JSON', HTTP_STATUS.BAD_REQUEST), request, { preserveHeaders: false, allowCache: false, rateLimit });
     }
 
     const validation = validateEventData(eventData);
     if (!validation.valid) {
       Logger.warn('Event validation failed', { errors: validation.errors });
-      return errorResponse(`Invalid event: ${validation.errors.join(', ')}`, HTTP_STATUS.BAD_REQUEST);
+      return buildResponse(errorResponse(`Invalid event: ${validation.errors.join(', ')}`, HTTP_STATUS.BAD_REQUEST), request, { preserveHeaders: false, allowCache: false, rateLimit });
     }
 
     const { headers } = request;
