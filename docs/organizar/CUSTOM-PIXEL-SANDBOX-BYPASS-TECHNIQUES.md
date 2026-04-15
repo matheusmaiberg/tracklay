@@ -1217,7 +1217,7 @@ const loadGTM = async () => {
 #### Implementation Checklist
 
 - [ ] Deploy Cloudflare Worker to first-party domain
-- [ ] Configure UUID-based obfuscated routes (v3.0.0)
+- [ ] Configure UUID-based obfuscated routes (v1.0.0)
 - [ ] Set up GTM Server-Side endpoints
 - [ ] Custom Pixel→Worker→GTM Server→GA4 flow
 - [ ] Test with uBlock Origin enabled

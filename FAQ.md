@@ -1,6 +1,6 @@
 # Frequently Asked Questions (FAQ)
 
-> ⚠️ **v3.0.0 UPDATE** - This FAQ references some legacy routes that were removed in v3.0.0
+> ⚠️ **v1.0.0 UPDATE** - This FAQ references some legacy routes that were removed in v1.0.0
 >
 > **Key Changes:**
 > - ❌ Legacy routes removed: `/cdn/gtag/js`, `/cdn/gtm.js`, `/cdn/fbevents.js`
@@ -44,7 +44,7 @@ The Cloudflare Workers free tier includes 100,000 requests/day, which is enough 
 3. Worker adds proper CORS headers and returns the script
 4. Browser treats it as first-party and doesn't block it
 
-Note: v3.0.0 uses UUID-based obfuscated paths instead of detectable patterns.
+Note: v1.0.0 uses UUID-based obfuscated paths instead of detectable patterns.
 
 ### What gets proxied?
 

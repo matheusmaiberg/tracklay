@@ -7,6 +7,8 @@
 name = "tracklay"
 main = "worker.js"
 compatibility_date = "2026-01-26"
+workers_dev = false
+preview_urls = false
 
 # Modern features enabled
 compatibility_flags = ["nodejs_compat"]
@@ -71,7 +73,7 @@ GTM_SERVER_URL = "https://gtm.suevich.com"
 
 # CORS Origins (optional, auto-detected by default)
 # Comma-separated list of allowed origins
-ALLOWED_ORIGINS = "https://suevich.com,https://www.suevich.com,https://cdn.suevich.com"
+ALLOWED_ORIGINS = "https://suevich.com,https://www.suevich.com,https://www.suevich.shop"
 
 # Rate Limiting (optional)
 RATE_LIMIT_REQUESTS = "100"
@@ -97,10 +99,15 @@ LOG_LEVEL = "info"
 # Generate UUIDs: node -e "console.log(require('crypto').randomUUID())"
 
 # Facebook obfuscation UUID (creates: /cdn/f/{UUID}.js)
-OBFUSCATION_FB_UUID = "a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e"
+OBFUSCATION_FB_UUID = "19ea1d6f-e84e-4aa5-8156-e00f052f7e68"
 
 # Google obfuscation UUID (creates: /cdn/g/{UUID}.js)
 OBFUSCATION_GA_UUID = "b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f"
+
+# ============= SECRETS (mirrored from Cloudflare production) =============
+OBFUSCATION_SECRET = "213057e7-dee7-48f6-8f6f-82fddb083e47"
+ENDPOINTS_API_TOKEN = "a8f3c2e1-4b9d-4f5a-8c3e-2d1f9b4a7c6e"
+WORKER_BASE_URL = "https://cdn.suevich.com"
 
 # ============= UUID ROTATION & DEBUG =============
 # UUID Rotation (false = fixed/recommended, true = rotation/advanced)

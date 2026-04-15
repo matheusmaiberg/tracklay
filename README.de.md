@@ -2,7 +2,7 @@
 
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/analyzify/tracklay/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/analyzify/tracklay/releases)
 
 > **Umgehen Sie Safari ITP, Werbeblocker (uBlock, AdBlock) und Browser-Datenschutzmaßnahmen. Stellen Sie 40%+ verlorene Konversionsdaten mit First-Party Tracking wieder her.**
 
@@ -41,7 +41,7 @@ In 2024-2025 **gehen 60-70% Ihrer Konversionsdaten verloren** durch moderne Brow
 
 ## Was Tracklay anders macht
 
-### Ultra-aggressives Obfuskieren (v3.0.0 Durchbruch)
+### Ultra-aggressives Obfuskieren (v1.0.0 Durchbruch)
 
 Im Gegensatz zu traditionellen Tracking-Proxies verwendet Tracklay **UUID-basierte Pfad-Rotation** mit **nulldetektierbaren Mustern**:
 
@@ -62,7 +62,7 @@ https://ihreshop.com/cdn/f/b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f
 - ✅ **Gleicher Pfad für Scripts und Endpoints**: Keine erkennbaren Muster
 - ✅ **Erkennungsrate <5%**: Reduziert von 90-100% mit traditionellen Proxies
 
-### Vollständiger Script-Proxy (v3.1.0) - Komplettes Werbeblocker-Bypass
+### Vollständiger Script-Proxy (v1.0.0) - Komplettes Werbeblocker-Bypass
 
 Tracklay führt jetzt **tiefe URL-Extraktion und -Austausch** in Tracking-Scripts durch. Jede externe URL in GTM-, gtag- oder Facebook-Scripts wird automatisch über eindeutige UUID-Endpoints proxyfiziert.
 
@@ -345,7 +345,7 @@ npm run deploy
 
 # 2. Health Endpoint testen
 curl https://ihr-worker.workers.dev/health
-# Sollte zurückgeben: {"status":"OK","version":"3.0.0"}
+# Sollte zurückgeben: {"status":"OK","version":"1.0.0"}
 
 # 3. Routes überprüfen
 npm run urls
@@ -437,7 +437,7 @@ Wir freuen uns über Beiträge! Siehe [`CONTRIBUTING.md`](CONTRIBUTING.md) für 
 
 ### Roadmap
 
-- [x] **Vollständiger Script-Proxy** - Komplette URL-Extraktion und Proxy (v3.1.0) ✅
+- [x] **Vollständiger Script-Proxy** - Komplette URL-Extraktion und Proxy (v1.0.0) ✅
 - [ ] TikTok Pixel Integration
 - [ ] Eingebautes Analytics-Dashboard
 - [ ] A/B-Testing-Framework für Tracking-Methoden

@@ -113,7 +113,7 @@ All themes have:
 2. **Open DevTools Console** (F12)
 3. **Look for:**
    ```
-   [Tracklay] Initializing Tracklay server-side tracking v3.1.0...
+   [Tracklay] Initializing Tracklay server-side tracking v1.0.0...
    [Tracklay] Created new session 1234567890
    [Tracklay] Event sent: page_view
    [Tracklay] Initialized ✓ Server-side tracking active

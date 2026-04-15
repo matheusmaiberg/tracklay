@@ -1,4 +1,4 @@
-# Instruções de Commit - Atualização dos READMEs v3.0.0
+# Instruções de Commit - Atualização dos READMEs v1.0.0
 
 ## Status dos Arquivos
 
@@ -27,7 +27,7 @@ git add README.md README.pt-BR.md
 
 ### Etapa 3: Fazer Commit
 ```bash
-git commit -m "docs: atualiza README.md e README.pt-BR.md para v3.0.0
+git commit -m "docs: atualiza README.md e README.pt-BR.md para v1.0.0
 
 🎯 Otimização SEO completa dos READMEs
 
@@ -47,7 +47,7 @@ README.pt-BR.md (Português):
 - Mantido tom profissional e técnico
 
 Ambos:
-- Versionados como v3.0.0
+- Versionados como v1.0.0
 - Estrutura de headings otimizada (H1, H2, H3)
 - Rich snippets e meta descrições implícitas
 - Links internos para documentação
@@ -120,7 +120,7 @@ git log -1 --stat
 # Author: Your Name <email>
 # Date: [data atual]
 #
-#     docs: atualiza README.md e README.pt-BR.md para v3.0.0
+#     docs: atualiza README.md e README.pt-BR.md para v1.0.0
 #
 #     [mensagem completa]
 #
@@ -133,12 +133,12 @@ git log -1 --stat
 
 ## Próximo Passo: Publicar Release
 
-Recomendado: Criar uma release GitHub v3.0.0 com os novos READMEs:
+Recomendado: Criar uma release GitHub v1.0.0 com os novos READMEs:
 
 1. Vá para https://github.com/analyzify/tracklay/releases
 2. Clique "Draft a new release"
-3. Tag version: `v3.0.0`
-4. Release title: "Tracklay v3.0.0 - First-Party Tracking with EMQ 9+"
+3. Tag version: `v1.0.0`
+4. Release title: "Tracklay v1.0.0 - First-Party Tracking with EMQ 9+"
 5. Copie o changelog do arquivo `CHANGELOG.md`
 6. Publique a release
 

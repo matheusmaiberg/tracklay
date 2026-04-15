@@ -114,14 +114,14 @@ wrangler.toml             # Cloudflare Workers configuration
 5. Metrics recorded before returning response
 ```
 
-### Ultra-Aggressive Obfuscation Mode (v3.0.0)
+### Ultra-Aggressive Obfuscation Mode (v1.0.0)
 The router uses **same path for both scripts and endpoints**, differentiated by:
 - **Facebook**: HTTP method (POST = tracking endpoint, GET = script)
 - **Google**: Query parameters (v=2/tid=/_p= = endpoint, c=/id= = script)
 
 This prevents ad-blockers from maintaining permanent blacklists of predictable paths.
 
-### Full Script Proxy (v3.2.0)
+### Full Script Proxy (v1.0.0)
 When `FULL_SCRIPT_PROXY_ENABLED=true`, the worker performs deep URL extraction and replacement:
 
 ```

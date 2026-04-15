@@ -466,7 +466,7 @@ Result: `gid://shopify/Shop/12345678` → Use `12345678`
 
 - [Tracklay Main README](../README.md)
 - [Obfuscation Documentation](OBFUSCATION.md)
-- [Migration Guide v3.0.0](MIGRATION-V3.md)
+- [Migration Guide v1.0.0](MIGRATION-V3.md)
 - [Cloudflare Workers Docs](https://developers.cloudflare.com/workers/)
 - [Shopify Admin API](https://shopify.dev/api/admin)
 

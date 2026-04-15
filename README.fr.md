@@ -2,7 +2,7 @@
 
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/analyzify/tracklay/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/analyzify/tracklay/releases)
 
 > **Contournez Safari ITP, les Bloqueurs de Publicités (uBlock, AdBlock) et les Protections de Confidentialité. Récupérez 40%+ de Données de Conversion Perdues avec le Suivi First-Party.**
 
@@ -41,7 +41,7 @@ En 2024-2025, **60-70% de vos données de conversion sont perdues** en raison de
 
 ## Ce qui Rend Tracklay Différent
 
-### Offuscation Ultraagressive (Percée v3.0.0)
+### Offuscation Ultraagressive (Percée v1.0.0)
 
 Contrairement aux proxies de suivi traditionnels, Tracklay utilise la **rotation de chemin basée sur UUID** avec **zéro motifs détectables** :
 
@@ -62,7 +62,7 @@ https://votreboutique.com/cdn/f/b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f
 - ✅ **Même Chemin pour Scripts et Endpoints** : Aucun motif distinguable
 - ✅ **Taux de Détection <5%** : Réduit de 90-100% avec les proxies traditionnels
 
-### Proxy de Script Complet (v3.1.0) - Contournement Complet du Bloqueur
+### Proxy de Script Complet (v1.0.0) - Contournement Complet du Bloqueur
 
 Tracklay effectue maintenant l'**extraction et le remplacement d'URL profonds** dans les scripts de suivi. Chaque URL externe trouvée dans les scripts GTM, gtag ou Facebook est automatiquement proxefiée via des endpoints UUID uniques.
 
@@ -345,7 +345,7 @@ npm run deploy
 
 # 2. Tester l'endpoint de santé
 curl https://votre-worker.workers.dev/health
-# Devrait retourner : {"status":"OK","version":"3.0.0"}
+# Devrait retourner : {"status":"OK","version":"1.0.0"}
 
 # 3. Vérifier les routes
 npm run urls
@@ -437,7 +437,7 @@ Nous accueillons les contributions ! Veuillez consulter [`CONTRIBUTING.md`](CONT
 
 ### Feuille de Route
 
-- [x] **Proxy de Script Complet** - Extraction et proxy d'URL complet (v3.1.0) ✅
+- [x] **Proxy de Script Complet** - Extraction et proxy d'URL complet (v1.0.0) ✅
 - [ ] Intégration Pixel TikTok
 - [ ] Tableau de bord d'analyse intégré
 - [ ] Cadre de tests A/B pour les méthodes de suivi

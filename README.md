@@ -2,7 +2,7 @@
 
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)](https://github.com/analyzify/tracklay/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/analyzify/tracklay/releases)
 
 > **Bypass Safari ITP, Ad-Blockers (uBlock, AdBlock), and Browser Privacy Protections. Recover 40%+ Lost Conversion Data with First-Party Tracking.**
 
@@ -41,7 +41,7 @@ In 2024-2025, **60-70% of your conversion data is being lost** due to modern bro
 
 ## What Makes Tracklay Different
 
-### Ultra-Aggressive Obfuscation (v3.0.0 Breakthrough)
+### Ultra-Aggressive Obfuscation (v1.0.0 Breakthrough)
 
 Unlike traditional tracking proxies, Tracklay uses **UUID-based path rotation** with **zero detectable patterns**:
 
@@ -62,7 +62,7 @@ https://yourstore.com/cdn/f/b7e4d3f2-c9a1-4d6b-9d4f-3e2a0c5b8d7f
 - ✅ **Same Path for Scripts & Endpoints**: No distinguishable patterns
 - ✅ **<5% Detection Rate**: Down from 90-100% with traditional proxies
 
-### Full Script Proxy (v3.2.0) - Complete Ad-Blocker Bypass
+### Full Script Proxy (v1.0.0) - Complete Ad-Blocker Bypass
 
 Tracklay performs **deep URL extraction and replacement** inside tracking scripts. Every external URL found in GTM, gtag, or Facebook scripts is automatically proxied through unique UUID endpoints.
 
@@ -442,9 +442,9 @@ We welcome contributions! Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for gu
 
 ### Roadmap
 
-- [x] **Full Script Proxy** - Complete URL extraction and proxy (v3.2.0)
-- [x] **Container-Specific Caching** - Per-container GTM/gtag caching (v3.2.0)
-- [x] **On-Demand Fetch** - Fetch and cache on first request (v3.2.0)
+- [x] **Full Script Proxy** - Complete URL extraction and proxy (v1.0.0)
+- [x] **Container-Specific Caching** - Per-container GTM/gtag caching (v1.0.0)
+- [x] **On-Demand Fetch** - Fetch and cache on first request (v1.0.0)
 - [ ] TikTok Pixel integration
 - [ ] Built-in analytics dashboard
 - [ ] A/B testing framework for tracking methods

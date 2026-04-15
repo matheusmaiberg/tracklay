@@ -99,7 +99,7 @@ Test the worker:
 
 ```bash
 curl https://cdn.yourstore.com/health
-# Should return: {"status":"ok","version":"3.2.0"}
+# Should return: {"status":"ok","version":"1.0.0"}
 ```
 
 ---

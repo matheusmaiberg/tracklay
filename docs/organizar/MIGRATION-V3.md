@@ -1,6 +1,6 @@
-# Migration Guide: v2.x → v3.0.0
+# Migration Guide: Legacy → v1.0.0
 
-**Tracklay v3.0.0 removes ALL legacy detectable routes for maximum anti-tracking protection.**
+**Tracklay v1.0.0 removes ALL legacy detectable routes for maximum anti-tracking protection.**
 
 This is a **BREAKING CHANGE** that requires updating your Shopify theme before upgrading.
 
@@ -56,7 +56,7 @@ This is a **BREAKING CHANGE** that requires updating your Shopify theme before u
    - Endpoint: GET /cdn/g/{UUID}?v=2&tid=... (tracking events)
 ```
 
-**Note:** v3.0.0 implements ultra-aggressive obfuscation:
+**Note:** v1.0.0 implements ultra-aggressive obfuscation:
 
 - NO file extensions (no `.js`)
 - NO suffixes (no `-script`, `-gtm`, `-tag`)
@@ -97,7 +97,7 @@ This is a **BREAKING CHANGE** that requires updating your Shopify theme before u
 ❌ REMOVED
 ```
 
-**AFTER (v3.0.0 - Ultra-Aggressive, Undetectable):**
+**AFTER (v1.0.0 - Ultra-Aggressive, Undetectable):**
 
 ```html
 <!-- Script Loading (NO SUFFIX - ultra-aggressive mode) -->
@@ -140,7 +140,7 @@ This is a **BREAKING CHANGE** that requires updating your Shopify theme before u
 </noscript>
 ```
 
-**AFTER (v3.0.0 - Ultra-Aggressive, Undetectable):**
+**AFTER (v1.0.0 - Ultra-Aggressive, Undetectable):**
 
 ```html
 <!-- GTM Script (NO SUFFIX - ultra-aggressive mode) -->
@@ -173,7 +173,7 @@ This is a **BREAKING CHANGE** that requires updating your Shopify theme before u
 </script>
 ```
 
-**AFTER (v3.0.0 - Ultra-Aggressive, Undetectable):**
+**AFTER (v1.0.0 - Ultra-Aggressive, Undetectable):**
 
 ```html
 <!-- GA4 Script (NO SUFFIX - ultra-aggressive mode) -->
@@ -223,7 +223,7 @@ This will display your ultra-obfuscated URLs (no suffixes):
 ```
 🔵 FACEBOOK PIXEL (Meta Pixel)
 
-   Ultra-Obfuscated Path (v3.0.0 - no suffix):
+   Ultra-Obfuscated Path (v1.0.0 - no suffix):
    https://yourstore.com/cdn/f/a8f3c2e1
 
    UUID: a8f3c2e1
@@ -232,7 +232,7 @@ This will display your ultra-obfuscated URLs (no suffixes):
 
 🔴 GOOGLE ANALYTICS / TAG MANAGER
 
-   Ultra-Obfuscated Path (v3.0.0 - no suffix):
+   Ultra-Obfuscated Path (v1.0.0 - no suffix):
    https://yourstore.com/cdn/g/b7e4d3f2
 
    UUID: b7e4d3f2
@@ -292,9 +292,9 @@ Then set them in your `.env` file or Cloudflare Dashboard.
 5. **Publish updated theme**
    - Once verified, publish the updated theme
 
-### Step 3: Deploy Tracklay v3.0.0
+### Step 3: Deploy Tracklay v1.0.0
 
-**ONLY after your theme is updated**, deploy v3.0.0:
+**ONLY after your theme is updated**, deploy v1.0.0:
 
 ```bash
 cd /path/to/tracklay
@@ -360,9 +360,9 @@ OBFUSCATION_GA_UUID=your-uuid-here
 npm run deploy
 ```
 
-### UUID Rotation (Automatic - v3.0.0 Feature)
+### UUID Rotation (Automatic - v1.0.0 Feature)
 
-**v3.0.0 includes AUTOMATIC UUID rotation** for maximum security:
+**v1.0.0 includes AUTOMATIC UUID rotation** for maximum security:
 
 **How it works:**
 
@@ -410,7 +410,7 @@ wrangler secret put OBFUSCATION_GA_UUID
 ```liquid
 <!-- theme.liquid - Before closing </head> tag -->
 
-<!-- Facebook Pixel Code (v3.0.0 - NO SUFFIX) -->
+<!-- Facebook Pixel Code (v1.0.0 - NO SUFFIX) -->
 <script>
   !function(f,b,e,v,n,t,s)
   {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -456,7 +456,7 @@ wrangler secret put OBFUSCATION_GA_UUID
 ```liquid
 <!-- theme.liquid - Before closing </head> tag -->
 
-<!-- Google Tag Manager (v3.0.0 - NO SUFFIX) -->
+<!-- Google Tag Manager (v1.0.0 - NO SUFFIX) -->
 <script>
   (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -500,7 +500,7 @@ wrangler secret put OBFUSCATION_GA_UUID
 ```liquid
 <!-- theme.liquid - Before closing </head> tag -->
 
-<!-- Google Analytics 4 (v3.0.0 - NO SUFFIX) -->
+<!-- Google Analytics 4 (v1.0.0 - NO SUFFIX) -->
 <script async src="https://{{ shop.domain }}/cdn/g/{{ settings.google_uuid }}?id={{ settings.ga4_measurement_id }}"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -601,7 +601,7 @@ wrangler secret put OBFUSCATION_GA_UUID
 
 **Verification:**
 
-- v3.0.0 should have ~10-20% detection rate (down from 90-100%)
+- v1.0.0 should have ~10-20% detection rate (down from 90-100%)
 - Test with uBlock Origin, AdBlock Plus in Incognito mode
 - Obfuscated routes should load successfully
 
@@ -627,7 +627,7 @@ npm run deploy
 
 ### Option 2: Re-enable Legacy Routes (Emergency Only)
 
-**⚠️ NOT RECOMMENDED** - Defeats the security purpose of v3.0.0
+**⚠️ NOT RECOMMENDED** - Defeats the security purpose of v1.0.0
 
 Edit `src/routing/mapping.js` and uncomment removed routes, then redeploy.
 
