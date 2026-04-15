@@ -1,8 +1,37 @@
 {% comment %}
   Tracklay Init — Shopify Theme Integration
-  Coloque este snippet em theme.liquid antes de </head>:
+  ===========================================
+  Este snippet configura o Tracklay lendo metafields da loja.
+
+  Recomendado: configure os metafields em:
+  Settings > Custom data > Shop metafields
+
+  Namespace: tracklay
+  Keys suportadas:
+    - gtm_id          (texto curto)
+    - measurement_id  (texto curto)
+    - worker_url      (texto curto)
+    - gtm_server_url  (texto curto)
+    - currency        (texto curto)
+    - debug           (booleano)
+
+  Ou use um único metafield JSON:
+    - config          (JSON)
+
+  Cole este snippet em theme.liquid antes de </head>:
   {% render 'tracklay-init' %}
 {% endcomment %}
+
+{% liquid
+  assign tracklay_gtm_id = shop.metafields.tracklay.gtm_id | default: ''
+  assign tracklay_measurement_id = shop.metafields.tracklay.measurement_id | default: ''
+  assign tracklay_worker_url = shop.metafields.tracklay.worker_url | default: ''
+  assign tracklay_gtm_server_url = shop.metafields.tracklay.gtm_server_url | default: ''
+  assign tracklay_currency = shop.metafields.tracklay.currency | default: cart.currency.iso_code | default: shop.currency
+  assign tracklay_debug = shop.metafields.tracklay.debug | default: false
+
+  assign tracklay_config_json = shop.metafields.tracklay.config | default: '{}'
+%}
 
 <script>
   (function() {
@@ -34,14 +63,27 @@
     }
 
     window._tracklay_cid = cid;
-    window.TracklayConfig = {
-      gtmId: {{ settings.tracklay_gtm_id | default: 'GTM-XXXXXX' | json }},
-      measurementId: {{ settings.tracklay_measurement_id | default: 'G-XXXXXXXXXX' | json }},
-      workerBaseUrl: {{ settings.tracklay_worker_url | default: 'https://cdn.yourstore.com' | json }},
-      gtmServerUrl: {{ settings.tracklay_gtm_server_url | default: '' | json }},
-      currency: {{ cart.currency.iso_code | default: shop.currency | json }},
-      debug: {{ settings.tracklay_debug | default: false | json }}
+
+    // Metafields individuais
+    var metafields = {
+      gtmId: {{ tracklay_gtm_id | json }},
+      measurementId: {{ tracklay_measurement_id | json }},
+      workerBaseUrl: {{ tracklay_worker_url | json }},
+      gtmServerUrl: {{ tracklay_gtm_server_url | json }},
+      currency: {{ tracklay_currency | json }},
+      debug: {{ tracklay_debug | json }}
     };
+
+    // Metafield JSON único (sobrescreve individuais se existir)
+    var jsonConfig = {};
+    try {
+      jsonConfig = {{ tracklay_config_json | json }} || {};
+    } catch (e) {
+      jsonConfig = {};
+    }
+
+    // Merge: metafields individuais <- metafield JSON <- window.TracklayConfig manual
+    window.TracklayConfig = Object.assign({}, metafields, jsonConfig, window.TracklayConfig || {});
   })();
 </script>
 

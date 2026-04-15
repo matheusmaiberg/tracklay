@@ -33,19 +33,33 @@ module.init.js
 Na pasta **Snippets**, crie `tracklay-init.liquid` e cole o conteúdo de:
 [`snippets/tracklay-init.liquid`](snippets/tracklay-init.liquid)
 
-**3. Configure as variáveis:**
+**3. Configure via Metafields da Shopify (recomendado):**
 
-Edite `tracklay-init.liquid` e altere apenas esta seção:
+Vá em **Settings → Custom data → Shop metafields** e crie os metafields abaixo:
 
-```javascript
-window.TracklayConfig = {
-  gtmId: 'GTM-XXXXXX',
-  measurementId: 'G-XXXXXXXXXX',
-  workerBaseUrl: 'https://cdn.seudominio.com',
-  gtmServerUrl: 'https://gtm.seudominio.com', // opcional
-  currency: 'BRL',
-  debug: false
-};
+| Namespace | Key | Tipo | Valor de exemplo |
+|-----------|-----|------|------------------|
+| `tracklay` | `gtm_id` | Single line text | `GTM-MJ7DW8H` |
+| `tracklay` | `measurement_id` | Single line text | `G-N5ZZGL11MW` |
+| `tracklay` | `worker_url` | Single line text | `https://cdn.suevich.com` |
+| `tracklay` | `gtm_server_url` | Single line text | `https://gtm.suevich.com` |
+| `tracklay` | `currency` | Single line text | `BRL` |
+| `tracklay` | `debug` | True or false | `false` |
+
+Depois vá em **Settings → General** e preencha os valores nos metafields da loja.
+
+> **Dica:** Com metafields você não precisa editar código para trocar configurações. O snippet `tracklay-init.liquid` lê automaticamente.
+
+**Alternativa:** Se preferir, pode sobrescrever no próprio `theme.liquid` antes do render:
+```liquid
+<script>
+  window.TracklayConfig = {
+    gtmId: 'GTM-XXXXXX',
+    measurementId: 'G-XXXXXXXXXX',
+    workerBaseUrl: 'https://cdn.seudominio.com'
+  };
+</script>
+{% render 'tracklay-init' %}
 ```
 
 **4. Adicione ao tema:**
