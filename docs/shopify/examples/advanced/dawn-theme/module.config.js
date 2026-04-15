@@ -17,9 +17,19 @@ function resolveUserConfig() {
   }
   if (user.workerBaseUrl || user.workerUrl) {
     const base = (user.workerBaseUrl || user.workerUrl).replace(/\/$/, '');
+    const googleUuid = user.googleUuid || '';
+    const facebookUuid = user.facebookUuid || '';
     overrides.GTM = overrides.GTM || {};
     overrides.GTM.PROXY = overrides.GTM.PROXY || {};
     overrides.GTM.PROXY.DOMAIN = base;
+    if (googleUuid) {
+      overrides.GTM.PROXY.GOOGLE_UUID = googleUuid;
+      overrides.GTM.PROXY.GOOGLE_PATH = `/cdn/g/${googleUuid}`;
+    }
+    if (facebookUuid) {
+      overrides.GTM.PROXY.FACEBOOK_UUID = facebookUuid;
+      overrides.GTM.PROXY.FACEBOOK_PATH = `/cdn/f/${facebookUuid}`;
+    }
   }
   if (user.gtmServerUrl || user.transportUrl) {
     overrides.GTM = overrides.GTM || {};

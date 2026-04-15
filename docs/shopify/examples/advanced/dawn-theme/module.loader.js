@@ -24,8 +24,9 @@ function buildGtmScriptUrl(gtmId) {
   
   if (proxyActive) {
     const proxyDomain = ConfigManager.get('GTM.PROXY.DOMAIN');
+    const googlePath = ConfigManager.get('GTM.PROXY.GOOGLE_PATH') || ConfigManager.get('GTM.PROXY.PATH');
     if (proxyDomain) {
-      const url = `${proxyDomain}?id=${normalizedGtmId}`;
+      const url = googlePath ? `${proxyDomain}${googlePath}?id=${normalizedGtmId}` : `${proxyDomain}?id=${normalizedGtmId}`;
       log.debug('Using proxy URL:', url);
       return url;
     }
