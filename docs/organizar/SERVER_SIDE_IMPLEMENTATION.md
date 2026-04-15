@@ -38,7 +38,7 @@ GA4
 ### Implementação
 
 1. **Copie o código:**
-   - Arquivo: [`custom-pixel-serverside.js`](shopify/examples/custom-pixel-serverside.js)
+   - Arquivo: [`custom-pixel-serverside.js`](../shopify/examples/custom-pixel-serverside.js)
 
 2. **Configure o Custom Pixel:**
    - Shopify Admin → Settings → Customer Events
@@ -48,18 +48,18 @@ GA4
 
 3. **Configure as variáveis:**
    ```javascript
-   const CONFIG = {
+   var CONFIG = {
      WORKER_URL: 'https://cdn.suevich.com/cdn/events',
      MEASUREMENT_ID: 'G-N5ZZGL11MW',
-     DEBUG: true,
-     DEFAULT_CURRENCY: 'EUR'
+     DEBUG: true
    };
    ```
 
 4. **Teste:**
    - Abra seu site
    - Abra DevTools Console
-   - Deve ver: `[Tracking] Initialized ✓ Server-side Custom Pixel active`
+   - No dropdown de contexto, selecione o **web-pixel-sandbox**
+   - Deve ver: `[Tracklay Pixel] Starting Tracklay Server-Side Pixel...`
 
 ### Eventos Rastreados
 
@@ -92,7 +92,7 @@ Usando a [Shopify Web Pixels API](https://shopify.dev/docs/api/web-pixels-api):
 ### Implementação
 
 1. **Copie o código:**
-   - Arquivo: [`server-side-tracking.js`](shopify/examples/server-side-tracking.js)
+   - Arquivo: [`server-side-tracking.js`](../shopify/examples/server-side-tracking.js)
 
 2. **Adicione ao tema:**
    - Shopify Admin → Online Store → Themes
@@ -102,18 +102,17 @@ Usando a [Shopify Web Pixels API](https://shopify.dev/docs/api/web-pixels-api):
 
 3. **Configure as variáveis:**
    ```javascript
-   const CONFIG = {
+   var CONFIG = {
      WORKER_URL: 'https://cdn.suevich.com/cdn/events',
      MEASUREMENT_ID: 'G-N5ZZGL11MW',
-     DEBUG: true,
-     SESSION_TIMEOUT: 30 * 60 * 1000
+     DEBUG: true
    };
    ```
 
 4. **Teste:**
    - Abra seu site
    - Abra DevTools Console
-   - Deve ver: `[Tracking] Initialized ✓ Server-side tracking active`
+   - Deve ver: `[Tracklay Theme] Tracklay theme tracking active`
 
 ### Eventos Rastreados
 
@@ -136,12 +135,13 @@ Usando a [Shopify Web Pixels API](https://shopify.dev/docs/api/web-pixels-api):
 
 | Característica | Custom Pixel | theme.liquid |
 |----------------|--------------|--------------|
-| **Bypass Rate** | 80-90% | 95-98% |
-| **uBlock Origin** | ❌ Bloqueado | ✅ Funciona |
+| **Bypass Rate** | 95-98% (server-side fetch) | 95-98% |
+| **uBlock Origin** | ✅ Funciona (fetch first-party) | ✅ Funciona |
 | **Edição de Tema** | Não | Sim |
-| **API Shopify** | ✅ Oficial | ❌ Custom |
-| **Eventos Automáticos** | ✅ Sim | ⚠️ Parcial |
-| **Checkout Pages** | ✅ Sim | ❌ Não (exceto Plus) |
+| **API Shopify** | ✅ Oficial | ✅ Custom / Módulos |
+| **Eventos Automáticos** | ✅ Sim (checkout) | ✅ Sim (navegação) |
+| **Checkout Pages** | ✅ Sim | ❌ Não (exceto Plus legacy) |
+| **Dual Tracking** | ✅ Sim (fetch + sessionStorage bridge) | ✅ Sim (dataLayer + fetch) |
 | **Manutenção** | Fácil | Média |
 
 ---
@@ -208,7 +208,7 @@ fetch('https://cdn.suevich.com/cdn/events', {
 });
 ```
 
-**Esperado:** Console mostra `[Tracking] Event sent: test_event`
+**Esperado:** Worker logs mostram `Server-side event received: test_event`
 
 ### 2. Teste com uBlock Origin
 
@@ -218,8 +218,8 @@ fetch('https://cdn.suevich.com/cdn/events', {
 4. Verifique logs de tracking
 
 **Esperado:**
-- **Custom Pixel:** Pode não aparecer logs (iframe bloqueado)
-- **theme.liquid:** Logs aparecem normalmente ✅
+- **Custom Pixel:** Logs aparecem no contexto `web-pixel-sandbox` ✅
+- **theme.liquid:** Logs aparecem no console principal ✅
 
 ### 3. Verifique Worker Logs
 
@@ -269,7 +269,7 @@ client_id: GA1.1...
 
 ### uBlock Origin ainda bloqueia
 
-- **Custom Pixel:** Normal, use theme.liquid
+- **Custom Pixel:** Não deve bloquear (usa `fetch` first-party)
 - **theme.liquid:** Não deve bloquear
   - Se bloquear, verifique se fetch() funciona:
     ```javascript
@@ -309,9 +309,9 @@ GTM_SERVER_URL = "https://gtm.suevich.com"
 ### Se está usando Custom Pixel atual:
 
 1. **Faça backup** do código atual
-2. **Substitua** com `custom-pixel-serverside.js`
-3. **Teste** sem uBlock Origin
-4. **Se uBlock bloquear:** Migre para theme.liquid
+2. **Substitua** com [`custom-pixel-serverside.js`](../shopify/examples/custom-pixel-serverside.js)
+3. **Teste** no checkout
+4. O Custom Pixel novo envia via `fetch` first-party, então não depende mais só do iframe
 
 ### Se quer máximo bypass desde o início:
 

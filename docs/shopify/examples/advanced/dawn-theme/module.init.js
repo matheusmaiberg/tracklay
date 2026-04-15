@@ -42,6 +42,20 @@ const ThemeGTM = (function() {
 
     logger.info('[processEvent] ✅ Processando evento:', event.name);
 
+    // Server-side redundancy: also send to Worker /cdn/events
+    const workerBaseUrl = ConfigManager.get('GTM.PROXY.DOMAIN');
+    if (workerBaseUrl && event.ga4) {
+      fetch(workerBaseUrl + '/cdn/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event.ga4)
+      }).then(function() {
+        logger.debug('[processEvent] Evento enviado para Worker /cdn/events');
+      }).catch(function(err) {
+        logger.warn('[processEvent] Falha ao enviar para Worker:', err.message);
+      });
+    }
+
     if (typeof GTMLoader !== 'undefined' && typeof GTMLoader.push === 'function') {
       try {
         const payload = {

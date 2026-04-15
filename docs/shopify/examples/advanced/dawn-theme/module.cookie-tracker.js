@@ -509,6 +509,78 @@ const SimplePoll = {
   }
 };
 
+// ============= SESSION STORAGE POLLER (Web Pixel API Bridge) =============
+
+const SessionStoragePoll = {
+  intervalId: null,
+  listeners: new Set(),
+  nextIndex: 0,
+  prefix: 'tracklay_event_',
+
+  start() {
+    if (this.intervalId) return;
+
+    const pollInterval = 1000;
+    this.intervalId = setInterval(() => {
+      this.processQueue();
+    }, pollInterval);
+  },
+
+  stop() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+  },
+
+  processQueue() {
+    if (typeof sessionStorage === 'undefined') return;
+
+    let processed = 0;
+    const maxBatch = 50;
+
+    while (processed < maxBatch) {
+      const key = this.prefix + this.nextIndex;
+      const raw = sessionStorage.getItem(key);
+
+      if (!raw) break;
+
+      try {
+        const event = JSON.parse(raw);
+        this.listeners.forEach(listener => {
+          try {
+            listener(event);
+          } catch (e) {
+            log.error('SessionStoragePoll Listener error:', e);
+          }
+        });
+      } catch (e) {
+        log.error('SessionStoragePoll JSON parse error:', e);
+      }
+
+      sessionStorage.removeItem(key);
+      this.nextIndex++;
+      processed++;
+    }
+  },
+
+  subscribe(callback) {
+    this.listeners.add(callback);
+    return () => this.unsubscribe(callback);
+  },
+
+  unsubscribe(callback) {
+    this.listeners.delete(callback);
+    if (this.listeners.size === 0) {
+      this.stop();
+    }
+  },
+
+  isActive() {
+    return this.intervalId !== null;
+  }
+};
+
 // ============= MAIN EVENT BRIDGE =============
 
 const EventBridge = {
@@ -589,6 +661,15 @@ const EventBridge = {
     
     // Strategy 3: IndexedDB fallback polling
     this.startIndexedDBPoll(onEvent);
+
+    // Strategy 4: SessionStorage bridge (Web Pixel API from checkout sandbox)
+    SessionStoragePoll.subscribe((event) => {
+      this.processIncomingEvent(event, onEvent);
+    });
+    SessionStoragePoll.start();
+    if (ConfigManager.get('COOKIE.DEBUG')) {
+      log.debug('Receiver: SessionStorage bridge active');
+    }
   },
 
   indexedDBPollIntervalId: null,
@@ -837,6 +918,7 @@ const EventBridge = {
   destroy() {
     // Stop all polling
     SimplePoll.stop();
+    SessionStoragePoll.stop();
     this.stopIndexedDBPoll();
     
     // Close BroadcastChannel
@@ -870,6 +952,7 @@ const EventBridge = {
       eventHistorySize: this.eventHistory.size,
       broadcastChannelOpen: !!BroadcastChannelManager.channel,
       simplePollActive: SimplePoll.isActive(),
+      sessionStoragePollActive: SessionStoragePoll.isActive(),
       indexedDBPollActive: this.indexedDBPollActive,
       registeredCallbacks: this.eventCallbacks.size
     };

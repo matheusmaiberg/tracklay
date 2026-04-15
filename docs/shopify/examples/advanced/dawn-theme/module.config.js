@@ -1,14 +1,63 @@
 /**
  * @fileoverview Centralized Configuration Manager for the Tracklay pixel tracking system.
  * Provides a unified API for managing configuration across all modules.
+ *
+ * Reads user configuration from window.TracklayConfig automatically on load.
  */
+
+function resolveUserConfig() {
+  if (typeof window === 'undefined') return {};
+  const user = window.TracklayConfig || window.ThemeGTMConfig || {};
+
+  const overrides = {};
+
+  if (user.gtmId) {
+    overrides.GTM = overrides.GTM || {};
+    overrides.GTM.ID = user.gtmId.startsWith('GTM-') ? user.gtmId : `GTM-${user.gtmId}`;
+  }
+  if (user.workerBaseUrl || user.workerUrl) {
+    const base = (user.workerBaseUrl || user.workerUrl).replace(/\/$/, '');
+    overrides.GTM = overrides.GTM || {};
+    overrides.GTM.PROXY = overrides.GTM.PROXY || {};
+    overrides.GTM.PROXY.DOMAIN = base;
+  }
+  if (user.gtmServerUrl || user.transportUrl) {
+    overrides.GTM = overrides.GTM || {};
+    overrides.GTM.TRANSPORT = overrides.GTM.TRANSPORT || {};
+    overrides.GTM.TRANSPORT.URL = user.gtmServerUrl || user.transportUrl;
+    overrides.GTM.TRANSPORT.ACTIVE = !!(user.gtmServerUrl || user.transportUrl);
+  }
+  if (user.currency) {
+    overrides.GTM = overrides.GTM || {};
+    overrides.GTM.CURRENCY = user.currency;
+  }
+  if (user.measurementId) {
+    overrides.MEASUREMENT_ID = user.measurementId;
+  }
+  if (user.debug !== undefined) {
+    const debugValue = !!user.debug;
+    overrides.COOKIE = { DEBUG: debugValue };
+    overrides.EVENT_ORCHESTRATOR = { DEBUG: debugValue };
+    overrides.GTM_LOADER = { DEBUG: debugValue };
+  }
+  if (user.cookiePrefix) {
+    overrides.COOKIE = overrides.COOKIE || {};
+    overrides.COOKIE.COOKIE_PREFIX = user.cookiePrefix;
+    overrides.COOKIE.PREFIX = user.cookiePrefix;
+    overrides.BROADCAST = { CHANNEL: user.cookiePrefix + 'events' };
+    overrides.EVENT_ORCHESTRATOR = overrides.EVENT_ORCHESTRATOR || {};
+    overrides.EVENT_ORCHESTRATOR.CHANNEL_NAME = user.cookiePrefix + 'events';
+  }
+
+  return overrides;
+}
 
 const DEFAULT_CONFIG = Object.freeze({
   GTM: Object.freeze({
-    ID: 'MJ7DW8H',
-    CURRENCY: 'EUR',
-    TRANSPORT: Object.freeze({ ACTIVE: true, URL: 'https://data.suevich.com/' }),
-    PROXY: { ACTIVE: true, PATH: 'b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f', DOMAIN: 'https://cdn.suevich.com/b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f' }
+    ID: '',
+    CURRENCY: 'USD',
+    TRANSPORT: Object.freeze({ ACTIVE: false, URL: '' }),
+    PROXY: { ACTIVE: true, PATH: '', DOMAIN: '' }
   }),
   COOKIE: Object.freeze({
     COOKIE_PREFIX: '_tracklay_', PREFIX: '_tracklay_', DB_NAME: 'TracklayEventBridge',
@@ -20,7 +69,7 @@ const DEFAULT_CONFIG = Object.freeze({
     MAX_CACHE_SIZE: 1000,
     FINGERPRINT_FIELDS: Object.freeze(['name', 'data.transaction_id', 'data.value', 'data.currency'])
   }),
-  EVENT_ORCHESTRATOR: Object.freeze({ DEBUG: true, CHANNEL_NAME: '_tracklay_events', MAX_DATALAYER_SIZE: 100 }),
+  EVENT_ORCHESTRATOR: Object.freeze({ DEBUG: false, CHANNEL_NAME: '_tracklay_events', MAX_DATALAYER_SIZE: 100 }),
   BROADCAST: Object.freeze({ CHANNEL: '_tracklay_events' }),
   EVENTS: Object.freeze({
     MARKETING: Object.freeze(['product_added_to_cart', 'checkout_started', 'checkout_completed', 'payment_info_submitted']),
@@ -28,7 +77,8 @@ const DEFAULT_CONFIG = Object.freeze({
   }),
   FINGERPRINT_FIELDS: Object.freeze(['name', 'data.checkout.order.id', 'data.value', 'data.currency']),
   GTM_LOADER: Object.freeze({ DEBUG: false }),
-  LOGGER: Object.freeze({ LEVEL: 4, STYLING: true, GLOBAL_PREFIX: '', TIMESTAMP: false, SILENCED: Object.freeze([]) })
+  LOGGER: Object.freeze({ LEVEL: 2, STYLING: true, GLOBAL_PREFIX: '', TIMESTAMP: false, SILENCED: Object.freeze([]) }),
+  MEASUREMENT_ID: ''
 });
 
 let currentConfig = deepClone(DEFAULT_CONFIG);
@@ -37,7 +87,7 @@ const VALIDATION_RULES = Object.freeze({
   'GTM.ID': { type: 'string', pattern: /^GTM-[A-Z0-9]+$/i },
   'GTM.CURRENCY': { type: 'string', pattern: /^[A-Z]{3}$/ },
   'GTM.TRANSPORT.ACTIVE': { type: 'boolean' },
-  'GTM.TRANSPORT.URL': { type: 'string', pattern: /^https?:\/\/.+/ },
+  'GTM.TRANSPORT.URL': { type: 'string', pattern: /^https?:\/.+/ },
   'GTM.PROXY.ACTIVE': { type: 'boolean' },
   'GTM.PROXY.PATH': { type: 'string' },
   'COOKIE.COOKIE_PREFIX': { type: 'string' },
@@ -228,6 +278,15 @@ export const CONFIG = new Proxy({}, {
     logWarning(`Direct assignment to CONFIG is deprecated. Use ConfigManager.set('${prop}.key', value)`); return true;
   }
 });
+
+// Auto-merge window.TracklayConfig on load
+(function autoInit() {
+  const userOverrides = resolveUserConfig();
+  if (Object.keys(userOverrides).length > 0) {
+    ConfigManager.merge(userOverrides);
+    logInfo('Merged window.TracklayConfig into configuration');
+  }
+})();
 
 if (typeof window !== 'undefined') {
   window.ConfigManager = ConfigManager;
