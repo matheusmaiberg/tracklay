@@ -89,7 +89,8 @@
     fetch(CONFIG.WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      keepalive: true
     }).then(function(res) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       log('Event sent:', eventName);

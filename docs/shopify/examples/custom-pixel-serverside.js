@@ -59,10 +59,25 @@
   }
 
   function getClientId() {
-    var cid = getCookie('_tracklay_cid');
+    var cid = null;
+    // 1. Tenta ler do browser.sessionStorage (bridge do tema → checkout)
+    try {
+      if (typeof browser !== 'undefined' && browser.sessionStorage) {
+        cid = browser.sessionStorage.getItem('_tracklay_cid');
+      }
+    } catch (e) {}
+    // 2. Fallback para cookie (same-origin)
+    if (!cid) {
+      cid = getCookie('_tracklay_cid');
+    }
+    // 3. Gera novo e persiste no sandbox
     if (!cid) {
       cid = generateCid();
-      // Tenta setar cookie no sandbox (pode funcionar dependendo do contexto)
+      try {
+        if (typeof browser !== 'undefined' && browser.sessionStorage) {
+          browser.sessionStorage.setItem('_tracklay_cid', cid);
+        }
+      } catch (e) {}
       try {
         var expires = new Date();
         expires.setTime(expires.getTime() + 730 * 24 * 60 * 60 * 1000);
@@ -187,7 +202,7 @@
   // ==========================================
   // SESSION STORAGE BRIDGE (→ TEMA)
   // ==========================================
-  var sessionIndex = 0;
+  var QUEUE_KEY = 'tracklay_event_queue';
 
   function bridgeToTheme(event) {
     try {
@@ -197,10 +212,21 @@
           name: event.name,
           data: event.data || {},
           timestamp: Date.now(),
-          ga4: buildPayload(event)
+          ga4: buildPayload(event),
+          _tracklay_server_sent: true
         };
-        browser.sessionStorage.setItem(CONFIG.SESSION_PREFIX + sessionIndex, JSON.stringify(data));
-        sessionIndex++;
+        var queueRaw = browser.sessionStorage.getItem(QUEUE_KEY);
+        var queue = [];
+        if (queueRaw) {
+          try {
+            queue = JSON.parse(queueRaw);
+            if (!Array.isArray(queue)) queue = [];
+          } catch (e) {
+            queue = [];
+          }
+        }
+        queue.push(data);
+        browser.sessionStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
         log('Bridge sessionStorage:', event.name);
       }
     } catch (e) {
@@ -219,7 +245,8 @@
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      keepalive: true
     }).then(function(response) {
       if (!response.ok) {
         throw new Error('HTTP ' + response.status);
@@ -246,12 +273,12 @@
 
     log('Event captured:', event.name);
 
-    // 1. Bridge para o tema via sessionStorage
-    bridgeToTheme(event);
-
-    // 2. Server-side via fetch
+    // 1. Server-side via fetch (prioridade)
     var payload = buildPayload(event);
     sendToWorker(payload);
+
+    // 2. Bridge para o tema via sessionStorage
+    bridgeToTheme(event);
   }
 
   // ==========================================

@@ -12,6 +12,8 @@
     - measurement_id  (texto curto)
     - worker_url      (texto curto)
     - gtm_server_url  (texto curto)
+    - google_uuid     (texto curto) — UUID de obfuscação do Google no Worker
+    - facebook_uuid   (texto curto) — UUID de obfuscação do Facebook no Worker
     - currency        (texto curto)
     - debug           (booleano)
 
@@ -27,6 +29,8 @@
   assign tracklay_measurement_id = shop.metafields.tracklay.measurement_id | default: ''
   assign tracklay_worker_url = shop.metafields.tracklay.worker_url | default: ''
   assign tracklay_gtm_server_url = shop.metafields.tracklay.gtm_server_url | default: ''
+  assign tracklay_google_uuid = shop.metafields.tracklay.google_uuid | default: ''
+  assign tracklay_facebook_uuid = shop.metafields.tracklay.facebook_uuid | default: ''
   assign tracklay_currency = shop.metafields.tracklay.currency | default: cart.currency.iso_code | default: shop.currency
   assign tracklay_debug = shop.metafields.tracklay.debug | default: false
 
@@ -62,6 +66,11 @@
       setCookie('_tracklay_cid', cid, 730); // 2 anos
     }
 
+    // Bridge para o checkout sandbox (browser.sessionStorage proxy)
+    try {
+      sessionStorage.setItem('_tracklay_cid', cid);
+    } catch (e) {}
+
     window._tracklay_cid = cid;
 
     // Metafields individuais
@@ -70,6 +79,8 @@
       measurementId: {{ tracklay_measurement_id | json }},
       workerBaseUrl: {{ tracklay_worker_url | json }},
       gtmServerUrl: {{ tracklay_gtm_server_url | json }},
+      googleUuid: {{ tracklay_google_uuid | json }},
+      facebookUuid: {{ tracklay_facebook_uuid | json }},
       currency: {{ tracklay_currency | json }},
       debug: {{ tracklay_debug | json }}
     };

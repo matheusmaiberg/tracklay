@@ -44,7 +44,7 @@ const ThemeGTM = (function() {
 
     // Server-side redundancy: also send to Worker /cdn/events
     const workerBaseUrl = ConfigManager.get('GTM.PROXY.DOMAIN');
-    if (workerBaseUrl && event.ga4) {
+    if (workerBaseUrl && event.ga4 && !event._tracklay_server_sent) {
       fetch(workerBaseUrl + '/cdn/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
