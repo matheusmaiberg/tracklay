@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Worker `/cdn/events` now returns CORS headers on validation and configuration errors
+- Dawn theme GTM proxy URL correctly includes the obfuscated UUID path (`/cdn/g/{uuid}`)
+- SessionStorage bridge rewritten to use a single queue key, preventing event loss on page refresh
+- Custom Pixel now reads `_tracklay_cid` from `sessionStorage` (fallback to cookie), ensuring consistent GA4 client ID across theme and checkout
+- Server-side deduplication: theme skips `fetch` to `/cdn/events` when event is already marked `_tracklay_server_sent`
+- All Shopify-side `fetch` calls now use `keepalive: true` to survive rapid navigation
+
+### Added
+
+- Shopify-to-GA4 event name mapping in `module.init.js` with support for multiple input aliases per event
+- `google_uuid` and `facebook_uuid` metafield support in `tracklay-init.liquid` and `module.config.js`
+- GTM export files (`gtm-export-*.json`) added to `.gitignore`
+
 ### Planned
 
 - Support for Meta CAPI (Conversion API)
