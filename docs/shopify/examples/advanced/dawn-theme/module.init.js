@@ -16,6 +16,43 @@ const ThemeGTM = (function() {
   'use strict';
 
   var isSubscribed = false;
+
+  var EVENT_NAME_MAPPINGS = {
+    // Page & Content
+    'page_view': ['page_viewed', 'page_view'],
+
+    // E-commerce — Catalog
+    'view_item': ['product_viewed', 'view_item'],
+    'view_item_list': ['collection_viewed', 'view_item_list'],
+
+    // E-commerce — Cart
+    'add_to_cart': ['product_added_to_cart', 'add_to_cart'],
+    'remove_from_cart': ['product_removed_from_cart', 'remove_from_cart'],
+    'view_cart': ['cart_viewed', 'view_cart'],
+
+    // E-commerce — Checkout
+    'begin_checkout': ['checkout_started', 'begin_checkout'],
+    'add_shipping_info': ['checkout_address_info_submitted', 'checkout_shipping_info_submitted', 'add_shipping_info'],
+    'add_payment_info': ['checkout_contact_info_submitted', 'payment_info_submitted', 'add_payment_info'],
+    'purchase': ['checkout_completed', 'purchase'],
+
+    // Engagement & Utility
+    'search': ['search_submitted', 'search'],
+    'alert_displayed': ['alert_displayed'],
+    'ui_extension_errored': ['ui_extension_errored']
+  };
+
+  function resolveMappedEventName(eventName) {
+    for (var mappedName in EVENT_NAME_MAPPINGS) {
+      if (EVENT_NAME_MAPPINGS.hasOwnProperty(mappedName)) {
+        var inputs = EVENT_NAME_MAPPINGS[mappedName];
+        if (inputs.indexOf(eventName) !== -1) {
+          return mappedName;
+        }
+      }
+    }
+    return eventName;
+  }
   
   function processEvent(event, source) {
     source = source || 'unknown';
@@ -59,7 +96,7 @@ const ThemeGTM = (function() {
     if (typeof GTMLoader !== 'undefined' && typeof GTMLoader.push === 'function') {
       try {
         const payload = {
-          event: event.name,
+          event: resolveMappedEventName(event.name),
           ...event.data,
           _tracklay_event_id: event.id,
           _tracklay_timestamp: event.timestamp,
@@ -94,7 +131,7 @@ const ThemeGTM = (function() {
     }
 
     const dataLayerEntry = {
-      event: event.name,
+      event: resolveMappedEventName(event.name),
       ...event.data,
       _tracklay_event_id: event.id,
       _tracklay_timestamp: event.timestamp,
@@ -367,5 +404,3 @@ const ThemeGTM = (function() {
 
 export { ThemeGTM };
 export default ThemeGTM;
-
-
