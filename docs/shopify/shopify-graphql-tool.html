@@ -14,6 +14,7 @@
       --accent: #3b82f6;
       --accent-hover: #2563eb;
       --success: #10b981;
+      --warning: #f59e0b;
       --danger: #ef4444;
       --border: #334155;
       --font: 'Segoe UI', system-ui, sans-serif;
@@ -72,7 +73,7 @@
       text-transform: uppercase;
       letter-spacing: 0.02em;
     }
-    .field input {
+    .field input, .field select {
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 0.375rem;
@@ -82,7 +83,7 @@
       outline: none;
       transition: border-color 0.15s;
     }
-    .field input:focus {
+    .field input:focus, .field select:focus {
       border-color: var(--accent);
     }
     .actions {
@@ -106,6 +107,8 @@
     button.secondary:hover { background: #475569; }
     button.success { background: var(--success); }
     button.success:hover { background: #059669; }
+    button.warning { background: var(--warning); color: #1e293b; }
+    button.warning:hover { background: #d97706; }
     button.danger { background: var(--danger); }
     .query-list {
       display: flex;
@@ -183,6 +186,69 @@
       color: var(--text-muted);
       margin-top: 0.5rem;
     }
+    .tutorial-step {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      align-items: flex-start;
+    }
+    .tutorial-step .num {
+      background: var(--accent);
+      color: white;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .tutorial-step p {
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .tutorial-step code {
+      background: var(--bg);
+      padding: 0.15rem 0.35rem;
+      border-radius: 0.25rem;
+      font-size: 0.85rem;
+      color: var(--accent);
+    }
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+    .tab {
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      border-radius: 0.375rem;
+      font-size: 0.9rem;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active {
+      background: var(--surface-hover);
+      color: var(--text);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .code-block {
+      position: relative;
+    }
+    .code-block button {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.6rem;
+    }
   </style>
 </head>
 <body>
@@ -192,64 +258,170 @@
       <p>Gere queries e mutations do Shopify Admin API com seus valores salvos no navegador.</p>
     </header>
 
-    <section class="card">
-      <h2>⚙️ Configuração da Loja</h2>
-      <div class="grid" id="config-form">
-        <div class="field">
-          <label for="ownerId">Shop ID (gid)</label>
-          <input id="ownerId" type="text" placeholder="gid://shopify/Shop/1234567890">
-        </div>
-        <div class="field">
-          <label for="gtmId">GTM ID</label>
-          <input id="gtmId" type="text" placeholder="GTM-MJ7DW8H">
-        </div>
-        <div class="field">
-          <label for="measurementId">Measurement ID (GA4)</label>
-          <input id="measurementId" type="text" placeholder="G-XXXXXX">
-        </div>
-        <div class="field">
-          <label for="workerUrl">Worker URL</label>
-          <input id="workerUrl" type="text" placeholder="https://cdn.suevich.com">
-        </div>
-        <div class="field">
-          <label for="gtmServerUrl">GTM Server URL</label>
-          <input id="gtmServerUrl" type="text" placeholder="https://gtm.suevich.com">
-        </div>
-        <div class="field">
-          <label for="googleUuid">Google UUID</label>
-          <input id="googleUuid" type="text" placeholder="b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f">
-        </div>
-        <div class="field">
-          <label for="facebookUuid">Facebook UUID</label>
-          <input id="facebookUuid" type="text" placeholder="deixe vazio se nao usar">
-        </div>
-        <div class="field">
-          <label for="currency">Moeda</label>
-          <input id="currency" type="text" placeholder="BRL">
-        </div>
-        <div class="field">
-          <label for="debug">Debug (true/false)</label>
-          <input id="debug" type="text" placeholder="false">
-        </div>
-      </div>
-      <div class="actions">
-        <button class="success" onclick="saveConfig()">💾 Salvar no navegador</button>
-        <button class="secondary" onclick="loadDefaults()">♻️ Restaurar padrões</button>
-        <button class="danger" onclick="clearConfig()">🗑️ Limpar tudo</button>
-      </div>
-      <p class="hint">Os dados são salvos automaticamente no <strong>localStorage</strong> deste navegador. Nenhum dado sai da sua máquina.</p>
-    </section>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('manual')">📝 Modo Manual</button>
+      <button class="tab" onclick="switchTab('auto')">⚡ Modo Full Auto</button>
+    </div>
 
-    <section class="card">
-      <h2>📋 Queries & Mutations</h2>
-      <div class="query-list" id="queries"></div>
-    </section>
+    <!-- TAB MANUAL -->
+    <div id="tab-manual" class="tab-content active">
+      <section class="card">
+        <h2>⚙️ Configuração da Loja</h2>
+        <div class="grid" id="config-form">
+          <div class="field">
+            <label for="ownerId">Shop ID (gid)</label>
+            <input id="ownerId" type="text" placeholder="gid://shopify/Shop/1234567890">
+          </div>
+          <div class="field">
+            <label for="gtmId">GTM ID</label>
+            <input id="gtmId" type="text" placeholder="GTM-MJ7DW8H">
+          </div>
+          <div class="field">
+            <label for="measurementId">Measurement ID (GA4)</label>
+            <input id="measurementId" type="text" placeholder="G-XXXXXX">
+          </div>
+          <div class="field">
+            <label for="workerUrl">Worker URL</label>
+            <input id="workerUrl" type="text" placeholder="https://cdn.suevich.com">
+          </div>
+          <div class="field">
+            <label for="gtmServerUrl">GTM Server URL</label>
+            <input id="gtmServerUrl" type="text" placeholder="https://gtm.suevich.com">
+          </div>
+          <div class="field">
+            <label for="googleUuid">Google UUID</label>
+            <input id="googleUuid" type="text" placeholder="b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f">
+          </div>
+          <div class="field">
+            <label for="facebookUuid">Facebook UUID</label>
+            <input id="facebookUuid" type="text" placeholder="deixe vazio se nao usar">
+          </div>
+          <div class="field">
+            <label for="currency">Moeda</label>
+            <input id="currency" type="text" placeholder="BRL">
+          </div>
+          <div class="field">
+            <label for="debug">Debug (true/false)</label>
+            <input id="debug" type="text" placeholder="false">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="success" onclick="saveConfig()">💾 Salvar no navegador</button>
+          <button class="secondary" onclick="loadDefaults()">♻️ Restaurar padrões</button>
+          <button class="danger" onclick="clearConfig()">🗑️ Limpar tudo</button>
+        </div>
+        <p class="hint">Os dados são salvos automaticamente no <strong>localStorage</strong> deste navegador. Nenhum dado sai da sua máquina.</p>
+      </section>
+
+      <section class="card">
+        <h2>📋 Queries & Mutations</h2>
+        <div class="query-list" id="queries"></div>
+      </section>
+    </div>
+
+    <!-- TAB FULL AUTO -->
+    <div id="tab-auto" class="tab-content">
+      <section class="card">
+        <h2>⚡ Modo Full Auto</h2>
+        <p style="margin-bottom:1rem;color:var(--text-muted);font-size:0.9rem;">
+          Neste modo você gera um <strong>script Node.js</strong> que roda no seu terminal e configura todos os metafields automaticamente via Shopify Admin API.
+        </p>
+
+        <div class="grid" style="margin-bottom:1rem;">
+          <div class="field">
+            <label for="shopDomain">Shop Domain</label>
+            <input id="shopDomain" type="text" placeholder="suevich.myshopify.com">
+          </div>
+          <div class="field">
+            <label for="accessToken">Admin API Access Token</label>
+            <input id="accessToken" type="password" placeholder="shpat_xxxxxxxxxxxxxxxxxxxxxxxx">
+          </div>
+          <div class="field">
+            <label for="apiVersion">API Version</label>
+            <select id="apiVersion">
+              <option value="2025-01">2025-01</option>
+              <option value="2024-10">2024-10</option>
+              <option value="2024-07">2024-07</option>
+              <option value="2024-04">2024-04</option>
+              <option value="2024-01" selected>2024-01</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="warning" onclick="generateScript()">📥 Gerar script Node.js</button>
+          <button class="success" onclick="downloadScript()">💾 Baixar .js</button>
+          <button class="secondary" onclick="copyScript()">📋 Copiar script</button>
+        </div>
+
+        <div id="script-output" style="margin-top:1rem;display:none;">
+          <div class="code-block">
+            <pre id="script-code"></pre>
+            <button onclick="copyScript()" style="position:absolute;top:0.5rem;right:0.5rem;font-size:0.75rem;">📋 Copiar</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>📖 Tutorial: Como conseguir o Access Token</h2>
+        <p style="margin-bottom:1rem;color:var(--text-muted);font-size:0.9rem;">Siga os passos abaixo para criar um app privado na Shopify e obter o token de acesso.</p>
+
+        <div class="tutorial-step">
+          <div class="num">1</div>
+          <p>Vá em <strong>Configurações</strong> (Settings) no admin da Shopify.</p>
+        </div>
+        <div class="tutorial-step">
+          <div class="num">2</div>
+          <p>Na barra lateral inferior, clique em <strong>Apps e canais de vendas</strong>.</p>
+        </div>
+        <div class="tutorial-step">
+          <div class="num">3</div>
+          <p>Clique em <strong>Desenvolver apps</strong> (Develop apps). Se não aparecer, você precisa habilitar desenvolvimento privado na loja.</p>
+        </div>
+        <div class="tutorial-step">
+          <div class="num">4</div>
+          <p>Clique em <strong>Criar app</strong> (Create an app). Dê o nome <code>Tracklay Config</code>.</p>
+        </div>
+        <div class="tutorial-step">
+          <div class="num">5</div>
+          <p>Clique em <strong>Configurar escopos de API do Admin</strong> (Configure Admin API scopes).</p>
+        </div>
+        <div class="tutorial-step">
+          <div class="num">6</div>
+          <p>Procure por <code>read_shop_metafields</code> e <code>write_shop_metafields</code>. Marque ambos e clique em <strong>Salvar</strong>.</p>
+        </div>
+        <div class="tutorial-step">
+          <div class="num">7</div>
+          <p>Volte para a aba <strong>Visão geral</strong> (Overview) e clique em <strong>Instalar app</strong> (Install app).</p>
+        </div>
+        <div class="tutorial-step">
+          <div class="num">8</div>
+          <p>Clique em <strong>Revelar token uma vez</strong> (Reveal token once) para ver o <strong>Admin API access token</strong>. Copie e cole no campo acima.</p>
+        </div>
+        <div class="tutorial-step">
+          <div class="num">9</div>
+          <p>Preencha seu <strong>Shop Domain</strong> (ex: <code>suevich.myshopify.com</code>) e clique em <strong>Gerar script Node.js</strong>.</p>
+        </div>
+        <div class="tutorial-step">
+          <div class="num">10</div>
+          <p>Salve o arquivo <code>tracklay-setup.js</code>, abra o terminal na pasta e execute: <code>node tracklay-setup.js</code></p>
+        </div>
+
+        <div style="margin-top:1rem;padding:0.75rem;background:rgba(245,158,11,0.1);border:1px solid var(--warning);border-radius:0.5rem;">
+          <strong style="color:var(--warning);">⚠️ Importante:</strong>
+          <p style="font-size:0.85rem;margin-top:0.25rem;">
+            O token tem acesso de leitura e escrita à sua loja. Nunca compartilhe ele. O script roda <strong>localmente</strong> no seu computador — nenhum dado é enviado para servidores externos.
+          </p>
+        </div>
+      </section>
+    </div>
   </div>
 
   <div class="toast" id="toast">Copiado!</div>
 
   <script>
     const STORAGE_KEY = 'tracklay_graphql_config_v1';
+    const SCRIPT_STORAGE_KEY = 'tracklay_auto_script';
 
     const defaults = {
       ownerId: '',
@@ -282,7 +454,7 @@
         title: '2. Ler metafields do namespace "tracklay"',
         description: 'Query com variável $namespace',
         hasVars: true,
-        buildVars: (cfg) => JSON.stringify({ namespace: "tracklay" }, null, 2),
+        buildVars: () => JSON.stringify({ namespace: "tracklay" }, null, 2),
         query: `query GetTracklayMetafields($namespace: String!) {
   shop {
     metafields(first: 20, namespace: $namespace) {
@@ -401,6 +573,13 @@
       }
     ];
 
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-' + name).classList.add('active');
+    }
+
     function getInputs() {
       const out = {};
       for (const key of Object.keys(defaults)) {
@@ -511,7 +690,7 @@
         .replace(/>/g, '&gt;');
     }
 
-    // Auto-save ao digitar (com debounce)
+    // Auto-save manual mode
     let timeout;
     document.getElementById('config-form').addEventListener('input', () => {
       clearTimeout(timeout);
@@ -521,11 +700,157 @@
       }, 400);
     });
 
+    // ===== FULL AUTO MODE =====
+    function getAutoInputs() {
+      return {
+        shopDomain: document.getElementById('shopDomain').value.trim(),
+        accessToken: document.getElementById('accessToken').value.trim(),
+        apiVersion: document.getElementById('apiVersion').value
+      };
+    }
+
+    function buildNodeScript() {
+      const cfg = getInputs();
+      const auto = getAutoInputs();
+
+      if (!auto.shopDomain || !auto.accessToken) {
+        alert('Preencha Shop Domain e Access Token antes de gerar o script.');
+        return null;
+      }
+
+      const script = `const SHOP_DOMAIN = '${auto.shopDomain}';
+const ACCESS_TOKEN = '${auto.accessToken}';
+const API_VERSION = '${auto.apiVersion}';
+
+async function shopifyFetch(query, variables = {}) {
+  const res = await fetch(\`https://\${SHOP_DOMAIN}/admin/api/\${API_VERSION}/graphql.json\`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Shopify-Access-Token': ACCESS_TOKEN
+    },
+    body: JSON.stringify({ query, variables })
+  });
+  const json = await res.json();
+  if (json.errors) {
+    console.error('GraphQL Errors:', json.errors);
+    throw new Error(json.errors[0].message);
+  }
+  return json.data;
+}
+
+async function getShopId() {
+  const data = await shopifyFetch(\`
+    query GetShopId {
+      shop { id name myshopifyDomain }
+    }
+  \`);
+  console.log('✅ Shop:', data.shop.name, data.shop.myshopifyDomain);
+  return data.shop.id;
+}
+
+async function setMetafields(ownerId) {
+  const variables = {
+    ownerId,
+    metafields: [
+      { ownerId, namespace: "tracklay", key: "gtm_id", value: "${cfg.gtmId}", type: "single_line_text_field" },
+      { ownerId, namespace: "tracklay", key: "measurement_id", value: "${cfg.measurementId}", type: "single_line_text_field" },
+      { ownerId, namespace: "tracklay", key: "worker_url", value: "${cfg.workerUrl}", type: "single_line_text_field" },
+      { ownerId, namespace: "tracklay", key: "gtm_server_url", value: "${cfg.gtmServerUrl}", type: "single_line_text_field" },
+      { ownerId, namespace: "tracklay", key: "google_uuid", value: "${cfg.googleUuid}", type: "single_line_text_field" },
+      { ownerId, namespace: "tracklay", key: "facebook_uuid", value: "${cfg.facebookUuid}", type: "single_line_text_field" },
+      { ownerId, namespace: "tracklay", key: "currency", value: "${cfg.currency}", type: "single_line_text_field" },
+      { ownerId, namespace: "tracklay", key: "debug", value: "${cfg.debug}", type: "boolean" }
+    ]
+  };
+
+  const data = await shopifyFetch(\`
+    mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
+      metafieldsSet(metafields: $metafields) {
+        metafields { id namespace key value type }
+        userErrors { field message code }
+      }
+    }
+  \`, variables);
+
+  const result = data.metafieldsSet;
+  if (result.userErrors.length > 0) {
+    console.error('❌ Errors:', result.userErrors);
+    process.exit(1);
+  }
+  console.log('✅ Metafields criados/atualizados:');
+  result.metafields.forEach(m => console.log('  -', m.key, '=', m.value));
+}
+
+async function verifyConfig() {
+  const data = await shopifyFetch(\`
+    query VerifyTracklayConfig {
+      shop {
+        gtmId: metafield(namespace: "tracklay", key: "gtm_id") { value }
+        measurementId: metafield(namespace: "tracklay", key: "measurement_id") { value }
+        workerUrl: metafield(namespace: "tracklay", key: "worker_url") { value }
+        gtmServerUrl: metafield(namespace: "tracklay", key: "gtm_server_url") { value }
+        googleUuid: metafield(namespace: "tracklay", key: "google_uuid") { value }
+        facebookUuid: metafield(namespace: "tracklay", key: "facebook_uuid") { value }
+        currency: metafield(namespace: "tracklay", key: "currency") { value }
+        debug: metafield(namespace: "tracklay", key: "debug") { value }
+      }
+    }
+  \`);
+  console.log('📋 Configuração atual:', JSON.stringify(data.shop, null, 2));
+}
+
+(async () => {
+  try {
+    console.log('🚀 Tracklay — Shopify Auto Setup');
+    console.log('----------------------------------');
+    const ownerId = await getShopId();
+    await setMetafields(ownerId);
+    await verifyConfig();
+    console.log('----------------------------------');
+    console.log('🎉 Pronto! A loja está configurada.');
+  } catch (err) {
+    console.error('💥 Falha:', err.message);
+    process.exit(1);
+  }
+})();
+`;
+      return script;
+    }
+
+    function generateScript() {
+      const script = buildNodeScript();
+      if (!script) return;
+      localStorage.setItem(SCRIPT_STORAGE_KEY, script);
+      document.getElementById('script-code').textContent = script;
+      document.getElementById('script-output').style.display = 'block';
+      showToast('📥 Script gerado!');
+    }
+
+    function copyScript() {
+      const script = localStorage.getItem(SCRIPT_STORAGE_KEY) || buildNodeScript();
+      if (script) copyText(script);
+    }
+
+    function downloadScript() {
+      const script = localStorage.getItem(SCRIPT_STORAGE_KEY) || buildNodeScript();
+      if (!script) return;
+      const blob = new Blob([script], { type: 'application/javascript' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tracklay-setup.js';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('💾 tracklay-setup.js baixado');
+    }
+
     // Init
     const saved = loadConfig();
     setInputs(saved);
     renderQueries();
-    // Abre a primeira query por padrão
     setTimeout(() => toggleQuery('setTracklayMetafields'), 50);
   </script>
 </body>
