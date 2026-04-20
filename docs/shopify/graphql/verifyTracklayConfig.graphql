@@ -1,0 +1,16 @@
+# Verificar se todos os metafields do Tracklay estao configurados corretamente
+# Retorna os valores atuais de cada chave
+# Sem variaveis necessarias
+
+query VerifyTracklayConfig {
+  shop {
+    gtmId: metafield(namespace: "tracklay", key: "gtm_id") { value }
+    measurementId: metafield(namespace: "tracklay", key: "measurement_id") { value }
+    workerUrl: metafield(namespace: "tracklay", key: "worker_url") { value }
+    gtmServerUrl: metafield(namespace: "tracklay", key: "gtm_server_url") { value }
+    googleUuid: metafield(namespace: "tracklay", key: "google_uuid") { value }
+    facebookUuid: metafield(namespace: "tracklay", key: "facebook_uuid") { value }
+    currency: metafield(namespace: "tracklay", key: "currency") { value }
+    debug: metafield(namespace: "tracklay", key: "debug") { value }
+  }
+}

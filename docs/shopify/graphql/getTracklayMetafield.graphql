@@ -1,0 +1,19 @@
+# Ler um metafield especifico pelo namespace + key
+# Variaveis: $namespace (String!), $key (String!)
+
+query GetTracklayMetafield($namespace: String!, $key: String!) {
+  shop {
+    metafield(namespace: $namespace, key: $key) {
+      id
+      value
+      type
+      updatedAt
+    }
+  }
+}
+
+# Variaveis:
+# {
+#   "namespace": "tracklay",
+#   "key": "gtm_id"
+# }

@@ -1,0 +1,11 @@
+# Descobrir o Shop ID (necessario para mutations)
+# Retorna: shop.id, shop.name, shop.myshopifyDomain
+# Sem variaveis necessarias
+
+query GetShopId {
+  shop {
+    id
+    name
+    myshopifyDomain
+  }
+}

@@ -1,0 +1,24 @@
+# Atualizar apenas um metafield especifico
+# Util para rotacionar UUIDs ou alterar um valor isolado
+
+mutation UpdateSingleMetafield(
+  $ownerId: ID!,
+  $key: String!,
+  $value: String!,
+  $type: String!
+) {
+  metafieldsSet(metafields: [
+    { ownerId: $ownerId, namespace: "tracklay", key: $key, value: $value, type: $type }
+  ]) {
+    metafields { id key value updatedAt }
+    userErrors { field message }
+  }
+}
+
+# Variaveis (exemplo: atualizar google_uuid):
+# {
+#   "ownerId": "gid://shopify/Shop/1234567890",
+#   "key": "google_uuid",
+#   "value": "SEU_UUID_AQUI",
+#   "type": "single_line_text_field"
+# }

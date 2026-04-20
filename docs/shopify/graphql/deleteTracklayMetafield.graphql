@@ -1,0 +1,15 @@
+# Deletar um metafield pelo ID
+# ATENCAO: irreversivel. Use com cuidado.
+# Primeiro rode getTracklayMetafields para obter o metafield.id
+
+mutation DeleteTracklayMetafield($id: ID!) {
+  metafieldDelete(input: { id: $id }) {
+    deletedId
+    userErrors { field message }
+  }
+}
+
+# Variaveis:
+# {
+#   "id": "gid://shopify/Metafield/1234567890"
+# }

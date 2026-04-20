@@ -1,0 +1,25 @@
+# Ler todos os metafields da loja no namespace "tracklay"
+# Variavel: $namespace (String!)
+
+query GetTracklayMetafields($namespace: String!) {
+  shop {
+    metafields(first: 20, namespace: $namespace) {
+      edges {
+        node {
+          id
+          namespace
+          key
+          value
+          type
+          createdAt
+          updatedAt
+        }
+      }
+    }
+  }
+}
+
+# Variaveis:
+# {
+#   "namespace": "tracklay"
+# }
