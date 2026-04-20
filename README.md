@@ -241,6 +241,55 @@ Edit `layout/theme.liquid`:
 
 ---
 
+## Shopify Integration
+
+Tracklay includes a complete first-party tracking solution for Shopify stores using Checkout Extensibility and the Dawn theme.
+
+### What's Included
+- **Custom Pixel** — captures checkout events from the sandbox and sends them server-side via `fetch POST /cdn/events`
+- **Dawn ES6 Modules** — theme-side tracking with automatic Shopify → GA4 event name mapping
+- **SessionStorage Bridge** — shares the `_tracklay_cid` client ID between storefront and checkout iframe
+- **Dual Tracking** — every checkout event hits both the dataLayer (for GTM) and the Worker (for server-side GA4)
+- **GraphQL Tool** — auto-generates Node.js scripts to configure Shopify metafields (`docs/shopify/shopify-graphql-tool.html`)
+
+### Quick Setup
+1. Deploy the Worker and note your `google_uuid` from `/endpoints`
+2. Install the snippet: copy `tracklay-init.liquid` to `snippets/` and all `module.*.js` to `assets/`
+3. Add `{% render 'tracklay-init' %}` before `</head>` in `theme.liquid`
+4. Create a **Custom Pixel** in Shopify Admin and paste `custom-pixel-serverside.js`
+5. Configure metafields (`tracklay.gtm_id`, `tracklay.google_uuid`, etc.) via the GraphQL tool or manually
+6. Add `Custom Event` triggers in GTM for: `page_view`, `view_item`, `add_to_cart`, `begin_checkout`, `purchase`, etc.
+7. Publish the GTM container
+
+### Event Mapping
+The Dawn theme automatically translates Shopify event names to GA4 standard events before pushing to the dataLayer:
+
+| Shopify Event | GA4 Event |
+|---|---|
+| `page_viewed` | `page_view` |
+| `product_viewed` | `view_item` |
+| `collection_viewed` | `view_item_list` |
+| `product_added_to_cart` | `add_to_cart` |
+| `product_removed_from_cart` | `remove_from_cart` |
+| `cart_viewed` | `view_cart` |
+| `checkout_started` | `begin_checkout` |
+| `checkout_address_info_submitted` | `add_shipping_info` |
+| `checkout_contact_info_submitted` | `add_payment_info` |
+| `checkout_completed` | `purchase` |
+| `search_submitted` | `search` |
+
+### Documentation
+- [`docs/shopify/INSTALLATION.md`](docs/shopify/INSTALLATION.md) — step-by-step installation guide
+- [`docs/shopify/SERVER_SIDE_IMPLEMENTATION.md`](docs/shopify/SERVER_SIDE_IMPLEMENTATION.md) — Custom Pixel & server-side details
+- [`docs/shopify/EVENT_MAPPING.md`](docs/shopify/EVENT_MAPPING.md) — full event mapping reference
+- [`docs/shopify/shopify-graphql-tool.html`](docs/shopify/shopify-graphql-tool.html) — interactive GraphQL tool (open in browser)
+
+### Requirements
+- Shopify (Plus recommended for Custom Pixel checkout access)
+- Checkout Extensibility enabled
+- Dawn theme or any compatible ES6 theme
+- GTM container with `googtag` and Meta Pixel tags
+
 ## Configuration Options
 
 ### Environment Variables (wrangler.toml)
