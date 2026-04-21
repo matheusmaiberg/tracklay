@@ -1,27 +1,8 @@
 # Criar / atualizar TODOS os metafields do Tracklay de uma vez
-# Preencha $ownerId com o gid retornado em getShopId
+# Preencha o array $metafields com todos os campos
 
-mutation SetTracklayMetafields(
-  $ownerId: ID!,
-  $gtmId: String!,
-  $measurementId: String!,
-  $workerUrl: String!,
-  $gtmServerUrl: String!,
-  $googleUuid: String!,
-  $facebookUuid: String!,
-  $currency: String!,
-  $debug: String!
-) {
-  metafieldsSet(metafields: [
-    { ownerId: $ownerId, namespace: "tracklay", key: "gtm_id", value: $gtmId, type: "single_line_text_field" },
-    { ownerId: $ownerId, namespace: "tracklay", key: "measurement_id", value: $measurementId, type: "single_line_text_field" },
-    { ownerId: $ownerId, namespace: "tracklay", key: "worker_url", value: $workerUrl, type: "single_line_text_field" },
-    { ownerId: $ownerId, namespace: "tracklay", key: "gtm_server_url", value: $gtmServerUrl, type: "single_line_text_field" },
-    { ownerId: $ownerId, namespace: "tracklay", key: "google_uuid", value: $googleUuid, type: "single_line_text_field" },
-    { ownerId: $ownerId, namespace: "tracklay", key: "facebook_uuid", value: $facebookUuid, type: "single_line_text_field" },
-    { ownerId: $ownerId, namespace: "tracklay", key: "currency", value: $currency, type: "single_line_text_field" },
-    { ownerId: $ownerId, namespace: "tracklay", key: "debug", value: $debug, type: "boolean" }
-  ]) {
+mutation SetTracklayMetafields($metafields: [MetafieldsSetInput!]!) {
+  metafieldsSet(metafields: $metafields) {
     metafields { id namespace key value type }
     userErrors { field message code }
   }
@@ -29,13 +10,14 @@ mutation SetTracklayMetafields(
 
 # Variaveis:
 # {
-#   "ownerId": "gid://shopify/Shop/1234567890",
-#   "gtmId": "GTM-MJ7DW8H",
-#   "measurementId": "G-XXXXXX",
-#   "workerUrl": "https://cdn.suevich.com",
-#   "gtmServerUrl": "https://gtm.suevich.com",
-#   "googleUuid": "b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f",
-#   "facebookUuid": "",
-#   "currency": "BRL",
-#   "debug": "false"
+#   "metafields": [
+#     { "ownerId": "gid://shopify/Shop/1234567890", "namespace": "tracklay", "key": "gtm_id", "value": "GTM-MJ7DW8H", "type": "single_line_text_field" },
+#     { "ownerId": "gid://shopify/Shop/1234567890", "namespace": "tracklay", "key": "measurement_id", "value": "G-XXXXXX", "type": "single_line_text_field" },
+#     { "ownerId": "gid://shopify/Shop/1234567890", "namespace": "tracklay", "key": "worker_url", "value": "https://cdn.suevich.com", "type": "single_line_text_field" },
+#     { "ownerId": "gid://shopify/Shop/1234567890", "namespace": "tracklay", "key": "gtm_server_url", "value": "https://gtm.suevich.com", "type": "single_line_text_field" },
+#     { "ownerId": "gid://shopify/Shop/1234567890", "namespace": "tracklay", "key": "google_uuid", "value": "b7e4d3f2-5c0e-4a6b-9d4f-3e2a0c5b8d7f", "type": "single_line_text_field" },
+#     { "ownerId": "gid://shopify/Shop/1234567890", "namespace": "tracklay", "key": "facebook_uuid", "value": "", "type": "single_line_text_field" },
+#     { "ownerId": "gid://shopify/Shop/1234567890", "namespace": "tracklay", "key": "currency", "value": "BRL", "type": "single_line_text_field" },
+#     { "ownerId": "gid://shopify/Shop/1234567890", "namespace": "tracklay", "key": "debug", "value": "false", "type": "boolean" }
+#   ]
 # }
